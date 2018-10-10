@@ -1,15 +1,15 @@
 'use strict'
 
 const pify = require('pify')
-const createSliceStream = require('./eth-rpc')
+const createSliceStream = require('./slice-tracker')
 const createEthProvider = require('./eth-provider')
 const BlockTracker = require('kitsunet-block-tracker')
-const KitsunetNode = require('./kitsunet')
+const KitsunetPeer = require('./kitsunet-peer')
+const createTelemetry = require('./telemetry')
 
 const log = require('debug')('kitsunet:client')
 module.exports = async function run ({ options, node }) {
   await pify(node.start.bind(node))()
-  console.log(`kitsunet libp2p started`)
 
   const ethProvider = createEthProvider({
     rpcUrl: options.rpcUrl,
@@ -19,16 +19,9 @@ module.exports = async function run ({ options, node }) {
   const blockTracker = new BlockTracker({ node, ethProvider })
   blockTracker.enable(options.rpcEnableTracker)
 
-  const kitsunetNode = new KitsunetNode({ node, interval: 10000 })
-  kitsunetNode.on('kitsunet:connection', (conn) => {
-    conn.getPeerInfo((err, peerInfo) => {
-      if (err) {
-        return log(err)
-      }
-
-      log(`peer connected ${peerInfo.id.toB58String()}`)
-    })
-  })
+  const kitsunetPeer = new KitsunetPeer({ node, interval: 10000 })
+  const { telemetry } = await createTelemetry({ node, kitsunetPeer, devMode: true })
+  telemetry.start()
 
   if (options.sliceBridge) {
     options.slicePath.forEach(async (path) => {
@@ -44,7 +37,7 @@ module.exports = async function run ({ options, node }) {
       log(`subscribed to slice ${path}`)
       sliceStream.on('data', (slice) => {
         node.multicast.publish(`kitsunet:slice:${path}-${options.sliceDepth}`, slice, -1, () => {
-          console.dir(slice.toString())
+          // console.dir(slice.toString())
         })
       })
     })
@@ -52,7 +45,9 @@ module.exports = async function run ({ options, node }) {
 
   options.slicePath.forEach(async (path) => {
     node.multicast.subscribe(`kitsunet:slice:${path}-${options.sliceDepth}`, (msg) => {
-      console.dir(msg.data.toString())
+      // console.dir(msg.data.toString())
     }, () => {})
   })
+
+  console.log(`kitsunet client running`)
 }

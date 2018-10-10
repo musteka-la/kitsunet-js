@@ -22,7 +22,7 @@ async function createNode ({ identity, addrs, options }) {
   addrs.forEach((a) => peerInfo.multiaddrs.add(a))
 
   const node = new Node(peerInfo, options)
-  node.idStr = peerIdStr
+  node.peerId = peerIdStr
 
   return node
 }

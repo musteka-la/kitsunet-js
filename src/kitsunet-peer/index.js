@@ -11,7 +11,7 @@ const proto = '/kitsunet/test/0.0.1'
 const MAX_PEERS = 25
 const INTERVAL = 60 * 1000 // every minute
 
-class KitsunetNode extends EventEmitter {
+class KitsunetPeer extends EventEmitter {
   constructor ({ node, maxPeers, interval }) {
     super()
 
@@ -23,11 +23,13 @@ class KitsunetNode extends EventEmitter {
     this.node = node
     this.connected = new Map()
     this.discovered = new Map()
+    this.dialing = new Map()
 
     node.handle(proto, (_, conn) => {
       conn.getPeerInfo((err, peerInfo) => {
-        if (err) return console.error(err)
+        if (err) return log(err)
         this.connected.set(peerInfo.id.toB58String(), peerInfo)
+        this.emit('kitsunet:connection', conn)
       })
     })
 
@@ -49,27 +51,43 @@ class KitsunetNode extends EventEmitter {
       log(`peer discovered ${peerInfo.id.toB58String()}`)
     })
 
-    setInterval(() => {
-      if (this.connected.size < this.maxPeers) {
-        if (this.discovered.size > 0) {
-          const [id, peer] = this.discovered.entries().next().value
-          this.discovered.delete(id)
-          this.dial(peer)
-        }
+    this.tryConnect()
+    setInterval(this.tryConnect.bind(this), this.interval)
+  }
+
+  async tryConnect () {
+    if (this.connected.size <= this.maxPeers) {
+      if (this.discovered.size > 0) {
+        const [id, peer] = this.discovered.entries().next().value
+        this.discovered.delete(id)
+        return this.dial(peer)
       }
-    }, this.interval)
+    }
   }
 
   async dial (peer) {
-    if (!this.connected.has(peer.id.toB58String())) {
-      const conn = await pify(this.node.dialProtocol).call(this.node, peer, proto)
-      this.emit('kitsunet:connection', conn)
+    const b58Id = peer.id.toB58String()
+    if (this.dialing.has(b58Id)) {
+      log(`dial already in progress for ${b58Id}`)
+      return
+    }
+
+    if (!this.connected.has(b58Id)) {
+      try {
+        this.dialing.set(b58Id, true)
+        const conn = await pify(this.node.dialProtocol).call(this.node, peer, proto)
+        this.emit('kitsunet:connection', conn)
+      } catch (err) {
+        log(err)
+      } finally {
+        this.dialing.delete(b58Id)
+      }
     }
   }
 
   async hangup (peer) {
-    this.node.hangupPeer(peer)
+    return pify(this.node.hangUp).call(this.node, peer)
   }
 }
 
-module.exports = KitsunetNode
+module.exports = KitsunetPeer

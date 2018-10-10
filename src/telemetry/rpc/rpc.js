@@ -1,7 +1,7 @@
 'use strict'
 
 const pump = require('pump')
-const { cbifyObj } = require('../util/cbify')
+const { cbifyObj } = require('../../utils/cbify')
 const pify = require('pify')
 const multiplexRpc = require('../network/multiplexRpc')
 

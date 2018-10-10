@@ -57,10 +57,6 @@ class Node extends Libp2p {
         return callback(err)
       }
 
-      this.peerInfo.multiaddrs.forEach((ma) => {
-        console.log('Swarm listening on', ma.toString())
-      })
-
       this.multicast = createMulticast(this)
       parallel([
         (cb) => this._multicast.start(cb),
@@ -70,7 +66,17 @@ class Node extends Libp2p {
           }
           cb()
         }
-      ], callback)
+      ], (err) => {
+        if (err) {
+          return callback(err)
+        }
+
+        this.peerInfo.multiaddrs.forEach((ma) => {
+          console.log('Swarm listening on', ma.toString())
+        })
+
+        callback()
+      })
     })
   }
 
