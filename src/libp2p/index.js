@@ -8,7 +8,8 @@ const Node = require('./node')
 
 async function createNode ({ identity, addrs, options }) {
   let id = {}
-  if (!identity.privKey) {
+  const privKey = identity && identity.privKey ? identity.privKey : null
+  if (!privKey) {
     id = await PeerId.create()
   } else {
     id = await PeerId.createFromJSON(identity)

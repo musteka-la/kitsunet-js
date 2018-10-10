@@ -3,8 +3,9 @@
 const yargs = require('yargs')
 const WS = require('libp2p-websockets')
 const TCP = require('libp2p-tcp')
+const MDNS = require('libp2p-mdns')
 
-const kitsunet = require('../kitsunet')
+const kitsunet = require('../kitsunet-app')
 const createNode = require('../libp2p')
 
 const log = require('debug')('kitsunet:node')
@@ -33,9 +34,19 @@ const args = yargs
     },
     'rpc-enable-tracker': {
       description: 'enable block tracker to propagate over libp2p multicast',
-      requiresArg: true,
+      alias: 't',
+      type: 'boolean',
+      default: false,
+      requiresArg: false,
+      required: false
+    },
+    'slice-bridge': {
+      alias: 'b',
+      description: 'enable bridge mode - read slices from the rpc',
+      requiresArg: false,
       required: false,
-      default: true
+      default: false,
+      type: 'boolean'
     },
     'slice-path': {
       alias: 'p',
@@ -86,6 +97,9 @@ async function run () {
       transport: [
         WS,
         TCP
+      ],
+      peerDiscovery: [
+        MDNS
       ]
     }
   }
