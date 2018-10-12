@@ -32,9 +32,6 @@ class Node extends Libp2p {
       config: {
         relay: {
           enabled: true
-        },
-        EXPERIMENTAL: {
-          pubsub: true
         }
       }
     }
@@ -49,6 +46,8 @@ class Node extends Libp2p {
       this.rndvzDiscovery = rndvzDiscovery
       this.rndvzDiscovery.on('peer', (peerInfo) => this.emit('peer:discovery', peerInfo))
     }
+
+    this.multicast = createMulticast(this)
   }
 
   start (callback) {
@@ -57,7 +56,6 @@ class Node extends Libp2p {
         return callback(err)
       }
 
-      this.multicast = createMulticast(this)
       parallel([
         (cb) => this._multicast.start(cb),
         (cb) => {

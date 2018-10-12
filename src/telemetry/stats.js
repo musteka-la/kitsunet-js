@@ -167,7 +167,7 @@ class KitsunetStats extends EventEmitter {
 
   stop () {
     // stop recording custom stats
-    this.node._switch.observer.off('message', recordStats)
+    this.node._switch.observer.removeAllListeners('message')
   }
 
   get stats () {

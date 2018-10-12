@@ -1,16 +1,10 @@
 'use strict'
 
 const yargs = require('yargs')
-const WS = require('libp2p-websockets')
-const TCP = require('libp2p-tcp')
-const MDNS = require('libp2p-mdns')
 
-const kitsunet = require('../kitsunet-app')
-const createNode = require('../libp2p')
+const createKitsunet = require('./kitsunet-factory')
 
-const log = require('debug')('kitsunet:node')
-
-const args = yargs
+const options = yargs
   .usage(`Kitsunet cmd client`)
   .options({
     'libp2p-addrs': {
@@ -20,11 +14,25 @@ const args = yargs
       required: false,
       type: 'array'
     },
+    'libp2p-bootstrap': {
+      alias: 'a',
+      description: 'list of libp2p bootstrap nodes',
+      requiresArg: true,
+      required: false,
+      type: 'array'
+    },
+    'eth-addrs': {
+      alias: 'e',
+      description: 'list of Ethereum addresses to track',
+      requiresArg: true,
+      required: false,
+      type: 'array'
+    },
     'rpc-url': {
       alias: 'r',
       description: 'bridge rpc url <http[s]://host:port>',
       requiresArg: true,
-      required: false
+      required: true
     },
     'rpc-poll-interval': {
       description: 'rpc poll interval in milliseconds',
@@ -53,13 +61,20 @@ const args = yargs
       description: 'slice path',
       requiresArg: true,
       required: true,
-      type: 'string'
+      type: 'array'
     },
     'slice-depth': {
       alias: 'd',
       description: 'slice depth',
       requiresArg: true,
-      required: true
+      required: false,
+      type: 'string'
+    },
+    'slice-file': {
+      alias: 'f',
+      description: 'slice depth',
+      requiresArg: true,
+      required: false
     },
     identity: {
       alias: 'i',
@@ -79,37 +94,25 @@ const args = yargs
   .alias('help', 'h')
   .argv
 
-let config = {}
-if (args.config) {
-  config = args.config
-}
-
-const identity = args.identity ? require(args.identity) : config.identity
-const addrs = args.libp2pAddrs || config.libp2pAddrs
-
 run()
 
 async function run () {
-  let node = null
-
-  const options = {
-    modules: {
-      transport: [
-        WS,
-        TCP
-      ],
-      peerDiscovery: [
-        MDNS
-      ]
-    }
+  let config = {}
+  if (options.config) {
+    config = options.config
   }
+
+  const identity = options.identity ? require(options.identity) : config.identity
+  const addrs = options.libp2pAddrs || config.libp2pAddrs
 
   try {
-    node = await createNode({ identity, addrs, options })
-  } catch (err) {
-    log(err)
-    return
-  }
+    const { kitsunet } = await createKitsunet({ options, identity, addrs })
+    await kitsunet.start()
 
-  if (node) { kitsunet({ options: args, node }) }
+    process.on('INT', () => {
+      kitsunet.stop()
+    })
+  } catch (err) {
+    console.error(err)
+  }
 }

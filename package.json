@@ -2,13 +2,16 @@
   "name": "kitsunet",
   "version": "0.0.1",
   "description": "Kitsunet mesh node",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "patch-package"
   },
   "bin": {
-    "kitsunet": "src/node.js"
+    "kitsunet": "src/cli.js"
+  },
+  "browser": {
+    "./src/kitsunet-peer/libp2p/index.js": "./src/kitsunet-peer/libp2p/browser.js"
   },
   "author": "",
   "license": "MIT",
@@ -19,16 +22,21 @@
     "detect-node": "^2.0.4",
     "end-of-stream": "^1.4.1",
     "eth-block-tracker": "^4.0.3",
+    "eth-json-rpc-kitsunet-slice": "github:dryajov/eth-json-rpc-kitsunet-slice.git#master",
     "eth-query": "^2.1.2",
+    "ethereumjs-util": "^6.0.0",
+    "ethjs": "^0.4.0",
     "ethjs-provider-http": "^0.1.6",
     "http-poll-stream": "^2.1.0",
-    "kitsunet-block-tracker": "MetaMask/kitsunet-block-tracker.git#b1a32b72fc324adacd67f6f9cb4c02f4b166bea7",
+    "json-rpc-engine": "^3.8.0",
+    "kitsunet-block-tracker": "github:MetaMask/kitsunet-block-tracker.git#master",
+    "kitsunet-slice-tracker": "github:MetaMask/kitsunet-slice-tracker.git#master",
     "libp2p": "~0.23.1",
     "libp2p-bootstrap": "~0.9.3",
     "libp2p-mdns": "^0.12.0",
     "libp2p-mplex": "~0.8.2",
-    "libp2p-multicast-experiment": "github:metamask/js-libp2p-multicast-experiment#fb8d027a026eff6239c15d9d3b36cccb3d1dc9f2",
-    "libp2p-rendezvous": "MetaMask/js-libp2p-rendezvous.git#feat/improve-and-cleanup",
+    "libp2p-multicast-experiment": "MetaMask/js-libp2p-multicast-conditional.git#master",
+    "libp2p-rendezvous": "github:MetaMask/js-libp2p-rendezvous.git#feat/improve-and-cleanup",
     "libp2p-secio": "~0.10.0",
     "libp2p-spdy": "~0.12.1",
     "libp2p-tcp": "^0.13.0",
@@ -37,6 +45,7 @@
     "multiplex": "^6.7.0",
     "pull-stream-to-stream": "^1.3.4",
     "pump": "^3.0.0",
+    "request": "^2.88.0",
     "rpc-stream": "^2.1.2",
     "websocket-stream": "^5.1.2",
     "yargs": "^12.0.2"
