@@ -1,10 +1,9 @@
 # kitsunet-js
 > The kitsunet js implementation
 
-
 ### What is this?
 
-This is the `kitsunet` client implementation. This includes both the command line executable as well as the browser client. The command line executable can be used a an RPC bridge that pulls slices from an Ethereum client and pushed them over to the kitsunet pubsub network - see examples bellow that show how to run the client for different purposes.
+This is the `kitsunet` client implementation. This includes both the command line executable as well as the browser client. The KSN client can be used as an RPC bridge that pulls slices from an Ethereum client and pushed them over to the kitsunet pubsub network - see examples bellow that show how to run the client for different purposes.
 
 ### Command line api
 
@@ -35,8 +34,19 @@ Options:
 
 #### Example 1
 
-Running a node in bridge (`-b`) mode for slices `8e99` (`-p`) and account (`-e`) `0x6810e776880C02933D47DB1b9fc05908e5386b96` against RPC endpoint `localhost:8546` (`-r`) and block tracker mode (`-t`) enabled
+- Running a node in bridge (`-b`) mode 
+- for slices `8e99` (`-p`) and
+- account (`-e`) `0x6810e776880C02933D47DB1b9fc05908e5386b96` 
+- against RPC endpoint `localhost:8546` (`-r`) 
+- and block tracker mode (`-t`) enabled
 
 ```
-kitsunet -a /ip4/127.0.0.1/tcp/33005/ws -a /ip4/127.0.0.1/tcp/33006 -b -d 10 -p 8e99 -e 0x6810e776880C02933D47DB1b9fc05908e5386b96 -r http://localhost:8546 -t
+kitsunet -a /ip4/127.0.0.1/tcp/33005/ws                 \ # the multiaddress of this node
+         -a /ip4/127.0.0.1/tcp/33006                    \ # the multiaddress of this node
+         -b                                             \ # make this node a bridge, read slices from the RPC 
+         -d 10                                          \ # set depth to 10
+         -p 8e99                                        \ # track slice 8e99, this can be combined with mulitple -p <slice>
+         -e 0x6810e776880C02933D47DB1b9fc05908e5386b96  \ # track address, the slice will be deduced from the address
+         -r http://localhost:8546                       \ # the RPC origin of a valid ethereum
+         -t                                               # enable block tracking for this node
 ```
