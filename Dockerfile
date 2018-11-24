@@ -15,9 +15,12 @@ COPY ./src /kitsunet/src
 ADD ./monkey.json /kitsunet/
 
 # start server
-CMD node src/cli.js -a /ip4/127.0.0.1/tcp/30334/ws \
+CMD node src/cli.js \
+        -a /ip4/127.0.0.1/tcp/30334/ws \
         -a /ip4/127.0.0.1/tcp/30333 \
-        -d 10 -p 8e99 -p 1372 \
+        -d 10 \
+        -p 8e99 \
+        -p 1372 \
         -e 0x6810e776880C02933D47DB1b9fc05908e5386b96 \
         -r http://mustekala-geth:8545 \
         -b -t -i `pwd`/monkey.json
