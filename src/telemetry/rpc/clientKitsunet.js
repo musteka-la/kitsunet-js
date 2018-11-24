@@ -2,31 +2,32 @@
 
 const base = require('./base')
 
-const { sec, min } = require('../util/time')
-const randomFromRange = require('../util/randomFromRange')
+const { sec, min } = require('../../utils/time')
+const randomFromRange = require('../../utils/randomFromRange')
 
-module.exports = function (client, multicast, pubsub, ebt, blockTracker) {
+const isNode = require('detect-node')
+
+async function restartWithDelay (timeoutDuration) {
+  console.log(`MetaMask Mesh Testing - restarting in ${timeoutDuration / 1000} sec...`)
+  setTimeout(() => restart(), timeoutDuration)
+}
+
+async function restart () {
+  if (!isNode) {
+    window.location.reload()
+  }
+}
+
+module.exports = function () {
   return Object.assign({}, {
     refresh: async () => {
-      return client.restart()
+      return restart()
     },
     refreshShortDelay: () => {
-      return client.restartWithDelay(randomFromRange(5 * sec, 10 * sec))
+      return restartWithDelay(randomFromRange(5 * sec, 10 * sec))
     },
     refreshLongDelay: async () => {
-      return client.restartWithDelay(randomFromRange(2 * min, 10 * min))
-    },
-    pubsubPublish: async (message) => {
-      return pubsub.publish(message)
-    },
-    multicastPublish: async (message, hops) => {
-      return multicast.publish(message, hops)
-    },
-    ebtAppend: async (message) => {
-      return ebt.append(message)
-    },
-    enableBlockTracker: async (enabled) => {
-      return blockTracker.enable(enabled)
+      return restartWithDelay(randomFromRange(2 * min, 10 * min))
     }
   }, base())
 }
