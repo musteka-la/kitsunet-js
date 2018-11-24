@@ -129,7 +129,6 @@ class TelemetryClient extends EventEmitter {
     const b58Id = peerInfo.id.toB58String()
     delete clientState.peers[b58Id]
     this.stats.removePeer(b58Id)
-    this.telemetryRpc.disconnect(b58Id)
   }
 }
 
