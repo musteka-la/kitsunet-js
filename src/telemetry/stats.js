@@ -1,7 +1,7 @@
 'use strict'
 
 const assert = require('assert')
-const EventEmitter = require('events')
+const SafeEventEmitter = require('safe-event-emitter')
 
 const Stat = require('libp2p-switch/src/stats/stat')
 
@@ -140,7 +140,7 @@ function recordStats (peerId, transport, protocol, direction, bufferLength) {
   }
 }
 
-class KitsunetStats extends EventEmitter {
+class KitsunetStats extends SafeEventEmitter {
   constructor ({ node }) {
     super()
     assert(node, 'node is required')

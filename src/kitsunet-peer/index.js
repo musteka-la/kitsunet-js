@@ -1,7 +1,7 @@
 'use strict'
 
 const assert = require('assert')
-const EventEmitter = require('events')
+const SafeEventEmitter = require('safe-event-emitter')
 const pify = require('pify')
 
 const log = require('debug')('kitsunet:node')
@@ -11,7 +11,7 @@ const proto = '/kitsunet/test/0.0.1'
 const MAX_PEERS = 25
 const INTERVAL = 60 * 1000 // every minute
 
-class KitsunetPeer extends EventEmitter {
+class KitsunetPeer extends SafeEventEmitter {
   constructor ({ node, maxPeers, interval }) {
     super()
 
