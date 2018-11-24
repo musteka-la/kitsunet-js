@@ -1,7 +1,7 @@
 'use strict'
 
 const assert = require('assert')
-const EventEmitter = require('events')
+const SafeEventEmitter = require('safe-event-emitter')
 const pify = require('pify')
 
 const log = require('debug')('kitsunet:node')
@@ -11,7 +11,7 @@ const proto = '/kitsunet/test/0.0.1'
 const MAX_PEERS = 25
 const INTERVAL = 60 * 1000 // every minute
 
-class KitsunetPeer extends EventEmitter {
+class KitsunetPeer extends SafeEventEmitter {
   constructor ({ node, maxPeers, interval }) {
     super()
 
@@ -28,26 +28,26 @@ class KitsunetPeer extends EventEmitter {
     node.handle(proto, (_, conn) => {
       conn.getPeerInfo((err, peerInfo) => {
         if (err) return log(err)
-        this.connected.set(peerInfo.id.toB58String(), peerInfo)
+        setImmediate(() => this.connected.set(peerInfo.id.toB58String(), peerInfo))
         this.emit('kitsunet:connection', conn)
       })
     })
 
     node.on('peer:connect', (peerInfo) => {
       this.connected.set(peerInfo.id.toB58String(), peerInfo)
-      this.emit('kitsunet:connect', peerInfo)
+      setImmediate(() => this.emit('kitsunet:connect', peerInfo))
       log(`peer connected ${peerInfo.id.toB58String()}`)
     })
 
     node.on('peer:disconnect', (peerInfo) => {
       this.connected.delete(peerInfo.id.toB58String())
-      this.emit('kitsunet:disconnect', peerInfo)
+      setImmediate(() => this.emit('kitsunet:disconnect', peerInfo))
       log(`peer disconnected ${peerInfo.id.toB58String()}`)
     })
 
     node.on('peer:discovery', (peerInfo) => {
       this.discovered.set(peerInfo.id.toB58String(), peerInfo)
-      this.emit('kitsunet:discovery', peerInfo)
+      setImmediate(() => this.emit('kitsunet:discovery', peerInfo))
       log(`peer discovered ${peerInfo.id.toB58String()}`)
     })
 

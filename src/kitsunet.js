@@ -1,6 +1,6 @@
 'use strict'
 
-const EventEmitter = require('events')
+const SafeEventEmitter = require('safe-event-emitter')
 const pify = require('pify')
 
 const KitsunetPeer = require('./kitsunet-peer')
@@ -9,7 +9,7 @@ const sliceFetcher = require('./slice-fetcher')
 
 const log = require('debug')('kitsunet:kitsunet-client')
 
-class Kitsunet extends EventEmitter {
+class Kitsunet extends SafeEventEmitter {
   constructor ({ node, isBridge, bridgeRpc, blockTracker, sliceTracker, slices }) {
     super()
     this._node = node
