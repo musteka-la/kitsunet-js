@@ -7,7 +7,7 @@ const BlockTracker = require('eth-block-tracker')
 const JsonRpcEngine = require('json-rpc-engine')
 const asMiddleware = require('json-rpc-engine/src/asMiddleware')
 const createFetchMiddleware = require('eth-json-rpc-middleware/fetch')
-const createVmMiddleware = require('./create-vm-middleware')
+const createVmMiddleware = require('eth-json-rpc-middleware/vm')
 const createSliceMiddleware = require('eth-json-rpc-kitsunet-slice')
 
 module.exports = createEthSliceProvider
@@ -40,6 +40,8 @@ function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
     ethQuery
   } = createRpcProviders({ rpcUrl, provider, rpcEnableTracker })
 
+  // if you pass in a blockTracker it will
+  // pass those blocks into the kitsunet network
   const kitsunetTracker = new KitsunetTracker({
     provider: blockTracker,
     node,

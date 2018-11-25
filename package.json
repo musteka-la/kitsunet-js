@@ -23,6 +23,7 @@
     "end-of-stream": "^1.4.1",
     "eth-block-tracker": "^4.0.3",
     "eth-json-rpc-kitsunet-slice": "github:dryajov/eth-json-rpc-kitsunet-slice.git#master",
+    "eth-json-rpc-middleware": "^3.1.7",
     "eth-query": "^2.1.2",
     "ethereumjs-util": "^6.0.0",
     "ethjs": "^0.4.0",
