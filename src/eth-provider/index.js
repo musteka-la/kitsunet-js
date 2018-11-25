@@ -43,16 +43,17 @@ function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
   // if you pass in a blockTracker it will
   // pass those blocks into the kitsunet network
   const kitsunetTracker = new KitsunetTracker({
-    provider: blockTracker,
+    blockTracker,
     node,
     ethQuery
   })
+
+  engine.push(createVmMiddleware({ provider }))
 
   const sliceTracker = new SliceTracker({ node, blockTracker: kitsunetTracker })
   const eth = new Eth(provider)
 
   // add handlers
-  engine.push(createVmMiddleware({ provider }))
   engine.push(createSliceMiddleware({ eth, sliceTracker, depth }))
 
   if (dataEngine) {
