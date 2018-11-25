@@ -13,7 +13,7 @@
   "browser": {
     "./src/kitsunet-peer/libp2p/index.js": "./src/kitsunet-peer/libp2p/browser.js"
   },
-  "author": "",
+  "author": "Dmitriy Ryajov <dryajov@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
@@ -25,6 +25,7 @@
     "eth-json-rpc-kitsunet-slice": "github:dryajov/eth-json-rpc-kitsunet-slice.git#master",
     "eth-query": "^2.1.2",
     "ethereumjs-util": "^6.0.0",
+    "ethereumjs-vm": "^2.5.0",
     "ethjs": "^0.4.0",
     "ethjs-provider-http": "^0.1.6",
     "http-poll-stream": "^2.1.0",
