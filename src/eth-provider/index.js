@@ -55,10 +55,7 @@ function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
 
   // add handlers
   engine.push(createSliceMiddleware({ eth, sliceTracker, depth }))
-
-  if (dataEngine) {
-    engine.push(asMiddleware(dataEngine))
-  }
+  engine.push(asMiddleware(dataEngine))
 
   return {
     engine,
