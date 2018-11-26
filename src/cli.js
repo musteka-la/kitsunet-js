@@ -86,7 +86,7 @@ const options = yargs
       alias: 'T',
       description: 'the telemetry endpoint url <http[s]://host:port>',
       requiresArg: true,
-      required: true
+      required: false
     },
     config: {
       alias: 'c',
