@@ -4,7 +4,7 @@ const SafeEventEmitter = require('safe-event-emitter')
 const pify = require('pify')
 
 const KitsunetPeer = require('./kitsunet-peer')
-const createTelemetry = require('./telemetry')
+const KitsunetStatsTracker = require('./stats')
 const sliceFetcher = require('./slice-fetcher')
 
 const log = require('debug')('kitsunet:kitsunet-client')
@@ -47,6 +47,11 @@ class Kitsunet extends SafeEventEmitter {
         this._trackSlice({ path, depth, isStorage: true })
       })
     }
+
+    this._stats = new KitsunetStatsTracker({
+      node: this._node,
+      kitsunetPeer: this._kitsunetPeer,
+    })
   }
 
   get peerInfo () {
@@ -109,31 +114,24 @@ class Kitsunet extends SafeEventEmitter {
   }
 
   async start () {
-    if (!this._telemetry) {
-      const { telemetry } = await createTelemetry({
-        node: this._node,
-        kitsunetPeer: this._kitsunetPeer,
-        devMode: true
-      })
-      this._telemetry = telemetry
-    }
-
     await this._node.start()
     await this._blockTracker.start()
     await this._sliceTracker.start()
-    await this._telemetry.start()
+    await this._stats.start()
 
     this._registeSlices()
   }
 
   async stop () {
-    if (this._telemetry) {
-      await this._telemetry.stop()
-    }
-
     await this._node.stop()
     await this._blockTracker.stop()
     await this._sliceTracker.stop()
+    await this._stats.stop()
+  }
+
+  getState () {
+    if (!this._stats) return {}
+    return this._stats.getState()
   }
 }
 

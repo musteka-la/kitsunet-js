@@ -45,7 +45,7 @@ module.exports = async function ({ options, identity, addrs }) {
       slices
     })
 
-    return { providerTools, kitsunet }
+    return { providerTools, kitsunet, node }
   } catch (err) {
     log(err)
   }
