@@ -10,7 +10,7 @@ const sliceFetcher = require('./slice-fetcher')
 const log = require('debug')('kitsunet:kitsunet-client')
 
 class Kitsunet extends SafeEventEmitter {
-  constructor ({ node, isBridge, bridgeRpc, blockTracker, sliceTracker, slices }) {
+  constructor ({ node, isBridge, bridgeRpc, blockTracker, sliceTracker, slices, telemetryUrl }) {
     super()
     this._node = node
     this._kitsunetPeer = new KitsunetPeer({ node, interval: 10000 })
@@ -18,6 +18,7 @@ class Kitsunet extends SafeEventEmitter {
     this._bridgeRpc = bridgeRpc
     this._blockTracker = blockTracker
     this._sliceTracker = sliceTracker
+    this._telemetryUrl = telemetryUrl
 
     this.multicast = pify(this._node.multicast)
     this._node.start = pify(node.start.bind(node))
@@ -113,7 +114,7 @@ class Kitsunet extends SafeEventEmitter {
       const { telemetry } = await createTelemetry({
         node: this._node,
         kitsunetPeer: this._kitsunetPeer,
-        devMode: true
+        url: this._telemetryUrl
       })
       this._telemetry = telemetry
     }
