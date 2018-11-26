@@ -18,7 +18,6 @@ const clientState = {
   // kitsunet peers
   peers: {}, // {}
   // libp2p stats
-  stats: {},
   multicast: [],
   block: {},
   blockTrackerEnabled: false
@@ -48,17 +47,13 @@ async function pingPeer ({ rpc, kitsunetPeer, peerInfo }) {
   }, peerPingInterval)
 }
 
-class TelemetryClient extends SafeEventEmitter {
-  constructor ({ stats, telemetryRpc, submitInterval, kitsunetPeer, node }) {
+class KitsunetStatsTracker extends SafeEventEmitter {
+  constructor ({ kitsunetPeer, node }) {
     super()
 
-    assert(telemetryRpc, 'telemetryRpc required')
     assert(node, 'node required')
     assert(node, 'kitsunetPeer required')
 
-    this.stats = stats
-    this.telemetryRpc = telemetryRpc
-    this.submitInterval = submitInterval || DEFAULT_SUBMIT_INTERVAL
     this.started = false
     this.node = node
 
@@ -83,54 +78,34 @@ class TelemetryClient extends SafeEventEmitter {
           kitsunetPeer.hangup(peerInfo)
         })
 
-        const kitsunetPeerRpc = rpc.createRpcServer(baseRpc(), stream)
-        pingPeer({ rpc: rpc.createRpcClient(baseRpc(), kitsunetPeerRpc), kitsunetPeer, peerInfo })
+        const rpcServer = rpc.createRpcServer(baseRpc(), stream)
+        const rpcClient = rpc.createRpcClient(baseRpc(), rpcServer)
+        pingPeer({ rpc: rpcClient, kitsunetPeer, peerInfo })
       })
     })
   }
 
   start () {
-    this.stats.start()
     this.started = true
-    this.telemetryRpc.setPeerId(this.node.peerId)
-    this.submitClientStateOnInterval()
   }
 
   stop () {
-    this.stats.stop()
     this.started = false
-    this.telemetryRpc.disconnectPeer(this.node.peerId)
   }
 
-  async submitClientStateOnInterval () {
-    if (!this.started) return
-
-    setTimeout(async () => {
-      try {
-        await this.submitNetworkState()
-      } catch (err) {
-        log(err)
-      }
-      this.submitClientStateOnInterval()
-    }, this.submitInterval)
-  }
-
-  async submitNetworkState () {
-    clientState.stats = this.stats.stats
-    return this.telemetryRpc.submitNetworkState(clientState)
+  getState () {
+    return clientState
   }
 
   async addPeer (peerInfo) {
     const b58Id = peerInfo.id.toB58String()
     clientState.peers[b58Id] = { status: 'connected' }
-    this.stats.addPeer(b58Id)
   }
 
   async removePeer (peerInfo) {
     const b58Id = peerInfo.id.toB58String()
     delete clientState.peers[b58Id]
-    this.stats.removePeer(b58Id)
   }
 }
 
-module.exports = TelemetryClient
+module.exports = KitsunetStatsTracker
