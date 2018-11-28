@@ -1,7 +1,6 @@
 'use strict'
 
 const assert = require('assert')
-const SafeEventEmitter = require('safe-event-emitter')
 const toStream = require('pull-stream-to-stream')
 const endOfStream = require('end-of-stream')
 
@@ -47,10 +46,8 @@ async function pingPeer ({ rpc, kitsunetPeer, peerInfo }) {
   }, peerPingInterval)
 }
 
-class KitsunetStatsTracker extends SafeEventEmitter {
+class KitsunetStatsTracker {
   constructor ({ kitsunetPeer, node }) {
-    super()
-
     assert(node, 'node required')
     assert(node, 'kitsunetPeer required')
 
