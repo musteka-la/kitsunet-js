@@ -35,7 +35,9 @@ class Node extends Libp2p {
         relay: {
           enabled: true
         },
-        dht: {},
+        dht: {
+          enabledDiscovery: true,
+        },
         EXPERIMENTAL: {
           dht: true,
         },
