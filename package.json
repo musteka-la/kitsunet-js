@@ -35,6 +35,7 @@
     "kitsunet-slice-tracker": "github:MetaMask/kitsunet-slice-tracker.git#master",
     "libp2p": "~0.23.1",
     "libp2p-bootstrap": "~0.9.3",
+    "libp2p-kad-dht": "^0.12.0",
     "libp2p-mdns": "^0.12.0",
     "libp2p-mplex": "~0.8.2",
     "libp2p-multicast-experiment": "MetaMask/js-libp2p-multicast-conditional.git#master",

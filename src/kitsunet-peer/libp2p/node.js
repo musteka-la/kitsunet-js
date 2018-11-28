@@ -4,6 +4,7 @@ const Multiplex = require('libp2p-mplex')
 const SPDY = require('libp2p-spdy')
 const SECIO = require('libp2p-secio')
 const Libp2p = require('libp2p')
+const DHT = require('libp2p-kad-dht')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 
 const createMulticast = require('libp2p-multicast-experiment/src/api')
@@ -27,12 +28,17 @@ class Node extends Libp2p {
         ],
         connEncryption: [
           SECIO
-        ]
+        ],
+        dht: DHT,
       },
       config: {
         relay: {
           enabled: true
-        }
+        },
+        dht: {},
+        EXPERIMENTAL: {
+          dht: true,
+        },
       }
     }
 
