@@ -102,7 +102,7 @@ class Kitsunet extends SafeEventEmitter {
     }
   }
 
-  _registeSlices () {
+  _registerSlices () {
     this._slices.forEach(async ({ path, depth, isStorage }) => {
       this._trackSlice({ path, depth, isStorage })
     })
@@ -110,7 +110,7 @@ class Kitsunet extends SafeEventEmitter {
 
   whatchSlices (slices) {
     slices.forEach((s) => this._slices.add(s))
-    this._registeSlices()
+    this._registerSlices()
   }
 
   async start () {
@@ -119,7 +119,7 @@ class Kitsunet extends SafeEventEmitter {
     await this._sliceTracker.start()
     await this._stats.start()
 
-    this._registeSlices()
+    this._registerSlices()
   }
 
   async stop () {
