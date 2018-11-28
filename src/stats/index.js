@@ -57,16 +57,14 @@ class KitsunetStatsTracker extends SafeEventEmitter {
     this.started = false
     this.node = node
 
-    kitsunetPeer.on('kitsunet:connect', (peerInfo) => {
-      this.addPeer(peerInfo)
-      log(`peer connected ${peerInfo.id.toB58String()}`)
-    })
-
     kitsunetPeer.on('kitsunet:disconnect', (peerInfo) => {
       this.removePeer(peerInfo)
     })
 
     kitsunetPeer.on('kitsunet:connection', (conn) => {
+      this.addPeer(peerInfo)
+      log(`kitsunet peer connected ${peerInfo.id.toB58String()}`)
+
       conn.getPeerInfo((err, peerInfo) => {
         if (err) {
           return log(err)
