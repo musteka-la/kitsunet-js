@@ -1,0 +1,12 @@
+patch-package
+--- a/node_modules/ethereumjs-vm/dist/hooked.js
++++ b/node_modules/ethereumjs-vm/dist/hooked.js
+@@ -34,7 +34,7 @@ function createHookedVm(opts, hooks) {
+ 
+   var vm = new VM(opts);
+   vm.stateManager._lookupStorageTrie = createAccountStorageTrie;
+-  vm.stateManager.cache._lookupAccount = loadAccount;
++  vm.stateManager._cache._lookupAccount = loadAccount;
+   vm.stateManager.getContractCode = codeStore.get.bind(codeStore);
+   vm.stateManager.setContractCode = codeStore.set.bind(codeStore);
+ 

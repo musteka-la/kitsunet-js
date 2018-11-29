@@ -26,31 +26,29 @@ class Kitsunet extends SafeEventEmitter {
     this._sliceStreams = new Map()
     this._slices = new Set(slices)
 
-    if (this._isBridge) {
-      this._sliceTracker.on('track', (slice) => {
-        log(`got slice to track ${slice}`)
-        const [path, depth, root] = slice.split('-')
-        if (root) {
-          this._fetchSlice({ path, depth, root })
-        }
+    this._sliceTracker.on('track', (slice) => setImmediate(() => {
+      log(`got slice to track ${slice}`)
+      const [path, depth, root] = slice.split('-')
+      if (root) {
+        this._fetchSlice({ path, depth, root })
+      }
 
-        this._trackSlice({ path, depth })
-      })
+      this._trackSlice({ path, depth })
+    }))
 
-      this._sliceTracker.on('track-storage', (slice) => {
-        log(`got storage slice to track ${slice}`)
-        const [path, depth, root] = slice.split('-')
-        if (root) {
-          this._fetchSlice({ path, depth, root, isStorage: true })
-        }
+    this._sliceTracker.on('track-storage', (slice) => setImmediate(() => {
+      log(`got storage slice to track ${slice}`)
+      const [path, depth, root] = slice.split('-')
+      if (root) {
+        this._fetchSlice({ path, depth, root, isStorage: true })
+      }
 
-        this._trackSlice({ path, depth, isStorage: true })
-      })
-    }
+      this._trackSlice({ path, depth, isStorage: true })
+    }))
 
     this._stats = new KitsunetStatsTracker({
       node: this._node,
-      kitsunetPeer: this._kitsunetPeer,
+      kitsunetPeer: this._kitsunetPeer
     })
   }
 
@@ -96,10 +94,10 @@ class Kitsunet extends SafeEventEmitter {
       })
 
       this._sliceStreams.set(`${path}-${depth}`, fetcher)
-    } else {
-      // subscribe to slices
-      this._sliceTracker.subscribe({ path, depth, isStorage: !!isStorage })
     }
+
+    // subscribe to slices
+    this._sliceTracker.subscribe({ path, depth, isStorage: !!isStorage })
   }
 
   _registerSlices () {
