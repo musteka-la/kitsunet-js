@@ -29,7 +29,7 @@ class Node extends Libp2p {
         connEncryption: [
           SECIO
         ],
-        dht: DHT,
+        dht: DHT
       },
       config: {
         relay: {
@@ -37,8 +37,8 @@ class Node extends Libp2p {
         },
         dht: {},
         EXPERIMENTAL: {
-          dht: true,
-        },
+          dht: true
+        }
       }
     }
 

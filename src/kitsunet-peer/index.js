@@ -9,6 +9,7 @@ const log = require('debug')('kitsunet:node')
 const proto = '/kitsunet/test/0.0.1'
 
 const MAX_PEERS = 25
+const MAX_PEERS_DISCOVERED = 250
 const INTERVAL = 60 * 1000 // every minute
 
 class KitsunetPeer extends SafeEventEmitter {
@@ -46,6 +47,7 @@ class KitsunetPeer extends SafeEventEmitter {
     })
 
     node.on('peer:discovery', (peerInfo) => {
+      if (this.discovered.size > MAX_PEERS_DISCOVERED) return
       this.discovered.set(peerInfo.id.toB58String(), peerInfo)
       setImmediate(() => this.emit('kitsunet:discovery', peerInfo))
       log(`peer discovered ${peerInfo.id.toB58String()}`)

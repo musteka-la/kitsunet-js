@@ -36,21 +36,19 @@ class Kitsunet extends SafeEventEmitter {
       this._trackSlice({ path, depth })
     }))
 
-    this._sliceTracker.on('track-storage', (slice) => setImmediate(() => {
-      log(`got storage slice to track ${slice}`)
-      const [path, depth, root] = slice.split('-')
-      if (root) {
-        this._fetchSlice({ path, depth, root, isStorage: true })
-      }
+    this._sliceTracker.on('track-storage', (slice) => {
+        log(`got storage slice to track ${slice}`)
+        const [path, depth, root] = slice.split('-')
+        if (root && this._bridgeRpc) {
+          this._fetchSlice({ path, depth, root, isStorage: true })
+        }
 
       this._trackSlice({ path, depth, isStorage: true })
-    }))
+    })
 
     this._stats = new KitsunetStatsTracker({
       node: this._node,
-      kitsunetPeer: this._kitsunetPeer,
-      blockTracker: this._blockTracker,
-      sliceTracker: this._sliceTracker,
+      kitsunetPeer: this._kitsunetPeer
     })
   }
 
