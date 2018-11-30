@@ -15,11 +15,11 @@ const DEFAULT_SUBMIT_INTERVAL = 15 * sec
 
 const clientState = {
   // kitsunet peers
-  peers: {}, // {}
-  // libp2p stats
+  peers: {},
   multicast: [],
+  // kitsunet blocks + slices
   block: {},
-  blockTrackerEnabled: false
+  slices: {},
 }
 
 const pingWithTimeout = require('./network/pingWithTimeout')
@@ -47,7 +47,7 @@ async function pingPeer ({ rpc, kitsunetPeer, peerInfo }) {
 }
 
 class KitsunetStatsTracker {
-  constructor ({ kitsunetPeer, node }) {
+  constructor ({ kitsunetPeer, node, blockTracker, sliceTracker }) {
     assert(node, 'node required')
     assert(node, 'kitsunetPeer required')
 
@@ -78,6 +78,28 @@ class KitsunetStatsTracker {
         pingPeer({ rpc: rpcClient, kitsunetPeer, peerInfo })
       })
     })
+
+    // record latest block
+    blockTracker.on('latest', (block) => {
+      const { number, stateRoot } = block
+      clientState.block = {
+        number,
+        stateRoot,
+        found: Date.now(),
+      }
+    })
+
+    // record latest slice
+    sliceTracker.on('latest', (slice) => {
+      const sliceId = slice.sliceId
+      const [stem, depth, root] = sliceId.split('-')
+      const sliceGroup = `${stem}-${depth}`
+      clientState.slices[sliceGroup] = {
+        root,
+        found: Date.now(),
+      }
+    })
+
   }
 
   start () {

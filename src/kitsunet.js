@@ -48,7 +48,9 @@ class Kitsunet extends SafeEventEmitter {
 
     this._stats = new KitsunetStatsTracker({
       node: this._node,
-      kitsunetPeer: this._kitsunetPeer
+      kitsunetPeer: this._kitsunetPeer,
+      blockTracker: this._blockTracker,
+      sliceTracker: this._sliceTracker,
     })
   }
 
