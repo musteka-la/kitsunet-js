@@ -15,7 +15,7 @@ const options = yargs
       type: 'array'
     },
     'libp2p-bootstrap': {
-      alias: 'a',
+      alias: 'A',
       description: 'list of libp2p bootstrap nodes',
       requiresArg: true,
       required: false,

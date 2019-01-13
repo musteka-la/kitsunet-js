@@ -1,10 +1,10 @@
 'use strict'
 
-const SafeEventEmitter = require('safe-event-emitter')
 const pify = require('pify')
+const SafeEventEmitter = require('safe-event-emitter')
+const KitsunetStatsTracker = require('kitsunet-telemetry')
 
 const KitsunetPeer = require('./kitsunet-peer')
-const KitsunetStatsTracker = require('./stats')
 const sliceFetcher = require('./slice-fetcher')
 
 const log = require('debug')('kitsunet:kitsunet-client')
@@ -37,11 +37,11 @@ class Kitsunet extends SafeEventEmitter {
     }))
 
     this._sliceTracker.on('track-storage', (slice) => {
-        log(`got storage slice to track ${slice}`)
-        const [path, depth, root] = slice.split('-')
-        if (root && this._bridgeRpc) {
-          this._fetchSlice({ path, depth, root, isStorage: true })
-        }
+      log(`got storage slice to track ${slice}`)
+      const [path, depth, root] = slice.split('-')
+      if (root && this._bridgeRpc) {
+        this._fetchSlice({ path, depth, root, isStorage: true })
+      }
 
       this._trackSlice({ path, depth, isStorage: true })
     })

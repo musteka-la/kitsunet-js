@@ -6,10 +6,15 @@ const ethUtil = require('ethereumjs-util')
 
 const createNode = require('./kitsunet-peer/libp2p')
 
-const log = require('debug')('kitsunet:factory')
+// const log = require('debug')('kitsunet:factory')
 
 module.exports = async function ({ options, identity, addrs }) {
-  const node = await createNode({ identity, addrs, bootstrap: options.libp2pBootstrap })
+  const node = await createNode({
+    identity,
+    addrs,
+    bootstrap: options.libp2pBootstrap || []
+  })
+
   const providerTools = createEthProvider({
     node,
     rpcUrl: options.rpcUrl,
@@ -29,10 +34,20 @@ module.exports = async function ({ options, identity, addrs }) {
     }))
   }
 
-  let slices = paths.map((p) => { return { path: String(p), depth: Number(options.sliceDepth) } })
+  let slices = paths.map((p) => {
+    return {
+      path: String(p),
+      depth: Number(options.sliceDepth)
+    }
+  })
   if (options.sliceFile && options.sliceFile.length > 0) {
     const sclicesFile = require(options.sliceFile)
-    slices = slices.concat(sclicesFile.slices.map((p) => { return { path: String(p), depth: Number(options.sliceDepth) } }))
+    slices = slices.concat(sclicesFile.slices.map((p) => {
+      return {
+        path: String(p),
+        depth: Number(options.sliceDepth)
+      }
+    }))
   }
 
   const kitsunet = new Kitsunet({

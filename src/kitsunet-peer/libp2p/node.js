@@ -7,7 +7,7 @@ const Libp2p = require('libp2p')
 const DHT = require('libp2p-kad-dht')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 
-const createMulticast = require('libp2p-multicast-experiment/src/api')
+const createMulticast = require('libp2p-multicast-conditional/src/api')
 
 const parallel = require('async/parallel')
 
