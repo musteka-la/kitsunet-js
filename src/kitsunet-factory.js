@@ -19,7 +19,7 @@ module.exports = async function ({ options, identity, addrs }) {
     node,
     rpcUrl: options.rpcUrl,
     depth: options.sliceDepth,
-    rpcEnableTracker: options.rpcEnableTracker
+    rpcEnableTracker: Boolean(options.rpcEnableTracker)
   })
 
   const { blockTracker, sliceTracker } = providerTools

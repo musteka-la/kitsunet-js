@@ -28,16 +28,16 @@ class Node extends Libp2p {
         ],
         connEncryption: [
           SECIO
-        ],
-        dht: DHT
+        ]
+        // dht: DHT
       },
       config: {
         relay: {
           enabled: true
         },
-        dht: {},
+        // dht: {},
         EXPERIMENTAL: {
-          dht: true
+          // dht: true
         }
       }
     }

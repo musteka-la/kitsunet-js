@@ -14,8 +14,8 @@ class Kitsunet extends SafeEventEmitter {
     super()
     this._node = node
     this._kitsunetPeer = new KitsunetPeer({ node, interval: 10000 })
-    this._isBridge = isBridge
-    this._bridgeRpc = bridgeRpc
+    this._isBridge = Boolean(isBridge)
+    this._bridgeRpcUrl = bridgeRpc
     this._blockTracker = blockTracker
     this._sliceTracker = sliceTracker
 
@@ -29,7 +29,7 @@ class Kitsunet extends SafeEventEmitter {
     this._sliceTracker.on('track', (slice) => setImmediate(() => {
       log(`got slice to track ${slice}`)
       const [path, depth, root] = slice.split('-')
-      if (root) {
+      if (root && this._bridgeRpcUrl) {
         this._fetchSlice({ path, depth, root })
       }
 
@@ -39,7 +39,7 @@ class Kitsunet extends SafeEventEmitter {
     this._sliceTracker.on('track-storage', (slice) => {
       log(`got storage slice to track ${slice}`)
       const [path, depth, root] = slice.split('-')
-      if (root && this._bridgeRpc) {
+      if (root && this._bridgeRpcUrl) {
         this._fetchSlice({ path, depth, root, isStorage: true })
       }
 
@@ -65,7 +65,7 @@ class Kitsunet extends SafeEventEmitter {
   async _fetchSlice ({path, depth, root, isStorage}) {
     try {
       const slice = await sliceFetcher.fetcher({
-        uri: this._bridgeRpc,
+        uri: this._bridgeRpcUrl,
         slice: { path, depth, root, isStorage }
       })
 
@@ -84,7 +84,7 @@ class Kitsunet extends SafeEventEmitter {
 
       // TODO: the rpc endpoint should support batching of slices
       const fetcher = sliceFetcher.sliceTracker({
-        uri: this._bridgeRpc,
+        uri: this._bridgeRpcUrl,
         tracker: this._blockTracker,
         slice: { path, depth, isStorage }
       }, (err, slice) => {

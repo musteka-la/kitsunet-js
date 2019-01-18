@@ -1,31 +1,38 @@
 const Eth = require('ethjs')
 const EthQuery = require('eth-query')
-const KitsunetTracker = require('kitsunet-block-tracker')
+const KitsunetBlockTracker = require('kitsunet-block-tracker')
 const SliceTracker = require('kitsunet-slice-tracker')
 const BlockTracker = require('eth-block-tracker')
 
 const JsonRpcEngine = require('json-rpc-engine')
-const asMiddleware = require('json-rpc-engine/src/asMiddleware')
 const createFetchMiddleware = require('eth-json-rpc-middleware/fetch')
 const createVmMiddleware = require('eth-json-rpc-middleware/vm')
+const asMiddleware = require('json-rpc-engine/src/asMiddleware')
 const createSliceMiddleware = require('eth-json-rpc-kitsunet-slice')
+
+const scaffold = require('eth-json-rpc-middleware/scaffold')
 
 module.exports = createEthSliceProvider
 
-function createRpcProviders ({rpcUrl, provider, rpcEnableTracker}) {
+function createRpcProviders ({rpcUrl, rpcEnableTracker}) {
   if (!rpcUrl) { return {} }
+
+  // create higher level
+  const engine = new JsonRpcEngine()
+  const provider = providerFromEngine(engine)
 
   // create data source
   const { dataEngine } = createDataEngine({ rpcUrl })
   const dataProvider = providerFromEngine(dataEngine)
-  const ethQuery = new EthQuery(provider)
+  const rpcEthQuery = new EthQuery(provider)
 
-  let blockTracker
-  if (rpcEnableTracker) {
-    blockTracker = new BlockTracker({ provider: dataProvider, pollingInterval: 8e3 })
-  }
+  engine.push(asMiddleware(dataEngine))
 
-  return { dataEngine, dataProvider, blockTracker, ethQuery }
+  const blockTracker = rpcEnableTracker
+    ? new BlockTracker({provider: dataProvider, pollingInterval: 8e3})
+    : undefined
+
+  return { blockTracker, rpcEthQuery }
 }
 
 function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
@@ -33,39 +40,46 @@ function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
   const engine = new JsonRpcEngine()
   const provider = providerFromEngine(engine)
 
-  const {
-    blockTracker,
-    dataEngine,
-    dataProvider,
-    ethQuery
-  } = createRpcProviders({ rpcUrl, provider, rpcEnableTracker })
+  const { blockTracker, rpcEthQuery } = createRpcProviders({ rpcUrl, provider, rpcEnableTracker })
 
-  // if you pass in a blockTracker it will
-  // pass those blocks into the kitsunet network
-  const kitsunetTracker = new KitsunetTracker({
+  // if a blockTracker is provided it will fetch and
+  // publish blocks on the kitsunet network
+  const kitsunetBlockTracker = new KitsunetBlockTracker({
     blockTracker,
     node,
-    ethQuery
+    ethQuery: rpcEthQuery
   })
 
-  engine.push(createVmMiddleware({ provider }))
-
-  const sliceTracker = new SliceTracker({ node, blockTracker: kitsunetTracker })
+  const sliceTracker = new SliceTracker({ node, blockTracker: kitsunetBlockTracker })
   const eth = new Eth(provider)
 
   // add handlers
   engine.push(createSliceMiddleware({ eth, sliceTracker, depth }))
-  engine.push(asMiddleware(dataEngine))
+  engine.push(createBlockMiddleware({ blockTracker: kitsunetBlockTracker }))
+  engine.push(createVmMiddleware({ provider }))
 
   return {
     engine,
     provider,
-    dataEngine,
-    dataProvider,
-    blockTracker: kitsunetTracker,
+    blockTracker: kitsunetBlockTracker,
     sliceTracker,
     eth
   }
+}
+
+function createBlockMiddleware ({ blockTracker }) {
+  return scaffold({
+    eth_getBlockByNumber: async (req, res, next, end) => {
+      const [blockRef] = req.params
+      if (blockRef === 'latest') {
+        res.result = await blockTracker.getLatestBlock()
+      } else {
+        res.result = await blockTracker.getBlockByNumber(blockRef, false)
+      }
+
+      end()
+    }
+  })
 }
 
 function createDataEngine ({ rpcUrl }) {
