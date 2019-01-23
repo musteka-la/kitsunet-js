@@ -6,7 +6,7 @@ const pify = require('pify')
 
 const log = require('debug')('kitsunet:node')
 
-const proto = '/kitsunet/test/0.0.1'
+const proto = '/kitsunet/test/0.0.1' // TODO: change to `/kitsunet/1.0.0`
 
 const MAX_PEERS = 25
 const MAX_PEERS_DISCOVERED = 250

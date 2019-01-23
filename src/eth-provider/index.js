@@ -1,4 +1,3 @@
-const Eth = require('ethjs')
 const EthQuery = require('eth-query')
 const KitsunetBlockTracker = require('kitsunet-block-tracker')
 const SliceTracker = require('kitsunet-slice-tracker')
@@ -7,6 +6,7 @@ const BlockTracker = require('eth-block-tracker')
 const JsonRpcEngine = require('json-rpc-engine')
 const createFetchMiddleware = require('eth-json-rpc-middleware/fetch')
 const createVmMiddleware = require('eth-json-rpc-middleware/vm')
+const createBlockRefRewriteMiddleware = require('eth-json-rpc-middleware/block-ref-rewrite')
 const asMiddleware = require('json-rpc-engine/src/asMiddleware')
 const createSliceMiddleware = require('eth-json-rpc-kitsunet-slice')
 
@@ -51,19 +51,19 @@ function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
   })
 
   const sliceTracker = new SliceTracker({ node, blockTracker: kitsunetBlockTracker })
-  const eth = new Eth(provider)
 
   // add handlers
-  engine.push(createSliceMiddleware({ eth, sliceTracker, depth }))
+  const ethQuery = new EthQuery(provider)
+  engine.push(createBlockRefRewriteMiddleware({ blockTracker: kitsunetBlockTracker }))
   engine.push(createBlockMiddleware({ blockTracker: kitsunetBlockTracker }))
+  engine.push(createSliceMiddleware({ ethQuery, sliceTracker, depth }))
   engine.push(createVmMiddleware({ provider }))
 
   return {
     engine,
     provider,
     blockTracker: kitsunetBlockTracker,
-    sliceTracker,
-    eth
+    sliceTracker
   }
 }
 
