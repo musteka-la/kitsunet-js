@@ -7,6 +7,7 @@ const JsonRpcEngine = require('json-rpc-engine')
 const createFetchMiddleware = require('eth-json-rpc-middleware/fetch')
 const createVmMiddleware = require('eth-json-rpc-middleware/vm')
 const createBlockRefRewriteMiddleware = require('eth-json-rpc-middleware/block-ref-rewrite')
+const createBlockCacheMiddleware = require('eth-json-rpc-middleware/block-cache')
 const asMiddleware = require('json-rpc-engine/src/asMiddleware')
 const createSliceMiddleware = require('eth-json-rpc-kitsunet-slice')
 
@@ -54,6 +55,7 @@ function createEthSliceProvider ({ rpcUrl, node, depth, rpcEnableTracker }) {
 
   // add handlers
   const ethQuery = new EthQuery(provider)
+  engine.push(createBlockCacheMiddleware({ blockTracker: kitsunetBlockTracker, provider }))
   engine.push(createBlockRefRewriteMiddleware({ blockTracker: kitsunetBlockTracker }))
   engine.push(createBlockMiddleware({ blockTracker: kitsunetBlockTracker }))
   engine.push(createSliceMiddleware({ ethQuery, sliceTracker, depth }))
