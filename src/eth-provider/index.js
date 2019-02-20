@@ -15,7 +15,7 @@ const scaffold = require('eth-json-rpc-middleware/scaffold')
 
 module.exports = createEthSliceProvider
 
-function createRpcProviders ({rpcUrl, rpcEnableTracker}) {
+function createRpcProviders ({ rpcUrl, rpcEnableTracker }) {
   if (!rpcUrl) { return {} }
 
   // create higher level
@@ -30,7 +30,7 @@ function createRpcProviders ({rpcUrl, rpcEnableTracker}) {
   engine.push(asMiddleware(dataEngine))
 
   const blockTracker = rpcEnableTracker
-    ? new BlockTracker({provider: dataProvider, pollingInterval: 8e3})
+    ? new BlockTracker({ provider: dataProvider, pollingInterval: 8e3 })
     : undefined
 
   return { blockTracker, rpcEthQuery }

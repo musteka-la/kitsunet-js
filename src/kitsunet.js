@@ -1,21 +1,25 @@
 'use strict'
 
 const pify = require('pify')
-const SafeEventEmitter = require('safe-event-emitter')
-const KitsunetStatsTracker = require('kitsunet-telemetry')
+const EE = require('safe-event-emitter')
+// const KitsunetStatsTracker = require('kitsunet-telemetry')
 
-const KitsunetPeer = require('./kitsunet-peer')
+const KitsunetNode = require('./kitsunet-node')
+const KitsunetBridge = require('./kitsunet-bridge')
 const sliceFetcher = require('./slice-fetcher')
+const TYPES = require('./constants').TYPES
 
 const log = require('debug')('kitsunet:kitsunet-client')
 
-class Kitsunet extends SafeEventEmitter {
+class Kitsunet extends EE {
   constructor ({ node, isBridge, bridgeRpc, blockTracker, sliceTracker, slices }) {
     super()
     this._node = node
-    this._kitsunetPeer = new KitsunetPeer({ node, interval: 10000 })
+    this._kitsunetNode = new KitsunetNode({ node, interval: 10000 })
+    this._kitsunetBridge = new KitsunetBridge({ bridgeUrl: bridgeRpc })
+    this._remotePeers = new Map()
+
     this._isBridge = Boolean(isBridge)
-    this._bridgeRpcUrl = bridgeRpc
     this._blockTracker = blockTracker
     this._sliceTracker = sliceTracker
 
@@ -23,8 +27,30 @@ class Kitsunet extends SafeEventEmitter {
     this._node.start = pify(node.start.bind(node))
     this._node.stop = pify(node.stop.bind(node))
 
-    this._sliceStreams = new Map()
+    this.latestBlock = null
+    this.bestBlock = null
+    this.subscriptions = []
+    this.blackListed = []
+    this.noteType = TYPES.NORMAL
+
+    this._blockTracker.on('latest', (block) => {
+      // TODO: figure out whats the best block
+      this.latestBlock = this.bestBlock = block
+    })
+
     this._slices = new Set(slices)
+
+    this._kitsunetNode.on('kitsunet:peer', async (peer) => {
+      peer.rpc.hello({
+        id: this._kitsunetNode.id,
+        noteType: this.noteType,
+        bestBlock: this.bestBlock,
+        subscriptions: this._slices,
+        latestBlock: this.latestBlock,
+        blackListed: this.blackListed
+      })
+      this._remotePeers.set(peer.id, peer)
+    })
 
     this._sliceTracker.on('track', (slice) => setImmediate(() => {
       log(`got slice to track ${slice}`)
@@ -46,34 +72,22 @@ class Kitsunet extends SafeEventEmitter {
       this._trackSlice({ path, depth, isStorage: true })
     })
 
-    this._stats = new KitsunetStatsTracker({
-      node: this._node,
-      kitsunetPeer: this._kitsunetPeer,
-      blockTracker,
-      sliceTracker
-    })
+    // this._stats = new KitsunetStatsTracker({
+    //   node: this._node
+    // })
   }
 
   get peerInfo () {
     return this._node.peerInfo
   }
 
-  get kitsunetPeer () {
-    return this._kitsunetPeer
+  get kitsunetNode () {
+    return this._kitsunetNode
   }
 
-  async _fetchSlice ({path, depth, root, isStorage}) {
-    try {
-      const slice = await sliceFetcher.fetcher({
-        uri: this._bridgeRpcUrl,
-        slice: { path, depth, root, isStorage }
-      })
-
-      this._sliceTracker.publish(slice)
-    } catch (err) {
-      log(err)
-      throw err
-    }
+  async _fetchSlice ({ path, depth, root, isStorage }) {
+    const slice = this.KitsunetBridge.fetchSlice({ path, depth, root, isStorage })
+    this._sliceTracker.publish(slice)
   }
 
   _trackSlice ({ path, depth, isStorage }) {
@@ -85,7 +99,7 @@ class Kitsunet extends SafeEventEmitter {
       // TODO: the rpc endpoint should support batching of slices
       const fetcher = sliceFetcher.sliceTracker({
         uri: this._bridgeRpcUrl,
-        tracker: this._blockTracker,
+        blockTracker: this._blockTracker,
         slice: { path, depth, isStorage }
       }, (err, slice) => {
         if (err) {
@@ -117,7 +131,7 @@ class Kitsunet extends SafeEventEmitter {
     await this._node.start()
     await this._blockTracker.start()
     await this._sliceTracker.start()
-    await this._stats.start()
+    // await this._stats.start()
 
     this._registerSlices()
   }
@@ -126,7 +140,7 @@ class Kitsunet extends SafeEventEmitter {
     await this._node.stop()
     await this._blockTracker.stop()
     await this._sliceTracker.stop()
-    await this._stats.stop()
+    // await this._stats.stop()
   }
 
   getState () {

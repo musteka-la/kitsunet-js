@@ -28,6 +28,7 @@ const options = yargs
       required: false,
       type: 'array'
     },
+    // TODO: make this required if in bridge mode
     'rpc-url': {
       alias: 'r',
       description: 'bridge rpc url <http[s]://host:port>',
