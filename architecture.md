@@ -68,7 +68,7 @@ As stated above, exchanging data over kitsunet is accomplished using a multicast
 One important open question is how to distribute slices across nodes in the network. We need to make it so that slices are evenly distributed across all nodes in a constantly changing mesh network. A few ideas come to mind:
 
 - Get the slice for all accounts that we care about and use some number of random samples to help distribute the rest of the state. (lets not use this)
-- Get the slice for all accounts that we care about and use consistent hashing to store the "closest" slices based on some numeric metric distance mapped on to the the peer's id. This should scale well in networks where nodes join and leave frequently. (lets use something like this)
+- Get the slice for all accounts that we care about and use consistent hashing to store the "closest" slices based on some notion of distance mapped on to the the peer's id. This should scale well in networks where nodes join and leave frequently. (lets use something like this)
 
 ### Multicast protocol
 

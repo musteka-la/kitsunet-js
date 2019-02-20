@@ -1,19 +1,21 @@
 'use strict'
 
 const pify = require('pify')
-const SafeEventEmitter = require('safe-event-emitter')
-const KitsunetStatsTracker = require('kitsunet-telemetry')
+const EE = require('safe-event-emitter')
+// const KitsunetStatsTracker = require('kitsunet-telemetry')
 
-const KitsunetPeer = require('./kitsunet-peer')
+const KitsunetNode = require('./kitsunet-node')
 const sliceFetcher = require('./slice-fetcher')
+const TYPES = require('./constants').TYPES
 
 const log = require('debug')('kitsunet:kitsunet-client')
 
-class Kitsunet extends SafeEventEmitter {
+class Kitsunet extends EE {
   constructor ({ node, isBridge, bridgeRpc, blockTracker, sliceTracker, slices }) {
     super()
     this._node = node
-    this._kitsunetPeer = new KitsunetPeer({ node, interval: 10000 })
+    this._kitsunetNode = new KitsunetNode({ node, interval: 10000 })
+    this._remotePeers = new Map()
     this._isBridge = Boolean(isBridge)
     this._bridgeRpcUrl = bridgeRpc
     this._blockTracker = blockTracker
@@ -23,8 +25,31 @@ class Kitsunet extends SafeEventEmitter {
     this._node.start = pify(node.start.bind(node))
     this._node.stop = pify(node.stop.bind(node))
 
+    this.latestBlock = null
+    this.bestBlock = null
+    this.subscriptions = []
+    this.blackListed = []
+    this.noteType = TYPES.NORMAL
+
+    this._blockTracker.on('latest', (block) => {
+      // TODO: figure out whats the best block
+      this.latestBlock = this.bestBlock = block
+    })
+
     this._sliceStreams = new Map()
     this._slices = new Set(slices)
+
+    this._kitsunetNode.on('kitsunet:peer', async (peer) => {
+      peer.rpc.hello({
+        id: this._kitsunetNode.id,
+        noteType: this.noteType,
+        bestBlock: this.bestBlock,
+        subscriptions: this._slices,
+        latestBlock: this.latestBlock,
+        blackListed: this.blackListed
+      })
+      this._remotePeers.set(peer.id, peer)
+    })
 
     this._sliceTracker.on('track', (slice) => setImmediate(() => {
       log(`got slice to track ${slice}`)
@@ -46,20 +71,17 @@ class Kitsunet extends SafeEventEmitter {
       this._trackSlice({ path, depth, isStorage: true })
     })
 
-    this._stats = new KitsunetStatsTracker({
-      node: this._node,
-      kitsunetPeer: this._kitsunetPeer,
-      blockTracker,
-      sliceTracker
-    })
+    // this._stats = new KitsunetStatsTracker({
+    //   node: this._node
+    // })
   }
 
   get peerInfo () {
     return this._node.peerInfo
   }
 
-  get kitsunetPeer () {
-    return this._kitsunetPeer
+  get kitsunetNode () {
+    return this._kitsunetNode
   }
 
   async _fetchSlice ({path, depth, root, isStorage}) {
@@ -117,7 +139,7 @@ class Kitsunet extends SafeEventEmitter {
     await this._node.start()
     await this._blockTracker.start()
     await this._sliceTracker.start()
-    await this._stats.start()
+    // await this._stats.start()
 
     this._registerSlices()
   }
@@ -126,7 +148,7 @@ class Kitsunet extends SafeEventEmitter {
     await this._node.stop()
     await this._blockTracker.stop()
     await this._sliceTracker.stop()
-    await this._stats.stop()
+    // await this._stats.stop()
   }
 
   getState () {

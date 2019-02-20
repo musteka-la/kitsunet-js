@@ -4,9 +4,7 @@ const Kitsunet = require('./kitsunet')
 const createEthProvider = require('./eth-provider')
 const ethUtil = require('ethereumjs-util')
 
-const createNode = require('./kitsunet-peer/libp2p')
-
-// const log = require('debug')('kitsunet:factory')
+const createNode = require('./kitsunet-node/libp2p')
 
 module.exports = async function ({ options, identity, addrs }) {
   const node = await createNode({
