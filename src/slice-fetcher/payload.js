@@ -5,8 +5,6 @@ module.exports = ({ path, depth, root, isStorage }) => {
     root = `0x${root}`
   }
 
-  // TODO: WTF is this
-  // FIXME: rewrite without explicit casting...
   return {
     jsonrpc: '2.0',
     method: 'debug_getSlice',

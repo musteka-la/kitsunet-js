@@ -7,6 +7,10 @@ const EE = require('safe-event-emitter')
 const KitsunetNode = require('./kitsunet-node')
 const KitsunetBridge = require('./kitsunet-bridge')
 const sliceFetcher = require('./slice-fetcher')
+
+const { Peer, RemotePeer } = require('./peer')
+const { createRpc } = require('./rpc')
+
 const TYPES = require('./constants').TYPES
 
 const log = require('debug')('kitsunet:kitsunet-client')
@@ -18,6 +22,7 @@ class Kitsunet extends EE {
     this._kitsunetNode = new KitsunetNode({ node, interval: 10000 })
     this._kitsunetBridge = new KitsunetBridge({ bridgeUrl: bridgeRpc })
     this._remotePeers = new Map()
+    this._peer = new Peer(this._kitsunetNode.id)
 
     this._isBridge = Boolean(isBridge)
     this._blockTracker = blockTracker
@@ -40,16 +45,13 @@ class Kitsunet extends EE {
 
     this._slices = new Set(slices)
 
-    this._kitsunetNode.on('kitsunet:peer', async (peer) => {
-      peer.rpc.hello({
-        id: this._kitsunetNode.id,
-        noteType: this.noteType,
-        bestBlock: this.bestBlock,
-        subscriptions: this._slices,
-        latestBlock: this.latestBlock,
-        blackListed: this.blackListed
-      })
-      this._remotePeers.set(peer.id, peer)
+    this._kitsunetNode.on('kitsunet:peer', async ({ id, conn }) => {
+      const remote = new RemotePeer(id)
+      const rpc = createRpc(this.peer, remote, conn)
+
+      remote.rpc = rpc
+      this._remotePeers.set(id, remote)
+      rpc.hello()
     })
 
     this._sliceTracker.on('track', (slice) => setImmediate(() => {
