@@ -2,11 +2,13 @@
 
 const EE = require('safe-event-emitter')
 
+const { TYPES } = require('../constants')
+
 class Peer extends EE {
   constructor (id) {
     super()
     this._id = id // peer id
-    this._nodeType = null
+    this._nodeType = TYPES.NORMAL
     this._bestBlock = null
     this._blackList = []
     this._subscriptions = []

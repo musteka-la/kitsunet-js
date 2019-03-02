@@ -1,14 +1,14 @@
 'use strict'
 
-const pify = require('pify')
+const promisify = require('pify')
 
 const WS = require('libp2p-websockets')
 const TCP = require('libp2p-tcp')
 const MDNS = require('libp2p-mdns')
 const Bootstrap = require('libp2p-bootstrap')
 
-const PeerInfo = pify(require('peer-info'))
-const PeerId = pify(require('peer-id'))
+const PeerInfo = promisify(require('peer-info'))
+const PeerId = promisify(require('peer-id'))
 const Node = require('./node')
 
 async function createNode ({ identity, addrs, bootstrap }) {

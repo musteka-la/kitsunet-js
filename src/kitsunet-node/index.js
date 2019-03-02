@@ -2,7 +2,6 @@
 
 const assert = require('assert')
 const EE = require('safe-event-emitter')
-const pify = require('pify')
 
 const nextTick = require('async/nextTick')
 
@@ -61,7 +60,7 @@ class KitsunetNode extends EE {
   }
 
   get id () {
-    return this.node.id
+    return this.node.id.toB58String()
   }
 
   async tryConnect () {
@@ -84,7 +83,7 @@ class KitsunetNode extends EE {
     if (!this.connected.has(id)) {
       try {
         this.dialing.set(id, true)
-        const conn = await pify(this.node.dialProtocol).call(this.node, peer, proto)
+        const conn = await this.node.dialProtocol(this.node, peer, proto)
         this.emit('kitsunet:peer', { id, conn })
       } catch (err) {
         log(err)
@@ -95,7 +94,7 @@ class KitsunetNode extends EE {
   }
 
   async hangup (peer) {
-    return pify(this.node.hangUp).call(this.node, peer)
+    return this.node.hangUp(this.node, peer)
   }
 }
 

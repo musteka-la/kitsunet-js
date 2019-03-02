@@ -6,6 +6,7 @@ const SECIO = require('libp2p-secio')
 const Libp2p = require('libp2p')
 const DHT = require('libp2p-kad-dht')
 const defaultsDeep = require('@nodeutils/defaults-deep')
+const promisify = require('pify')
 
 const createMulticast = require('libp2p-multicast-conditional/src/api')
 
@@ -54,10 +55,18 @@ class Node extends Libp2p {
     }
 
     this.multicast = createMulticast(this)
+
+    this.multicast = promisify(this.multicast)
+
+    this.start = promisify(this.start.bind(this))
+    this.stop = promisify(this.stop.bind(this))
+    this.dial = promisify(this.dial.bind(this))
+    this.dialProtocol = promisify(this.dialProtocol.bind(this))
+    this.hangUp = promisify(this.hangUp.bind(this))
   }
 
   get id () {
-    return this.peerInfo.id.toB58String()
+    return this.peerInfo.id
   }
 
   start (callback) {
