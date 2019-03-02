@@ -35,7 +35,7 @@ module.exports = async function ({ options, identity, addrs }) {
   let slices = paths.map((p) => {
     return {
       path: String(p),
-      depth: Number(options.sliceDepth)
+      depth: options.sliceDepth
     }
   })
 
@@ -44,7 +44,7 @@ module.exports = async function ({ options, identity, addrs }) {
     slices = slices.concat(sclicesFile.slices.map((p) => {
       return {
         path: String(p),
-        depth: Number(options.sliceDepth)
+        depth: options.sliceDepth
       }
     }))
   }
