@@ -1,5 +1,5 @@
 # kitsunet-js
-> The kitsunet js implementation
+> The kitsunet client implementation
 
 ### What is this?
 

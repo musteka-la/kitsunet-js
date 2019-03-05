@@ -14,7 +14,7 @@ const MAX_PEERS_DISCOVERED = 250
 const INTERVAL = 60 * 1000 // every minute
 
 class KitsunetNode extends EE {
-  constructor ({ node, maxPeers, interval }) {
+  constructor (node, maxPeers, interval) {
     super()
 
     assert(node, 'node is required')

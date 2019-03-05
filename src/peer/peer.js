@@ -11,7 +11,7 @@ class Peer extends EE {
     this._nodeType = TYPES.NORMAL
     this._bestBlock = null
     this._blackList = []
-    this._subscriptions = []
+    this._slices = []
   }
 
   get id () {
@@ -38,12 +38,12 @@ class Peer extends EE {
     return this._bestBlock
   }
 
-  set subscriptions (subscriptions) {
-    this._subscriptions = subscriptions
+  set slices (subscriptions) {
+    this._slices = subscriptions
   }
 
-  get subscriptions () {
-    return this._subscriptions
+  get slices () {
+    return this._slices
   }
 
   set blackListed (blackList) {

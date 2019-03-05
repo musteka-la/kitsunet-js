@@ -4,9 +4,9 @@ const Kitsunet = require('./kitsunet')
 const createEthProvider = require('./eth-provider')
 const ethUtil = require('ethereumjs-util')
 
-const createNode = require('./kitsunet-node/libp2p')
+const createNode = require('./kitsunet-node/libp2p/runtime')
 
-module.exports = async function ({ options, identity, addrs }) {
+module.exports = async function (options, identity, addrs) {
   const node = await createNode({
     identity,
     addrs,
@@ -49,14 +49,14 @@ module.exports = async function ({ options, identity, addrs }) {
     }))
   }
 
-  const kitsunet = new Kitsunet({
+  const kitsunet = new Kitsunet(
     node,
     blockTracker,
     sliceTracker,
-    bridgeRpc: options.rpcUrl,
-    isBridge: options.sliceBridge,
+    options.rpcUrl,
+    options.sliceBridge,
     slices
-  })
+  )
 
   return { providerTools, kitsunet, node }
 }
