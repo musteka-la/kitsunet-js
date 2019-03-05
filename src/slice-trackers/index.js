@@ -1,9 +1,9 @@
 'use strict'
 
 const BridgeTracker = require('./kitsunet-bridge')
-const PubsubTracker = require('./kitsunet-pubsub')
+const PubSubTracker = require('./kitsunet-pubsub')
 
 module.exports = {
   BridgeTracker,
-  PubsubTracker
+  PubSubTracker
 }

@@ -9,7 +9,7 @@ This interface exposes methods to get periodic updates for slices, either by pol
   - `isTracking` - is this slice being tracked
   - `publishSlice` - propagate the slice through the network
 - Event tracking methods - this interface also assumes that this evens will be emitted
-  - `slice` - a Slice object
+  - `slice` - emitted when a new slice has been discovered
 
 ## Slice Retrieval
 
