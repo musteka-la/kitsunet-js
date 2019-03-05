@@ -1,18 +1,16 @@
 'use strict'
 
 const EE = require('safe-event-emitter')
-const { fetcher } = require('./slice-fetcher')
+const { fetcher } = require('../slice-fetcher')
 
 const log = require('debug')('kitsunet:kitsunet-bridge')
 
 class KitsunetBridge extends EE {
-  constructor ({ bridgeUrl, blockTracker, sliceTracker, node, slices }) {
+  constructor (bridgeUrl, blockTracker, slices) {
     super()
-    this.node = node
     this.slices = slices
     this.bridgeUrl = bridgeUrl
     this.blockTracker = blockTracker
-    this.sliceTracker = sliceTracker
 
     this._sliceStreams = new Map()
     this.fetcher = fetcher(this.bridgeUrl)
@@ -26,17 +24,17 @@ class KitsunetBridge extends EE {
           root: block.stateRoot,
           isStorage
         })
-        this.sliceTracker.publish(fetchedSlice)
+        this.emit('slice', fetchedSlice)
       })
     }
   }
 
-  untrackSlices (slices) {
+  async untrackSlices (slices) {
     slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach((slice) => this.slices.delete(slice))
   }
 
-  trackSlices (slices) {
+  async trackSlices (slices) {
     slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach((slice) => this.slices.add(slice))
   }
@@ -45,11 +43,17 @@ class KitsunetBridge extends EE {
     return this.fetcher({ path, depth, root, isStorage })
   }
 
-  start () {
+  async isTracking (slice) {
+  }
+
+  async publishSlice (slice) {
+  }
+
+  async start () {
     this.blockTracker.on('latest', this._blockHandler)
   }
 
-  stop () {
+  async stop () {
     this.blockTracker.removeListener('latest', this._blockHandler)
   }
 }

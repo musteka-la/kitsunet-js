@@ -11,7 +11,7 @@
     "kitsunet": "src/cli.js"
   },
   "browser": {
-    "./src/kitsunet-node/libp2p/index.js": "./src/kitsunet-node/libp2p/browser.js"
+    "./src/kitsunet-node/libp2p/runtime/index.js": "./src/kitsunet-node/libp2p/runtime/browser.js"
   },
   "author": "Dmitriy Ryajov <dryajov@gmail.com>",
   "license": "MIT",
