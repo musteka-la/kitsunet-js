@@ -3,17 +3,25 @@
 // const KitsunetStatsTracker = require('kitsunet-telemetry')
 
 const KitsunetNode = require('./kitsunet-node')
-const KitsunetBridge = require('./slice-trackers/kitsunet-bridge')
+const KitsunetBridge = require('./slice-trackers/kitsunet-rpc')
 
 const { Peer, RemotePeer } = require('./peer')
 const { createRpc } = require('./rpc')
 
 const { TYPES } = require('./constants')
 
-const log = require('debug')('kitsunet:kitsunet-client')
+const log = require('debug')('kitsunet:kitsunet-driver')
 
 class KitsunetDriver extends Peer {
-  constructor (node, isBridge, bridgeRpc, blockTracker, sliceTracker, slices) {
+  constructor ({
+    node,
+    isBridge,
+    bridgeRpc,
+    blockTracker,
+    pubSubSliceTracker,
+    bridgeSliceTracker,
+    slices
+  }) {
     super()
     this.node = node
     this.isBridge = Boolean(isBridge)
@@ -27,14 +35,25 @@ class KitsunetDriver extends Peer {
 
     this._remotePeers = new Map()
     this._blockTracker = blockTracker
-    this._sliceTracker = sliceTracker
+
+    this._bridgeSliceTracker = bridgeSliceTracker
+    this._pubSubSliceTracker = pubSubSliceTracker
 
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
 
+    this._setUp()
+  }
+
+  _setUp () {
     // subscribe to block updates
     this._blockTracker.on('latest', (block) => {
       // TODO: implement logic to figure out whats the best block
       this.peer.latestBlock = this.peer.bestBlock = block
+
+      if (this.isBridge) {
+        this._bridgeSliceTracker.emit('latest', block)
+        this._bridgeSliceTracker.on('slice', (slice) => this._pubSubSliceTracker.publishSlice(slice))
+      }
     })
 
     // handle incoming peers
@@ -45,16 +64,6 @@ class KitsunetDriver extends Peer {
       remote.rpc = rpc
       this._remotePeers.set(id, remote)
       rpc.hello() // send the hello message
-    })
-
-    // subscribe to initial slice set
-    this._slices.forEach(async (slice) => {
-      const sliceTopic = `${slice.path}-${slice.depth}`
-      try {
-        await this.multicast.subscribe(sliceTopic)
-      } catch (e) {
-        log(`Error subscribing to slice topic ${sliceTopic}`, e)
-      }
     })
   }
 
@@ -131,7 +140,7 @@ class KitsunetDriver extends Peer {
   }
 
   /**
-   * Announces slice to the network using whatever mechanisms are available, e.g - DHT, RPC, etc...
+   * Announces slice to the network using whatever mechanisms are available, e.g DHT, RPC, etc...
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
@@ -144,10 +153,10 @@ class KitsunetDriver extends Peer {
   async start () {
     await this.node.start()
     await this._blockTracker.start()
-    await this._sliceTracker.start()
+    await this._pubSubSliceTracker.start()
 
     if (this.isBridge) {
-      await this._kitsunetBridge.start()
+      await this._bridgeSliceTracker.start()
     }
     // await this._stats.start()
 
@@ -160,10 +169,10 @@ class KitsunetDriver extends Peer {
   async stop () {
     await this.node.stop()
     await this._blockTracker.stop()
-    await this._sliceTracker.stop()
+    await this._pubSubSliceTracker.stop()
 
     if (this.isBridge) {
-      await this._kitsunetBridge.stop()
+      await this._bridgeSliceTracker.stop()
     }
 
     // await this._stats.stop()
