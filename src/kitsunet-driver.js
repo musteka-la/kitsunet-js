@@ -3,12 +3,11 @@
 // const KitsunetStatsTracker = require('kitsunet-telemetry')
 
 const KitsunetNode = require('./kitsunet-node')
-const KitsunetBridge = require('./slice-trackers/kitsunet-rpc')
 
-const { Peer, RemotePeer } = require('./peer')
-const { createRpc } = require('./rpc')
-
+const { Peer } = require('./peer')
 const { TYPES } = require('./constants')
+
+const headerFromRpc = require('ethereumjs-block/header-from-rpc')
 
 const log = require('debug')('kitsunet:kitsunet-driver')
 
@@ -16,22 +15,21 @@ class KitsunetDriver extends Peer {
   constructor ({
     node,
     isBridge,
-    bridgeRpc,
     blockTracker,
     pubSubSliceTracker,
     bridgeSliceTracker,
+    chain,
     slices
   }) {
     super()
     this.node = node
     this.isBridge = Boolean(isBridge)
     this.multicast = node.multicast
+
     this._slices = new Set(slices)
+    this._chain = chain
 
     this._kitsunetNode = new KitsunetNode({ node, interval: 10000 })
-    if (this.isBridge) {
-      this._kitsunetBridge = new KitsunetBridge(bridgeRpc, this._slices)
-    }
 
     this._remotePeers = new Map()
     this._blockTracker = blockTracker
@@ -46,24 +44,22 @@ class KitsunetDriver extends Peer {
 
   _setUp () {
     // subscribe to block updates
-    this._blockTracker.on('latest', (block) => {
-      // TODO: implement logic to figure out whats the best block
-      this.peer.latestBlock = this.peer.bestBlock = block
+    this._blockTracker.on('latest', (_blockHeader) => {
+      const header = headerFromRpc(_blockHeader)
+      this.peer.latestBlock = this.peer.bestBlock = header
+
+      this.chain.pubHeader(header)
 
       if (this.isBridge) {
-        this._bridgeSliceTracker.emit('latest', block)
-        this._bridgeSliceTracker.on('slice', (slice) => this._pubSubSliceTracker.publishSlice(slice))
+        this._bridgeSliceTracker.emit('latest', header)
+        this._bridgeSliceTracker.on('slice', (slice) => {
+          this._pubSubSliceTracker.publishSlice(slice)
+        })
       }
     })
 
-    // handle incoming peers
-    this._kitsunetNode.on('kitsunet:peer', async ({ id, conn }) => {
-      const remote = new RemotePeer(id)
-      const rpc = createRpc(this, remote, conn)
-
-      remote.rpc = rpc
-      this._remotePeers.set(id, remote)
-      rpc.hello() // send the hello message
+    this._pubSubSliceTracker.on('slice', (slice) => {
+      // TODO: store slices somewhere
     })
   }
 
