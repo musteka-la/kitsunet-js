@@ -1,11 +1,11 @@
 'use strict'
 
 class SliceId {
-  constructor () {
-    this.path = ''
-    this.depth = 0
-    this.root = ''
-    this.isStorage = false
+  constructor ({ path, depth, root, isStorage }) {
+    this.path = path
+    this.depth = depth
+    this.root = root
+    this.isStorage = isStorage
   }
 
   get id () {
