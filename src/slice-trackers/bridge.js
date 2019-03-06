@@ -1,13 +1,13 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const BaseTracker = require('./base')
 const { fetcher } = require('../slice-fetcher')
 
 const normalizeKeys = require('normalize-keys')
 
 const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
 
-class KitsunetBridge extends EE {
+class KitsunetBridge extends BaseTracker {
   constructor (bridgeUrl, slices) {
     super()
     this.slices = new Set(slices)
@@ -17,7 +17,7 @@ class KitsunetBridge extends EE {
 
     /**
      * Handle blocks via the `latest` event
-     * 
+     *
      * TODO: this is probably better handled with an explicit method
      * such as publish/push/etc... Events are really the wrong thing!!
      */

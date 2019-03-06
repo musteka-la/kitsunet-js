@@ -2,23 +2,19 @@
 
 // const KitsunetStatsTracker = require('kitsunet-telemetry')
 
-const KitsunetNode = require('./kitsunet-node')
-
 const { Peer } = require('./peer')
 const { TYPES } = require('./constants')
-
-const headerFromRpc = require('ethereumjs-block/header-from-rpc')
 
 const log = require('debug')('kitsunet:kitsunet-driver')
 
 class KitsunetDriver extends Peer {
   constructor ({
     node,
+    kitsunetNode,
     isBridge,
     blockTracker,
-    pubSubSliceTracker,
-    bridgeSliceTracker,
-    chain,
+    sliceTracker,
+    chain, // blockchain
     slices
   }) {
     super()
@@ -29,13 +25,12 @@ class KitsunetDriver extends Peer {
     this._slices = new Set(slices)
     this._chain = chain
 
-    this._kitsunetNode = new KitsunetNode({ node, interval: 10000 })
+    this._kitsunetNode = kitsunetNode
 
     this._remotePeers = new Map()
     this._blockTracker = blockTracker
 
-    this._bridgeSliceTracker = bridgeSliceTracker
-    this._pubSubSliceTracker = pubSubSliceTracker
+    this._sliceTracker = sliceTracker
 
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
 
@@ -43,24 +38,6 @@ class KitsunetDriver extends Peer {
   }
 
   _setUp () {
-    // subscribe to block updates
-    this._blockTracker.on('latest', (_blockHeader) => {
-      const header = headerFromRpc(_blockHeader)
-      this.peer.latestBlock = this.peer.bestBlock = header
-
-      this.chain.pubHeader(header)
-
-      if (this.isBridge) {
-        this._bridgeSliceTracker.emit('latest', header)
-        this._bridgeSliceTracker.on('slice', (slice) => {
-          this._pubSubSliceTracker.publishSlice(slice)
-        })
-      }
-    })
-
-    this._pubSubSliceTracker.on('slice', (slice) => {
-      // TODO: store slices somewhere
-    })
   }
 
   /**
@@ -150,10 +127,8 @@ class KitsunetDriver extends Peer {
     await this.node.start()
     await this._blockTracker.start()
     await this._pubSubSliceTracker.start()
+    await this._sliceTracker.start()
 
-    if (this.isBridge) {
-      await this._bridgeSliceTracker.start()
-    }
     // await this._stats.start()
 
     this._registerSlices()
@@ -165,11 +140,7 @@ class KitsunetDriver extends Peer {
   async stop () {
     await this.node.stop()
     await this._blockTracker.stop()
-    await this._pubSubSliceTracker.stop()
-
-    if (this.isBridge) {
-      await this._bridgeSliceTracker.stop()
-    }
+    await this._sliceTracker.stop()
 
     // await this._stats.stop()
   }
