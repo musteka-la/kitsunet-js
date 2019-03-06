@@ -1,6 +1,6 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const BaseTracker = require('./base')
 const Cache = require('lru-cache')
 
 const DEFAULT_TOPIC = `kitsunet:slice`
@@ -13,7 +13,7 @@ const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }) => {
   return new Cache(options)
 }
 
-class KitsunetPubSub extends EE {
+class KitsunetPubSub extends BaseTracker {
   constructor (node, slices, topic) {
     super()
     this.multicast = node.multicast
