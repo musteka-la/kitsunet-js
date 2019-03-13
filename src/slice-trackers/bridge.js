@@ -3,8 +3,8 @@
 const BaseTracker = require('./base')
 const { fetcher } = require('../slice-fetcher')
 
+const nextTick = require('async/nextTick')
 const normalizeKeys = require('normalize-keys')
-
 const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
 
 class KitsunetBridge extends BaseTracker {
@@ -22,15 +22,17 @@ class KitsunetBridge extends BaseTracker {
      * such as publish/push/etc... Events are really the wrong thing!!
      */
     const blockHandler = async (block) => {
-      this.slices.forEach(async (slice) => {
-        const { path, depth, isStorage } = slice
-        const fetchedSlice = await this.fetchSlice({
-          path,
-          depth,
-          root: block.stateRoot,
-          isStorage
+      nextTick(() => {
+        this.slices.forEach(async (slice) => {
+          const { path, depth, isStorage } = slice
+          const fetchedSlice = await this.fetchSlice({
+            path,
+            depth,
+            root: block.stateRoot,
+            isStorage
+          })
+          this.emit('slice', normalizeKeys(fetchedSlice))
         })
-        this.emit('slice', normalizeKeys(fetchedSlice))
       })
     }
 
@@ -43,7 +45,7 @@ class KitsunetBridge extends BaseTracker {
    * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
    */
   async untrackSlices (slices) {
-    slices = Set.isSet(slices) ? slices : [slices]
+    slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach((slice) => this.slices.delete(slice))
   }
 
@@ -88,11 +90,11 @@ class KitsunetBridge extends BaseTracker {
   }
 
   async start () {
-    this.on('latest', this._blockHandler)
+    this.on('block', this._blockHandler)
   }
 
   async stop () {
-    this.removeListener('latest', this._blockHandler)
+    this.removeListener('block', this._blockHandler)
   }
 }
 

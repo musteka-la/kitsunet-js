@@ -1,7 +1,5 @@
 'use strict'
 
-// const KitsunetStatsTracker = require('kitsunet-telemetry')
-
 const { Peer } = require('./peer')
 const { TYPES } = require('./constants')
 
@@ -15,14 +13,14 @@ class KitsunetDriver extends Peer {
     blockTracker,
     sliceTracker,
     chain, // blockchain
-    slices
+    trie
   }) {
     super()
     this.node = node
     this.isBridge = Boolean(isBridge)
     this.multicast = node.multicast
 
-    this._slices = new Set(slices)
+    this._slices = new Set()
     this._chain = chain
 
     this._kitsunetNode = kitsunetNode
@@ -34,10 +32,24 @@ class KitsunetDriver extends Peer {
 
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
 
+    this._trie = trie
+
+    this._sliceCache = new Map()
+
     this._setUp()
   }
 
   _setUp () {
+    // subscribe to block updates
+    this._blockTracker.on('latest', (header) => {
+      this.peer.latestBlock = header
+
+      this.chain.putHeader(header)
+      this._sliceTracker.emit('header', header)
+    })
+
+    const sliceHandler = this._storeSlice.bind(this)
+    this._sliceTracker.on('slice', sliceHandler)
   }
 
   /**
@@ -47,6 +59,7 @@ class KitsunetDriver extends Peer {
    * @returns {Boolean}
    */
   async isTracking (slice) {
+    return this._sliceTracker.isTracking(slice)
   }
 
   /**
@@ -56,6 +69,7 @@ class KitsunetDriver extends Peer {
    * @param {Array<SliceId>|SliceId} slices - a slice or an array of slices to track
    */
   async trackSlices (slices) {
+    this._sliceTracker.trackSlices(slices)
   }
 
   /**
@@ -64,19 +78,22 @@ class KitsunetDriver extends Peer {
    * @param {Array<SliceId>|SliceId} slices - the slices to stop tracking
    */
   async untrackSlices (slices) {
+    this._sliceTracker.untrackSlices(slices)
   }
 
   /**
-   * Get the slice by its id
+   * Get a slice
    *
-   * @param {SliceId} id - the id of the slice
+   * @param {SliceId} slice - the slice to return
    * @return {Slice}
    */
-  async getSliceById (slice) {
+  async getSlice (slice) {
+    // TODO: this should fallback to to some persistent storage if not found
+    return this._sliceCache.get(slice.id)
   }
 
   /**
-   * Get the latest slice
+   * Get the latest slice for prefix
    *
    * @return {Slice}
    */
@@ -87,8 +104,9 @@ class KitsunetDriver extends Peer {
    * Get the slice for a block
    *
    * @param {Number} block - the block number to get the slice for
+   * @param {Slice} slice - the slice to get (root is ignored)
    */
-  async getSliceForBlock (block) {
+  async getSliceForBlock (block, slice) {
   }
 
   /**

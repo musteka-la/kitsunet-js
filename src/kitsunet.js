@@ -9,12 +9,12 @@ class KitsunetClient extends EE {
   }
 
   /**
- * Get the slice by its id
- *
- * @param {SliceId} id - the id of the slice
- * @return {Slice}
- */
-  async getSliceById (slice) {
+  * Get a slice
+  *
+  * @param {SliceId} slice - the slice to return
+  * @return {Slice}
+  */
+  async getSlice (slice) {
   }
 
   /**
