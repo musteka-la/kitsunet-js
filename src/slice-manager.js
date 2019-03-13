@@ -1,23 +1,25 @@
 'use strict'
 
+const each = require('async/each')
+const ethUtils = require('ethereumjs-util')
+
+const log = require('debug')('kitsunet:kitsunet-manager')
+
 class SliceManager {
-  constructor ({ bridgeTracker, pubsubTracker, blockTracker }) {
+  constructor ({ bridgeTracker, pubsubTracker, trie }) {
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
-    this._blockTracker = blockTracker
+
+    this._trie = trie
+    this._sliceCache = new Map()
 
     this._setUp()
   }
 
   _setUp () {
-    // subscribe to block updates
-    this._blockTracker.on('latest', (header) => {
-      this.peer.latestBlock = this.peer.bestBlock = header
-
-      this.chain.putHeader(header)
-
+    this.on('header', (header) => {
       if (this.isBridge) {
-        this._bridgeSliceTracker.emit('latest', header)
+        this._bridgeSliceTracker.emit('header', header)
         this._bridgeSliceTracker.on('slice', (slice) => {
           this._pubSubSliceTracker.publishSlice(slice)
         })
@@ -25,15 +27,40 @@ class SliceManager {
     })
 
     this._pubSubSliceTracker.on('slice', (slice) => {
-      // TODO: store slices somewhere
+      this.emit('slice', slice)
     })
   }
 
   /**
- * Stop tracking the provided slices
- *
- * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
- */
+   * Store a received slice
+   *
+   * @param {Slice} slice - the slice to store
+   */
+  async _storeSlice (slice) {
+    return new Promise((resolve, reject) => {
+      each(Object.keys(slice.nodes), (_key, cb) => {
+        const [key, value] = [ethUtils.addHexPrefix(_key), Buffer.from(slice.nodes[_key], 'hex')]
+        this.trie.put(key, value, (err) => {
+          if (err) return cb(err)
+          cb()
+        })
+      }, (e) => {
+        if (e) {
+          log('error adding slice %s to storage', slice.id)
+          return reject(e)
+        }
+        this.slices.push(slice.id)
+        this._sliceCache.set(slice.id, slice)
+        return resolve(true)
+      })
+    })
+  }
+
+  /**
+   * Stop tracking the provided slices
+   *
+   * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
+   */
   async untrackSlices (slices) {
     if (this._bridgeTracker) {
       this._bridgeTracker.untrackSlices(slices)
@@ -52,6 +79,7 @@ class SliceManager {
     if (this._bridgeTracker) {
       this._bridgeTracker.trackSlices(slices)
     }
+    this._pubsubTracker.trackSlices(slices)
   }
 
   /**
@@ -74,6 +102,63 @@ class SliceManager {
   async publishSlice (slice) {
     // bridge doesn't implement publishSlice
     this._pubsubTracker.publishSlice(slice)
+  }
+
+  /**
+   * Get a slice
+   *
+   * @param {SliceId} slice - the slice to return
+   * @return {Slice}
+  */
+  async getSlice (slice) {
+    // TODO: this should fallback to to some persistent storage if not found
+    return this._sliceCache.get(slice.id)
+  }
+
+  /**
+   * Get the latest slice for prefix
+   *
+   * @return {Slice}
+   */
+  async getLatestSlice () {
+  }
+
+  /**
+   * Get the slice for a block
+   *
+   * @param {Number} block - the block number to get the slice for
+   * @param {Slice} slice - the slice to get (root is ignored)
+   */
+  async getSliceForBlock (block, slice) {
+  }
+
+  /**
+   * Discover peers tracking this slice
+   *
+   * @param {Array<SliceId>|SliceId} slice - the slices to find the peers for
+   * @param {Object}  - an options object with the following properties
+   *                  - maxPeers - the maximum amount of peers to connect to
+   * @returns {Array<Peer>} peers - an array of peers tracking the slice
+   */
+  async findSlicePeers (slice, options = { maxPeers: 3 }) {
+  }
+
+  /**
+   * Discover and connect to peers tracking this slice
+   *
+   * @param {Array<SliceId>} slices - the slices to find the peers for
+   * @param {Slice} - an options object with the following properties
+   *                    - maxPeers - the maximum amount of peers to connect to
+   */
+  async findAndConnect (slices, options = { maxPeers: 3 }) {
+  }
+
+  /**
+   * Announces slice to the network using whatever mechanisms are available, e.g DHT, RPC, etc...
+   *
+   * @param {Array<SliceId>} slices - the slices to announce to the network
+   */
+  async announceSlices (slices) {
   }
 
   async start () {

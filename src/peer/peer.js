@@ -9,9 +9,9 @@ class Peer extends EE {
     super()
     this._id = id // peer id
     this._nodeType = TYPES.NORMAL
-    this._bestBlock = null
+    this._latestBlock = null
     this._blackList = []
-    this._slices = []
+    this._slices = new Set()
   }
 
   get id () {
@@ -30,12 +30,12 @@ class Peer extends EE {
     return this._nodeType
   }
 
-  set bestBlock (bestBlock) {
-    this._bestBlock = bestBlock
+  set latestBlock (bestBlock) {
+    this._latestBlock = bestBlock
   }
 
-  get bestBlock () {
-    return this._bestBlock
+  get latestBlock () {
+    return this._latestBlock
   }
 
   set slices (subscriptions) {
