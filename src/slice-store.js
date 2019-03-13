@@ -1,20 +1,37 @@
 'use strict'
 
 class SliceStore {
-  async put () {
-
+  /**
+   * Store a slice
+   *
+   * @param {String|Buffer} key - the key to store under
+   * @param {Buffer} value - the value to store
+   */
+  async put (key, value) {
   }
 
-  async get () {
-
+  /**
+   * Retrieve a key from the store
+   *
+   * @param {String|Buffer} key - the key to retrieve
+   */
+  async get (key) {
   }
 
-  async has () {
-
+  /**
+   * Check if key is in the store
+   *
+   * @param {String|Buffer} key - the key to check
+   */
+  async has (key) {
   }
 
-  async delete () {
-
+  /**
+   * Delete a key from the store
+   *
+   * @param {String|Buffer} key - the key to delete
+   */
+  async delete (key) {
   }
 }
 
