@@ -12,6 +12,7 @@ class KitsunetDriver extends Peer {
     isBridge,
     blockTracker,
     sliceTracker,
+    dataStore, // the data store
     chain, // blockchain
     trie
   }) {
@@ -21,7 +22,11 @@ class KitsunetDriver extends Peer {
     this.multicast = node.multicast
 
     this._slices = new Set()
+
+    this._trie = trie
     this._chain = chain
+
+    this._dataStore = dataStore
 
     this._kitsunetNode = kitsunetNode
 
@@ -29,18 +34,14 @@ class KitsunetDriver extends Peer {
     this._blockTracker = blockTracker
 
     this._sliceTracker = sliceTracker
-
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
-
-    this._trie = trie
-
-    this._sliceCache = new Map()
 
     this._setUp()
   }
 
   _setUp () {
     // subscribe to block updates
+    // TODO: this should just be a block stream
     this._blockTracker.on('latest', (header) => {
       this.peer.latestBlock = header
 

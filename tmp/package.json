@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "checkpoint-store": "^1.1.0",
     "multihashing": "^0.3.3",
     "peer-id": "^0.12.2",
     "pify": "^4.0.1",
