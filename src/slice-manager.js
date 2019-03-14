@@ -1,17 +1,14 @@
 'use strict'
 
-const each = require('async/each')
-const ethUtils = require('ethereumjs-util')
-
-const log = require('debug')('kitsunet:kitsunet-manager')
+const SliceId = require('./slice/slice-id')
 
 class SliceManager {
-  constructor ({ bridgeTracker, pubsubTracker, trie }) {
+  constructor ({ bridgeTracker, pubsubTracker, sliceStore, blockTracker }) {
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
 
-    this._trie = trie
-    this._sliceCache = new Map()
+    this._blockTracker = blockTracker
+    this._sliceStore = sliceStore
 
     this._setUp()
   }
@@ -27,32 +24,8 @@ class SliceManager {
     })
 
     this._pubSubSliceTracker.on('slice', (slice) => {
+      this._sliceStore.storeSlice(slice)
       this.emit('slice', slice)
-    })
-  }
-
-  /**
-   * Store a received slice
-   *
-   * @param {Slice} slice - the slice to store
-   */
-  async _storeSlice (slice) {
-    return new Promise((resolve, reject) => {
-      each(Object.keys(slice.nodes), (_key, cb) => {
-        const [key, value] = [ethUtils.addHexPrefix(_key), Buffer.from(slice.nodes[_key], 'hex')]
-        this.trie.put(key, value, (err) => {
-          if (err) return cb(err)
-          cb()
-        })
-      }, (e) => {
-        if (e) {
-          log('error adding slice %s to storage', slice.id)
-          return reject(e)
-        }
-        this.slices.push(slice.id)
-        this._sliceCache.set(slice.id, slice)
-        return resolve(true)
-      })
     })
   }
 
@@ -110,17 +83,18 @@ class SliceManager {
    * @param {SliceId} slice - the slice to return
    * @return {Slice}
   */
-  async getSlice (slice) {
-    // TODO: this should fallback to to some persistent storage if not found
-    return this._sliceCache.get(slice.id)
+  async getSlice (sliceId) {
+    return this._sliceStore.getSliceById(sliceId)
   }
 
   /**
    * Get the latest slice for prefix
    *
-   * @return {Slice}
+   * @return {SliceId}
    */
-  async getLatestSlice () {
+  async getLatestSlice (prefix, depth) {
+    const block = await this._blockTracker.getLatestBlock()
+    return this._sliceStore.getSliceById(new SliceId({ prefix, depth, root: block.stateRoot }))
   }
 
   /**
@@ -129,7 +103,8 @@ class SliceManager {
    * @param {Number} block - the block number to get the slice for
    * @param {Slice} slice - the slice to get (root is ignored)
    */
-  async getSliceForBlock (block, slice) {
+  async getSliceForBlock (block, prefix, depth) {
+    return this._sliceStore.getSliceById(new SliceId({ prefix, depth, root: block.stateRoot }))
   }
 
   /**

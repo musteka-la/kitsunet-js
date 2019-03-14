@@ -37,6 +37,10 @@ class Slice extends SliceId {
   get nodes () {
     return this._nodes
   }
+
+  serialize () {
+    return Buffer.from(JSON.stringify(this.parsed))
+  }
 }
 
 module.exports = Slice

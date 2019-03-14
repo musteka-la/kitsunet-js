@@ -58,10 +58,8 @@ class KitsunetPubSub extends BaseTracker {
   /**
    * This is a hook that will be triggered on each pubsub message.
    *
-   * This check if the slice has been already forwarded. This is useful
-   * since even tho, pubsub dedups messages, it does it based on the
-   * message id, so if two bridges generated a different message for the same
-   * slice, this will take care of it.
+   * This check if the slice has been already forwarded. This is
+   * to check for duplicates at the application level, regardless of the msg id.
    *
    * @param {PeerInfo} peer - the peer sending the message
    * @param {Msg} msg - the pubsub message
