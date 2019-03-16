@@ -29,6 +29,7 @@
     "eth-json-rpc-kitsunet-slice": "github:dryajov/eth-json-rpc-kitsunet-slice.git#master",
     "eth-json-rpc-middleware": "^3.1.7",
     "eth-query": "^2.1.2",
+    "ethereumjs-account": "^3.0.0",
     "ethereumjs-block": "^2.2.0",
     "ethereumjs-blockchain": "^3.4.0",
     "ethereumjs-util": "^6.0.0",

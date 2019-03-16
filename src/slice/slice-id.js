@@ -1,7 +1,11 @@
 'use strict'
 
 class SliceId {
-  constructor ({ path, depth, root, isStorage }) {
+  constructor (path = 0x0, depth = 10, root = 0x0, isStorage = false) {
+    if (typeof path === 'string' && path.includes('-')) {
+      [path, depth, root] = path.split('-')
+    }
+
     this.path = path
     this.depth = depth
     this.root = root
