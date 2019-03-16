@@ -94,7 +94,7 @@ class SliceManager {
    */
   async getLatestSlice (prefix, depth) {
     const block = await this._blockTracker.getLatestBlock()
-    return this._sliceStore.getSliceById(new SliceId({ prefix, depth, root: block.stateRoot }))
+    return this._sliceStore.getSliceById(new SliceId(prefix, depth, block.stateRoot))
   }
 
   /**
