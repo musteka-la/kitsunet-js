@@ -1,6 +1,6 @@
 'use strict'
 
-const promisify = require('pify')
+const promisify = require('promisify-this')
 
 const WS = require('libp2p-websockets')
 const TCP = require('libp2p-tcp')

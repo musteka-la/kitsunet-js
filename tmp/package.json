@@ -10,6 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "checkpoint-store": "^1.1.0",
+    "ethereumjs-vm": "^2.6.0",
+    "fake-merkle-patricia-tree": "^1.0.1",
     "multihashing": "^0.3.3",
     "peer-id": "^0.12.2",
     "pify": "^4.0.1",

@@ -6,7 +6,7 @@ const SECIO = require('libp2p-secio')
 const Libp2p = require('libp2p')
 const DHT = require('libp2p-kad-dht')
 const defaultsDeep = require('@nodeutils/defaults-deep')
-const promisify = require('pify')
+const promisify = require('promisify-this')
 
 const createMulticast = require('libp2p-multicast-conditional/src/api')
 

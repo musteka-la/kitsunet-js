@@ -1,40 +1,61 @@
-(async () => {
-  'use strict'
+'use strict'
 
-  const distance = require('xor-distance')
-  const promisify = require('pify')
-  const PeerId = promisify(require('peer-id'))
-  const multihashing = require('multihashing')
+const VM = require('ethereumjs-vm')
+const blockFromRpc = require('ethereumjs-block/from-rpc')
+const FakeTransaction = require('ethereumjs-tx/fake')
 
-  const SLICE_RANGE = 16 ** 4
-  const RANGE = 40
+const { SlicedTrie } = require('../src/sliced-trie')
+const { Slice } = require('../src/slice')
 
-  try {
-    const p1 = Buffer.from('cba5271651bee35e9173ea1eb1fb1143d5147b3eaa6500536987c1d41ac4ed71', 'hex')
-    const p2 = Buffer.from('cba5271651d461b94844a5f4394fbf0008fa8851cafee68b82d655fb951c9675', 'hex')
+const accountRaw = require('./account.json')
+const contractRaw = require('./contract.json')
 
-    const p3 = Buffer.from('c716f1b210009fa598764faa40484848341b98ecf7cb2f06f0a3831d700d6c4c', 'hex')
-    const p4 = Buffer.from('c716f1b2101bee35e9173ea1eb1fb1143d5147b3eaa6500536987c1d41ac4ed71', 'hex')
+const accountData = JSON.parse(accountRaw).result
+const contractData = JSON.parse(contractRaw).result
 
-    const p1s = Number(`0x${p1.toString('hex').slice(0, 16)}`)
-    const p2s = Number(`0x${p2.toString('hex').slice(0, 16)}`)
-
-    const p3s = Number(`0x${p3.toString('hex').slice(0, 16)}`)
-    const p4s = Number(`0x${p4.toString('hex').slice(0, 16)}`)
-
-    console.dir(`p1: ${p1s % SLICE_RANGE}`)
-    console.dir(`p2: ${p2s % SLICE_RANGE}`)
-
-    console.dir(`p3: ${p3s % SLICE_RANGE}`)
-    console.dir(`p4: ${p4s % SLICE_RANGE}`)
-
-    // var dist1 = distance(p1, p2)
-    // var dist2 = distance(p3, p4)
-
-    // // the following returns true since the distance between foo and bar
-    // // is greater than the distance between foo and baz
-    // console.log(distance.gt(dist1, dist2))
-  } catch (e) {
-    console.dir(e)
+const slice = new Slice(accountData)
+const slicedTrie = new SlicedTrie({
+  depth: 12,
+  sliceManager: {
+    async getSliceById (sliceId) {
+      return slice
+    }
   }
-})()
+})
+
+const block = blockFromRpc(blockParams)
+runVm(req, block, (err, results) => {
+  if (err) return end(err)
+  const returnValue = results.vm.return ? '0x' + results.vm.return.toString('hex') : '0x'
+  res.result = returnValue
+  end()
+})
+
+function runVm (req, block, cb) {
+  const txParams = Object.assign({}, req.params[0])
+
+  // create vm with state lookup intercepted
+  const vm = new VM({ state: slicedTrie })
+
+  // create tx
+  txParams.from = txParams.from || '0x0000000000000000000000000000000000000000'
+  txParams.gasLimit = txParams.gasLimit || ('0x' + block.header.gasLimit.toString('hex'))
+  const tx = new FakeTransaction(txParams)
+
+  vm.runTx({
+    tx: tx,
+    block: block,
+    skipNonce: true,
+    skipBalance: true
+  }, function (err, results) {
+    if (err) return cb(err)
+    if (results.error) {
+      return cb(new Error('VM error: ' + results.error))
+    }
+    if (results.vm && results.vm.exception !== 1 && results.vm.exceptionError !== 'invalid opcode') {
+      return cb(new Error('VM Exception while executing ' + req.method + ': ' + results.vm.exceptionError))
+    }
+
+    cb(null, results)
+  })
+}
