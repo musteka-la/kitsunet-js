@@ -7,31 +7,36 @@ const bourne = require('bourne')
 
 class Slice extends SliceId {
   constructor (data) {
-    super()
-
-    let raw
+    let parsed
     if (Buffer.isBuffer(data)) {
-      raw = data.toString()
+      parsed = bourne.parse(data.toString())
     } else if (typeof data === 'string') {
-      raw = data
+      parsed = bourne.parse(data)
+    } else if (typeof data === 'object') {
+      parsed = data
     } else {
-      throw new Error('slice data must be Buffer or JSON')
+      throw new Error('slice data must be Buffer, JSON or a parsed Slice Object')
     }
 
-    this.parsed = normalizeKeys(bourne.parse(raw), ['meta'])
-    this._nodes = { ...this.stem, ...this.head, ...this.trieNodes }
+    parsed = normalizeKeys(parsed, ['metadata'])
+    const [path, depth, root] = parsed.sliceId.split('-')
+
+    super(path, depth, root)
+
+    this._parsed = parsed
+    this._nodes = { ...this.head, ...this.sliceNodes, ...this.stem }
   }
 
   get head () {
-    return this.parsed.head
+    return this._parsed.trieNodes.head
   }
 
   get stem () {
-    return this.parsed.stem
+    return this._parsed.trieNodes.stem
   }
 
-  get trieNodes () {
-    return this.parsed.trieNodes
+  get sliceNodes () {
+    return this._parsed.trieNodes.sliceNodes
   }
 
   get nodes () {
@@ -39,7 +44,7 @@ class Slice extends SliceId {
   }
 
   serialize () {
-    return Buffer.from(JSON.stringify(this.parsed))
+    return Buffer.from(JSON.stringify(this._parsed))
   }
 }
 

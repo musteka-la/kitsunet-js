@@ -5,7 +5,7 @@ class Discovery {
    * Discover peers tracking this slice
    *
    * @param {Array<SliceId>|SliceId} sliceId - the slices to find the peers for
-   * @param {Object}  - an options object with the following properties
+   * @param {Object}  options - an options object with the following properties
    *                  - maxPeers - the maximum amount of peers to connect to
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */

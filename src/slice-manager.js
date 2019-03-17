@@ -80,7 +80,7 @@ class SliceManager {
   /**
    * Get a slice
    *
-   * @param {SliceId} slice - the slice to return
+   * @param {SliceId} sliceId - the slice to return
    * @return {Slice}
   */
   async getSlice (sliceId) {
@@ -90,7 +90,8 @@ class SliceManager {
   /**
    * Get the latest slice for prefix
    *
-   * @return {SliceId}
+   * @param {String} prefix
+   * @param {Number} depth
    */
   async getLatestSlice (prefix, depth) {
     const block = await this._blockTracker.getLatestBlock()
@@ -100,8 +101,9 @@ class SliceManager {
   /**
    * Get the slice for a block
    *
-   * @param {Number} block - the block number to get the slice for
-   * @param {Slice} slice - the slice to get (root is ignored)
+   * @param {Number} block
+   * @param {String} prefix
+   * @param {Number} depth
    */
   async getSliceForBlock (block, prefix, depth) {
     return this._sliceStore.getSliceById(new SliceId({ prefix, depth, root: block.stateRoot }))
@@ -110,20 +112,20 @@ class SliceManager {
   /**
    * Discover peers tracking this slice
    *
-   * @param {Array<SliceId>|SliceId} slice - the slices to find the peers for
-   * @param {Object}  - an options object with the following properties
+   * @param {Array<SliceId>|SliceId} sliceId - the slices to find the peers for
+   * @param {Object} options - an options object with the following properties
    *                  - maxPeers - the maximum amount of peers to connect to
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
-  async findSlicePeers (slice, options = { maxPeers: 3 }) {
+  async findSlicePeers (sliceId, options = { maxPeers: 3 }) {
   }
 
   /**
    * Discover and connect to peers tracking this slice
    *
    * @param {Array<SliceId>} slices - the slices to find the peers for
-   * @param {Slice} - an options object with the following properties
-   *                    - maxPeers - the maximum amount of peers to connect to
+   * @param {Object} options - an options object with the following properties
+   *                        - maxPeers - the maximum amount of peers to connect to
    */
   async findAndConnect (slices, options = { maxPeers: 3 }) {
   }
