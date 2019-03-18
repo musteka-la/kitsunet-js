@@ -8,7 +8,7 @@ class BaseTracker extends EE {
  *
  * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
  */
-  async untrackSlices (slices) {
+  async untrack (slices) {
     throw new Error('not implemented!')
   }
 
@@ -18,7 +18,7 @@ class BaseTracker extends EE {
    *
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
-  async trackSlices (slices) {
+  async track (slices) {
     throw new Error('not implemented!')
   }
 
@@ -37,7 +37,7 @@ class BaseTracker extends EE {
    *
    * @param {Slice} slice - the slice to be published
    */
-  async publishSlice (slice) {
+  async publish (slice) {
     throw new Error('not implemented!')
   }
 

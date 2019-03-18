@@ -8,21 +8,28 @@ const bourne = require('bourne')
 const cbor = require('borc')
 
 class Slice extends SliceId {
-  constructor (data) {
+  static parse (data) {
     let parsed
     if (Buffer.isBuffer(data)) {
       parsed = cbor.decode(data)
+      parsed = { ...parsed, ...cbor.decode(parsed.__sliceId__) }
+      delete parsed.__sliceId__
     } else if (typeof data === 'string') {
-      parsed = bourne.parse(data)
+      parsed = normalizeKeys(bourne.parse(data), ['metadata'])
     } else if (typeof data === 'object') {
-      parsed = data
+      parsed = normalizeKeys(data, ['metadata'])
     } else {
       throw new Error('slice data must be Buffer, JSON or a parsed Slice Object')
     }
 
-    parsed = normalizeKeys(parsed, ['metadata'])
+    return parsed
+  }
+
+  constructor (data) {
+    const parsed = Slice.parse(data)
     const [path, depth, root] = parsed.sliceId.split('-')
 
+    // call super after parsing the slice
     super(path, depth, root)
 
     this._parsed = parsed
@@ -47,13 +54,12 @@ class Slice extends SliceId {
 
   serialize () {
     return cbor.encode({
-      path: this.path,
-      depth: this.depth,
-      root: this.root,
-      isStorage: this.isStorage,
-      head: this.head,
-      stem: this.stem,
-      sliceNodes: this.sliceNodes
+      __sliceId__: super.serialize(),
+      trieNodes: {
+        head: this.head,
+        stem: this.stem,
+        sliceNodes: this.sliceNodes
+      }
     })
   }
 }

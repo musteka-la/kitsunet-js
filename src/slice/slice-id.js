@@ -3,17 +3,18 @@
 const cbor = require('borc')
 
 class SliceId {
-  constructor (path = '0x0000', depth = 10, root = null, isStorage = false) {
+  static parse (path, depth, root, isStorage) {
     if (Buffer.isBuffer(path)) {
-      [ path, depth, root, isStorage ] = cbor.decode(path)
+      [path, depth, root, isStorage] = cbor.decode(path)
     } else if (typeof path === 'string' && path.includes('-')) {
       [path, depth, root] = path.split('-')
     }
 
-    this.path = path
-    this.depth = Number(depth)
-    this.root = root
-    this.isStorage = isStorage
+    return [path, Number(depth), root, Boolean(isStorage)]
+  }
+
+  constructor (path = '0x0000', depth = 10, root = null, isStorage = false) {
+    [this.path, this.depth, this.root] = SliceId.parse(path, depth, root, isStorage)
   }
 
   get id () {
@@ -22,10 +23,11 @@ class SliceId {
 
   serialize () {
     return cbor.encode({
+      sliceId: this.id,
       path: this.path,
       depth: this.depth,
       root: this.root,
-      isStorage: this.isStorage
+      isStorage: Boolean(this.isStorage)
     })
   }
 }

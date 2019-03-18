@@ -1,9 +1,9 @@
 'use strict'
 
-const SliceStore = require('./slice-store')
+const KitsunetStore = require('./kitsunet-store')
 const Store = require('./store')
 
 module.exports = {
-  SliceStore,
+  KitsunetStore,
   Store
 }

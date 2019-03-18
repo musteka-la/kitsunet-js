@@ -22,7 +22,7 @@ describe('sliced trie', () => {
   const slicedTrie = new SlicedTrie({ root,
     depth: 12,
     sliceManager: {
-      async getSliceById (sliceId) {
+      async getSlice (sliceId) {
         return slice
       }
     }
