@@ -5,5 +5,5 @@ const Slice = require('./slice')
 
 module.exports = {
   SliceId,
-  Slice,
+  Slice
 }

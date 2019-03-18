@@ -2,10 +2,10 @@
 
 const EE = require('safe-event-emitter')
 
-class KitsunetClient extends EE {
-  constructor (driver) {
+class Kitsunet extends EE {
+  constructor (sliceManager) {
     super()
-    this.driver = driver
+    this._sliceManager = sliceManager
   }
 
   /**
@@ -36,10 +36,10 @@ class KitsunetClient extends EE {
   /**
  * Get the slice for a block hash
  *
- * @param {Number} block - the block hash to get the slice for
+ * @param {Number} blockHash - the block hash to get the slice for
  */
   async getSliceForBlockHash (blockHash) {
   }
 }
 
-module.exports = KitsunetClient
+module.exports = Kitsunet
