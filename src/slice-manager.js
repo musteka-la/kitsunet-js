@@ -1,31 +1,37 @@
 'use strict'
 
+const assert = require('assert')
 const SliceId = require('./slice/slice-id')
+const EE = require('safe-event-emitter')
 
-class SliceManager {
-  constructor ({ bridgeTracker, pubsubTracker, sliceStore, blockTracker, driver }) {
+class SliceManager extends EE {
+  constructor ({ bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, driver }) {
+    super()
+
+    assert(blockTracker, 'blockTracker should be supplied')
+    assert(kitsunetStore, 'kitsunetStore should be supplied')
+    assert(driver, 'driver should be supplied')
+    driver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
+
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
-
     this._blockTracker = blockTracker
-    this._sliceStore = sliceStore
+    this._kitsunetStore = kitsunetStore
     this._driver = driver
+    this._isBridge = driver.isBridge
 
     this._setUp()
   }
 
   _setUp () {
-    this.on('header', (header) => {
-      if (this.isBridge) {
-        this._bridgeSliceTracker.emit('header', header)
-        this._bridgeSliceTracker.on('slice', (slice) => {
-          this._pubSubSliceTracker.publishSlice(slice)
-        })
-      }
-    })
+    if (this.isBridge) {
+      this._bridgeTracker.on('slice', (slice) => {
+        this._pubsubTracker.publish(slice)
+      })
+    }
 
-    this._pubSubSliceTracker.on('slice', (slice) => {
-      this._sliceStore.storeSlice(slice)
+    this._pubsubTracker.on('slice', (slice) => {
+      this._kitsunetStore.put(slice)
       this.emit('slice', slice)
     })
   }
@@ -36,11 +42,11 @@ class SliceManager {
    * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
    */
   async untrack (slices) {
-    if (this._bridgeTracker) {
-      this._bridgeTracker.untrackSlices(slices)
+    if (this._isBridge) {
+      this._bridgeTracker.untrack(slices)
     }
 
-    this._pubsubTracker.untrackSlices(slices)
+    this._pubsubTracker.untrack(slices)
   }
 
   /**
@@ -50,10 +56,10 @@ class SliceManager {
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
   async track (slices) {
-    if (this._bridgeTracker) {
-      this._bridgeTracker.trackSlices(slices)
+    if (this._isBridge) {
+      this._bridgeTracker.track(slices)
     }
-    this._pubsubTracker.trackSlices(slices)
+    this._pubsubTracker.track(slices)
   }
 
   /**
@@ -75,7 +81,7 @@ class SliceManager {
    */
   async publish (slice) {
     // bridge doesn't implement publishSlice
-    this._pubsubTracker.publishSlice(slice)
+    this._pubsubTracker.publish(slice)
   }
 
   /**
@@ -85,7 +91,7 @@ class SliceManager {
    * @return {Slice}
   */
   async getSlice (sliceId) {
-    const slice = await this._sliceStore.getSliceById(sliceId)
+    const slice = await this._kitsunetStore.getById(sliceId)
     if (slice) return slice
   }
 
@@ -97,7 +103,7 @@ class SliceManager {
    */
   async getLatestSlice (prefix, depth) {
     const block = await this._blockTracker.getLatestBlock()
-    return this._sliceStore.getSliceById(new SliceId(prefix, depth, block.stateRoot))
+    return this._kitsunetStore.getById(new SliceId(prefix, depth, block.stateRoot))
   }
 
   /**
@@ -108,11 +114,11 @@ class SliceManager {
    * @param {Number} depth
    */
   async getSliceForBlock (block, prefix, depth) {
-    return this._sliceStore.getSliceById(new SliceId({ prefix, depth, root: block.stateRoot }))
+    return this._kitsunetStore.getById(new SliceId({ prefix, depth, root: block.stateRoot }))
   }
 
   async start () {
-    if (this._bridgeTracker) {
+    if (this._isBridge) {
       await this._bridgeTracker.start()
     }
 
@@ -120,7 +126,7 @@ class SliceManager {
   }
 
   async stop () {
-    if (this._bridgeTracker) {
+    if (this._isBridge) {
       await this._bridgeTracker.stop()
     }
 

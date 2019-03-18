@@ -26,22 +26,6 @@ class KitsunetDriver extends Peer {
     this._sliceManager = sliceManager
     this._discovery = discovery
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
-
-    this._setUp()
-  }
-
-  _setUp () {
-    // subscribe to block updates
-    // TODO: this should just be a block stream
-    this._blockTracker.on('latest', (header) => {
-      this.peer.latestBlock = header
-
-      this.chain.putHeader(header)
-      this._sliceTracker.emit('header', header)
-    })
-
-    const sliceHandler = this._storeSlice.bind(this)
-    this._sliceTracker.on('slice', sliceHandler)
   }
 
   /**

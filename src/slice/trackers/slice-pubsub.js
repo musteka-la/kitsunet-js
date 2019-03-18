@@ -1,28 +1,32 @@
 'use strict'
 
-const BaseTracker = require('./base')
 const Cache = require('lru-cache')
+const cbor = require('borc')
 
-const DEFAULT_TOPIC = `kitsunet:slice`
-const DEFAULT_SLICE_TIMEOUT = 300 * 1000
-const DEFAULT_DEPTH = 10
+const BaseTracker = require('./base')
+const Slice = require('../slice')
 
 const log = require('debug')('kitsunet:kitsunet-pubsub-tracker')
+
+const DEFAULT_TOPIC_NAMESPACE = `/kitsunet/slice`
+const DEFAULT_SLICE_TIMEOUT = 300 * 1000
+const DEFAULT_DEPTH = 10
 
 const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }) => {
   return new Cache(options)
 }
 
 class KitsunetPubSub extends BaseTracker {
-  constructor (node, slices, topic) {
+  constructor ({ node, slices, namespace, depth }) {
     super()
-    this.multicast = node.multicast
-    this.topic = topic || DEFAULT_TOPIC
-    this.forwardedSlicesCache = createCache()
-    this.slices = new Set(slices)
+    this._multicast = node.multicast
+    this._namespace = namespace || DEFAULT_TOPIC_NAMESPACE
+    this._depth = depth || DEFAULT_DEPTH
+    this._forwardedSlicesCache = createCache()
+    this._slices = new Set(slices) // slice ids
 
-    this.slicesHook = this._slicesHook.bind(this)
-    this.handleSlice = this._handleSlice.bind(this)
+    this._slicesHook = this._slicesHook.bind(this)
+    this._handleSlice = this._handleSlice.bind(this)
   }
 
   /**
@@ -31,8 +35,8 @@ class KitsunetPubSub extends BaseTracker {
    * @param {Slice} slice - slice to subscribe to
    */
   _subscribe (slice) {
-    this.multicast.addFrwdHook(this._makeSliceTopic(slice), [this.slicesHook])
-    this.multicast.subscribe(this._makeSliceTopic(slice), this.handleSlice)
+    this._multicast.addFrwdHook(this._makeSliceTopic(slice), [this._slicesHook])
+    this._multicast.subscribe(this._makeSliceTopic(slice), this._handleSlice)
   }
 
   /**
@@ -41,18 +45,19 @@ class KitsunetPubSub extends BaseTracker {
    * @param {Slice} slice - slice to unsubscribe from
    */
   _unsubscribe (slice) {
-    this.multicast.removeFrwdHook(this._makeSliceTopic(slice), this.slicesHook)
-    this.multicast.unsubscribe(this._makeSliceTopic(slice), this.handleSlice)
+    this._multicast.removeFrwdHook(this._makeSliceTopic(slice), this._slicesHook)
+    this._multicast.unsubscribe(this._makeSliceTopic(slice), this._handleSlice)
   }
 
   /**
    * Helper to make a slice topic
    *
    * @param {Slice|SliceId} slice - a Slice object
+   * @returns {String} - a slice topic
    */
   _makeSliceTopic (slice) {
     const { path, depth } = slice
-    return `${this.topic}-${path}-${depth || DEFAULT_DEPTH}`
+    return `${this._namespace}-${path}-${depth || this._depth}`
   }
 
   /**
@@ -64,11 +69,12 @@ class KitsunetPubSub extends BaseTracker {
    * @param {PeerInfo} peer - the peer sending the message
    * @param {Msg} msg - the pubsub message
    * @param {Function} cb - callback
+   * @returns {Function}
    */
   _slicesHook (peer, msg, cb) {
     let slice = null
     try {
-      slice = JSON.parse(msg.data.toString())
+      slice = cbor.parse(msg.data)
       if (!slice) {
         return cb(new Error(`No slice in message!`))
       }
@@ -78,10 +84,10 @@ class KitsunetPubSub extends BaseTracker {
     }
 
     const peerId = peer.info.id.toB58String()
-    const slices = this.forwardedSlicesCache.has(peerId) || createCache()
+    const slices = this._forwardedSlicesCache.has(peerId) || createCache()
     if (!slices.has(slice.sliceId)) {
       slices.set(slice.sliceId, true)
-      this.forwardedSlicesCache.set(peerId, slices)
+      this._forwardedSlicesCache.set(peerId, slices)
       return cb(null, msg)
     }
 
@@ -96,10 +102,9 @@ class KitsunetPubSub extends BaseTracker {
    * @param {Msg} msg - the pubsub message
    */
   _handleSlice (msg) {
-    const data = msg.data.toString()
     try {
-      const slice = JSON.parse(data)
-      this.emit(`slice`, slice)
+      const slice = cbor.parse(msg.data)
+      this.emit(`slice`, new Slice(slice))
     } catch (err) {
       log(err)
     }
@@ -110,9 +115,10 @@ class KitsunetPubSub extends BaseTracker {
    *
    * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
    */
-  async untrackSlices (slices) {
+  async untrack (slices) {
+    slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach(async (slice) => {
-      await this.multicast.unsubscribe(this._makeSliceTopic(slice))
+      await this._multicast.unsubscribe(this._makeSliceTopic(slice))
       this.slice.delete(slice)
     })
   }
@@ -123,12 +129,12 @@ class KitsunetPubSub extends BaseTracker {
    *
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
-  async trackSlices (slices) {
+  async track (slices) {
     slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach(async (slice) => {
       if (this.isTracking(slice)) return
-      await this.multicast.subscribe(this._makeSliceTopic(slice), this.slicesHook)
-      this.slices.add(slice)
+      await this._multicast.subscribe(this._makeSliceTopic(slice), this._slicesHook)
+      this._slices.add(slice)
     })
   }
 
@@ -139,8 +145,8 @@ class KitsunetPubSub extends BaseTracker {
    * @returns {Boolean}
    */
   async isTracking (slice) {
-    return (this.slices.has(slice) &&
-    this.multicast.ls().indexOf(this._makeSliceTopic(slice)) > -1)
+    return (this._slices.has(slice) &&
+    this._multicast.ls().indexOf(this._makeSliceTopic(slice)) > -1)
   }
 
   /**
@@ -148,19 +154,19 @@ class KitsunetPubSub extends BaseTracker {
    *
    * @param {Slice} slice - the slice to be published
    */
-  async publishSlice (slice) {
+  async publish (slice) {
     if (!this.isTracking(slice)) {
       this.trackSlice(slice)
     }
-    this.multicast.publish(this._makeSliceTopic(slice), slice)
+    this._multicast.publish(this._makeSliceTopic(slice), slice.serialize())
   }
 
   async start () {
-    this.trackSlices(this.slice)
+    this.track(this.slice)
   }
 
   async stop () {
-    this.untrackSlices(this.slices)
+    this.untrack(this._slices)
   }
 }
 

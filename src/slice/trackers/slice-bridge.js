@@ -2,41 +2,40 @@
 
 const BaseTracker = require('./base')
 const { fetcher } = require('../slice-fetcher')
+const { Slice } = require('../slice')
 
 const nextTick = require('async/nextTick')
-const normalizeKeys = require('normalize-keys')
 const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
 
 class KitsunetBridge extends BaseTracker {
-  constructor (bridgeUrl, slices) {
+  constructor ({ bridgeUrl, slices, blockTracker }) {
     super()
     this.slices = new Set(slices)
     this.bridgeUrl = bridgeUrl
+    this._blockTracker = blockTracker
 
     this.fetcher = fetcher(this.bridgeUrl)
+    this._blockHandler = this._blockHandler.bind(this)
+  }
 
-    /**
-     * Handle blocks via the `latest` event
-     *
-     * TODO: this is probably better handled with an explicit method
-     * such as publish/push/etc... Events are really the wrong thing!!
-     */
-    const blockHandler = async (block) => {
-      nextTick(() => {
-        this.slices.forEach(async (slice) => {
-          const { path, depth, isStorage } = slice
-          const fetchedSlice = await this.fetchSlice({
-            path,
-            depth,
-            root: block.stateRoot,
-            isStorage
-          })
-          this.emit('slice', normalizeKeys(fetchedSlice))
+  /**
+  * Handle blocks via the `latest` event
+  *
+  * @param {Block} block - an rpc (JSON) block
+  */
+  _blockHandler (block) {
+    nextTick(() => {
+      this.slices.forEach(async (slice) => {
+        const { path, depth, isStorage } = slice
+        const fetchedSlice = await this.fetchSlice({
+          path,
+          depth,
+          root: block.stateRoot,
+          isStorage
         })
+        this.emit('slice', new Slice(fetchedSlice))
       })
-    }
-
-    this._blockHandler = blockHandler.bind(this)
+    })
   }
 
   /**
@@ -44,7 +43,7 @@ class KitsunetBridge extends BaseTracker {
    *
    * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
    */
-  async untrackSlices (slices) {
+  async untrack (slices) {
     slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach((slice) => this.slices.delete(slice))
   }
@@ -55,7 +54,7 @@ class KitsunetBridge extends BaseTracker {
    *
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
-  async trackSlices (slices) {
+  async track (slices) {
     slices = Array.isArray(slices) ? slices : [slices]
     this.slices = new Set(this.slices, slices)
   }
@@ -63,38 +62,29 @@ class KitsunetBridge extends BaseTracker {
   /**
    * Fetch a slice from the Ethereum RPC
    *
-   * @param {SliceId} param - the slice id to fetch
+   * @param {SliceId} sliceId - the slice id to fetch
    */
-  async _fetchSlice (slice) {
-    const { path, depth, root, isStorage } = slice
+  async _fetchSlice (sliceId) {
+    const { path, depth, root, isStorage } = sliceId
     return this.fetcher({ path, depth, root, isStorage })
   }
 
   /**
    * Check wether the slice is already being tracked
    *
-   * @param {SliceId} slice - the slice id
+   * @param {SliceId} sliceId - the slice id
    * @returns {Boolean}
    */
-  async isTracking (slice) {
-    return this.slices.has(slice)
-  }
-
-  /**
-   * Publish the slice
-   *
-   * @param {Slice} slice - the slice to be published
-   */
-  async publishSlice (slice) {
-    // noop
+  async isTracking (sliceId) {
+    return this.slices.has(sliceId)
   }
 
   async start () {
-    this.on('block', this._blockHandler)
+    this._blockTracker.on('block', this._blockHandler)
   }
 
   async stop () {
-    this.removeListener('block', this._blockHandler)
+    this._blockTracker.removeListener('block', this._blockHandler)
   }
 }
 
