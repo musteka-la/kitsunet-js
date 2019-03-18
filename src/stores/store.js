@@ -1,6 +1,5 @@
 'use strict'
 
-const assert = require('assert')
 const Key = require('interface-datastore').Key
 
 class Store {

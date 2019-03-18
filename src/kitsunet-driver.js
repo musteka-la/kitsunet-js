@@ -10,9 +10,8 @@ class KitsunetDriver extends Peer {
     node,
     kitsunetNode,
     isBridge,
-    blockTracker,
-    sliceTracker,
-    dataStore, // the data store
+    sliceManager,
+    discovery,
     chain, // blockchain
     trie
   }) {
@@ -20,20 +19,12 @@ class KitsunetDriver extends Peer {
     this.node = node
     this.isBridge = Boolean(isBridge)
     this.multicast = node.multicast
-
     this._slices = new Set()
-
     this._trie = trie
     this._chain = chain
-
-    this._dataStore = dataStore
-
     this._kitsunetNode = kitsunetNode
-
-    this._remotePeers = new Map()
-    this._blockTracker = blockTracker
-
-    this._sliceTracker = sliceTracker
+    this._sliceManager = sliceManager
+    this._discovery = discovery
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
 
     this._setUp()
@@ -54,89 +45,33 @@ class KitsunetDriver extends Peer {
   }
 
   /**
-   * Check wether the slice is already being tracked
-   *
-   * @param {String} slice - the slice id
-   * @returns {Boolean}
-   */
-  async isTracking (slice) {
-    return this._sliceTracker.isTracking(slice)
-  }
-
-  /**
-   * This will discover, connect and start tracking
-   * the requested slices from the network.
-   *
-   * @param {Array<SliceId>|SliceId} slices - a slice or an array of slices to track
-   */
-  async trackSlices (slices) {
-    this._sliceTracker.trackSlices(slices)
-  }
-
-  /**
-   * Stop tracking the provided slices
-   *
-   * @param {Array<SliceId>|SliceId} slices - the slices to stop tracking
-   */
-  async untrackSlices (slices) {
-    this._sliceTracker.untrackSlices(slices)
-  }
-
-  /**
-   * Get a slice
-   *
-   * @param {SliceId} slice - the slice to return
-   * @return {Slice}
-   */
-  async getSlice (slice) {
-    // TODO: this should fallback to to some persistent storage if not found
-    return this._sliceCache.get(slice.id)
-  }
-
-  /**
-   * Get the latest slice for prefix
-   *
-   * @return {Slice}
-   */
-  async getLatestSlice () {
-  }
-
-  /**
-   * Get the slice for a block
-   *
-   * @param {Number} block - the block number to get the slice for
-   * @param {Slice} slice - the slice to get (root is ignored)
-   */
-  async getSliceForBlock (block, slice) {
-  }
-
-  /**
    * Discover peers tracking this slice
    *
    * @param {Array<SliceId>|SliceId} slice - the slices to find the peers for
-   * @param {Object}  - an options object with the following properties
-   *                  - maxPeers - the maximum amount of peers to connect to
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
-  async findSlicePeers (slice, options = { maxPeers: 3 }) {
+  async findPeers (slice) {
+    this.discovery.findPeers(slice)
   }
 
   /**
    * Discover and connect to peers tracking this slice
    *
    * @param {Array<SliceId>} slices - the slices to find the peers for
-   * @param {Slice} - an options object with the following properties
-   *                    - maxPeers - the maximum amount of peers to connect to
    */
-  async findAndConnect (slices, options = { maxPeers: 3 }) {
+  async findAndConnect (slices) {
+    const peers = this.findPeers(slices)
+    peers.forEach((peer) => this.kitsunetNode.dial(peer))
   }
 
   /**
-   * Announces slice to the network using whatever mechanisms are available, e.g DHT, RPC, etc...
+   * Announces slice to the network using whatever mechanisms
+   * are available, e.g DHT, RPC, etc...
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
-  async announceSlices (slices) {
+  async announce (slices) {
+    return this._discovery.announce(slices)
   }
 
   /**

@@ -1,6 +1,10 @@
 'use strict'
 
 const Discovery = require('./base')
+const promisify = require('promisify-this')
+const multihashing = promisify(require('multihashing'))
+
+const TIMEOUT = 1000 * 60 // one minute
 
 class DhtDiscovery extends Discovery {
   /**
@@ -13,16 +17,18 @@ class DhtDiscovery extends Discovery {
     this._dht = dht
   }
 
+  async _makeKeyId (sliceId) {
+    return multihashing.digest(sliceId.serialize(), 'sha2-256')
+  }
+
   /**
    * Discover peers tracking this slice
    *
    * @param {Array<SliceId>|SliceId} sliceId - the slices to find the peers for
-   * @param {Object}  - an options object with the following properties
-   *                  - maxPeers - the maximum amount of peers to connect to
-   * @returns {Array<Peer>} peers - an array of peers tracking the slice
+   * @returns {Array<PeerInfo>} peers - an array of peers tracking the slice
    */
-  async findSlicePeers (sliceId, options = { maxPeers: 3 }) {
-    throw new Error('not implemented!')
+  async findPeers (sliceId) {
+    return this._dht.findProviders(await this._makeKeyId(sliceId), TIMEOUT)
   }
 
   /**
@@ -30,8 +36,8 @@ class DhtDiscovery extends Discovery {
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
-  async announceSlices (slices) {
-    throw new Error('not implemented!')
+  async announce (slices) {
+    slices.forEach(async (sliceId) => this._dht.provide(await this._makeKeyId(sliceId)))
   }
 }
 

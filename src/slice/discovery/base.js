@@ -9,7 +9,7 @@ class Discovery {
    *                  - maxPeers - the maximum amount of peers to connect to
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
-  async findSlicePeers (sliceId, options = { maxPeers: 3 }) {
+  async findPeers (sliceId, options = { maxPeers: 3 }) {
     throw new Error('not implemented!')
   }
 
@@ -18,7 +18,7 @@ class Discovery {
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
-  async announceSlices (slices) {
+  async announce (slices) {
     throw new Error('not implemented!')
   }
 }

@@ -5,11 +5,13 @@ const normalizeKeys = require('normalize-keys')
 
 const bourne = require('bourne')
 
+const cbor = require('borc')
+
 class Slice extends SliceId {
   constructor (data) {
     let parsed
     if (Buffer.isBuffer(data)) {
-      parsed = bourne.parse(data.toString())
+      parsed = cbor.decode(data)
     } else if (typeof data === 'string') {
       parsed = bourne.parse(data)
     } else if (typeof data === 'object') {
@@ -44,7 +46,15 @@ class Slice extends SliceId {
   }
 
   serialize () {
-    return Buffer.from(JSON.stringify(this._parsed))
+    return cbor.encode({
+      path: this.path,
+      depth: this.depth,
+      root: this.root,
+      isStorage: this.isStorage,
+      head: this.head,
+      stem: this.stem,
+      sliceNodes: this.sliceNodes
+    })
   }
 }
 

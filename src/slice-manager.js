@@ -3,12 +3,13 @@
 const SliceId = require('./slice/slice-id')
 
 class SliceManager {
-  constructor ({ bridgeTracker, pubsubTracker, sliceStore, blockTracker }) {
+  constructor ({ bridgeTracker, pubsubTracker, sliceStore, blockTracker, driver }) {
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
 
     this._blockTracker = blockTracker
     this._sliceStore = sliceStore
+    this._driver = driver
 
     this._setUp()
   }
@@ -34,7 +35,7 @@ class SliceManager {
    *
    * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
    */
-  async untrackSlices (slices) {
+  async untrack (slices) {
     if (this._bridgeTracker) {
       this._bridgeTracker.untrackSlices(slices)
     }
@@ -48,7 +49,7 @@ class SliceManager {
    *
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
-  async trackSlices (slices) {
+  async track (slices) {
     if (this._bridgeTracker) {
       this._bridgeTracker.trackSlices(slices)
     }
@@ -72,7 +73,7 @@ class SliceManager {
    *
    * @param {Slice} slice - the slice to be published
    */
-  async publishSlice (slice) {
+  async publish (slice) {
     // bridge doesn't implement publishSlice
     this._pubsubTracker.publishSlice(slice)
   }
@@ -84,7 +85,8 @@ class SliceManager {
    * @return {Slice}
   */
   async getSlice (sliceId) {
-    return this._sliceStore.getSliceById(sliceId)
+    const slice = await this._sliceStore.getSliceById(sliceId)
+    if (slice) return slice
   }
 
   /**
@@ -107,35 +109,6 @@ class SliceManager {
    */
   async getSliceForBlock (block, prefix, depth) {
     return this._sliceStore.getSliceById(new SliceId({ prefix, depth, root: block.stateRoot }))
-  }
-
-  /**
-   * Discover peers tracking this slice
-   *
-   * @param {Array<SliceId>|SliceId} sliceId - the slices to find the peers for
-   * @param {Object} options - an options object with the following properties
-   *                  - maxPeers - the maximum amount of peers to connect to
-   * @returns {Array<Peer>} peers - an array of peers tracking the slice
-   */
-  async findSlicePeers (sliceId, options = { maxPeers: 3 }) {
-  }
-
-  /**
-   * Discover and connect to peers tracking this slice
-   *
-   * @param {Array<SliceId>} slices - the slices to find the peers for
-   * @param {Object} options - an options object with the following properties
-   *                        - maxPeers - the maximum amount of peers to connect to
-   */
-  async findAndConnect (slices, options = { maxPeers: 3 }) {
-  }
-
-  /**
-   * Announces slice to the network using whatever mechanisms are available, e.g DHT, RPC, etc...
-   *
-   * @param {Array<SliceId>} slices - the slices to announce to the network
-   */
-  async announceSlices (slices) {
   }
 
   async start () {

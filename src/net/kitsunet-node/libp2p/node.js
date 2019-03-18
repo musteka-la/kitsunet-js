@@ -55,9 +55,7 @@ class Node extends Libp2p {
     }
 
     this.multicast = createMulticast(this)
-
     this.multicast = promisify(this.multicast)
-
     this.start = promisify(this.start.bind(this))
     this.stop = promisify(this.stop.bind(this))
     this.dial = promisify(this.dial.bind(this))
