@@ -1,20 +1,20 @@
 'use strict'
 
 const BaseTracker = require('./base')
-const { fetcher } = require('./slice-fetcher')
+const fetcher = require('./slice-fetcher')
 const { Slice } = require('../slice')
 
 const nextTick = require('async/nextTick')
 const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
 
 class KitsunetBridge extends BaseTracker {
-  constructor ({ bridgeUrl, slices, blockTracker }) {
+  constructor ({ rpcUrl, slices, blockTracker }) {
     super()
     this.slices = new Set(slices)
-    this.bridgeUrl = bridgeUrl
+    this.rpcUrl = rpcUrl
     this._blockTracker = blockTracker
 
-    this.fetcher = fetcher(this.bridgeUrl)
+    this.fetcher = fetcher(this.rpcUrl)
     this._blockHandler = this._blockHandler.bind(this)
   }
 

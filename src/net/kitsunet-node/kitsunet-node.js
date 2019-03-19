@@ -21,6 +21,7 @@ class KitsunetNode extends EE {
 
     this.maxPeers = maxPeers || MAX_PEERS
     this.interval = interval || INTERVAL
+    this.intervalTimer = null
 
     this.node = node
     this.connected = new Map()
@@ -54,9 +55,15 @@ class KitsunetNode extends EE {
       nextTick(() => this.emit('kitsunet:discovery', peerInfo))
       log(`peer discovered ${peerInfo.id.toB58String()}`)
     })
+  }
 
+  async start () {
     this.tryConnect()
-    setInterval(this.tryConnect.bind(this), this.interval)
+    this.intervalTimer = setInterval(this.tryConnect.bind(this), this.interval)
+  }
+
+  async stop () {
+    clearInterval(this.intervalTimer)
   }
 
   get id () {

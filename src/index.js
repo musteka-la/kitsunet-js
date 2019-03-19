@@ -1,7 +1,7 @@
 'use strict'
 
 const { Opium } = require('opium-ioc')
-const createDeps = require('./dependencies')
+const dependencies = require('./dependencies')
 const ethUtils = require('ethereumjs-util')
 
 const { SliceId } = require('./slice')
@@ -9,8 +9,8 @@ const { SliceId } = require('./slice')
 const log = require('debug')('kitsunet:kitsunet-factory')
 
 module.exports = async (options) => {
-  const container = new Opium()
-  const deps = createDeps(container, options)
+  const container = new Opium('kitsunet')
+  const deps = await dependencies(container, options)
 
   const kitsunetDep = deps.getDep('kitsunet')
   const kitsunet = await kitsunetDep.inject()
