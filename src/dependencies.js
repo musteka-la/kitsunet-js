@@ -20,15 +20,11 @@ module.exports = async (container, options) => {
   container.registerInstance('is-bridge', Boolean(options.bridge))
 
   // register node
-  container.registerFactory('node', async (options) => {
-    const node = await createNode({
-      identity: options.identity,
-      addrs: options.libp2pAddrs,
-      bootstrap: options.libp2pBootstrap || []
-    })
-
-    return node
-  }, ['options'])
+  container.registerFactory('node', async (options) => createNode({
+    identity: options.identity,
+    addrs: options.libp2pAddrs,
+    bootstrap: options.libp2pBootstrap || []
+  }), ['options'])
 
   // register dht discovery
   container.registerFactory('kitsunet-discovery', (node) => new DhtDiscovery(node), ['node'])
