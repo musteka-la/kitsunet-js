@@ -107,7 +107,7 @@ async function run () {
   options.libp2pAddrs = options.libp2pAddrs || config.libp2pAddrs
 
   try {
-    const { kitsunet } = await createKitsunet(options)
+    const kitsunet = await createKitsunet(options)
     await kitsunet.start()
 
     process.on('INT', () => {

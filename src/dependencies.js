@@ -5,56 +5,57 @@ const SliceManager = require('./slice-manager')
 const KitsunetDriver = require('./kitsunet-driver')
 const { createNode, KitsunetNode } = require('./net/kitsunet-node')
 const { DhtDiscovery } = require('./slice/discovery')
-const { BridgetTracker, PubsubTracker } = require('./slice/trackers')
-const { Blockchain } = require('ethereumjs-blockchain')
-const { Level } = require('level')
+const Blockchain = require('ethereumjs-blockchain')
+const Level = require('level')
+const path = require('path')
 
-module.exports = (container, options) => {
+const { dependencies: trackerDeps } = require('./slice/trackers')
+const { dependencies: storeDependencies } = require('./stores')
+
+module.exports = async (container, options) => {
+  container = trackerDeps(container, options)
+  container = storeDependencies(container, options)
+
   container.registerInstance('options', options)
   container.registerInstance('is-bridge', Boolean(options.bridge))
 
-  // register chain db
-  container.registerFactory('chain-db', (options) => new Level(options.chainDbPath), ['options'])
-
-  // register node options
-  container.registerFactory('blockchain-options', (db) => { return { db } }, ['chain-db'])
-
-  // register Blockchain
-  // TODO: do propper blockchain setup (hardforks, etc...)
-  container.registerInstance('blockchain', Blockchain, ['blockchain-options'])
-
-  // register dht discovery
-  container.registerType('dht-discovery', DhtDiscovery, ['node'])
-
-  // register node options
-  container.registerFactory('node-options', (options) => {
-    return {
+  // register node
+  container.registerFactory('node', async (options) => {
+    const node = await createNode({
       identity: options.identity,
       addrs: options.libp2pAddrs,
       bootstrap: options.libp2pBootstrap || []
-    }
+    })
+
+    return node
   }, ['options'])
 
-  // register node
-  container.registerFactory('node', createNode, ['node-options'])
+  // register dht discovery
+  container.registerFactory('kitsunet-discovery', (node) => new DhtDiscovery(node), ['node'])
 
   // register kitsunet node
-  container.registerInstance('kitsunet-node-options', { node: null }, ['node'])
+  container.registerFactory('kitsunet-node', (node) => new KitsunetNode({ node }), ['node'])
 
-  // register kitsunet node
-  container.registerType('kitsunet-node', KitsunetNode, ['kitsunet-node-options'])
+  // register chain db
+  container.registerFactory('chain-db', (options) => {
+    return Level(path.resolve(options.chainDbPath || './kitsunet/chain-db/'))
+  }, ['options'])
+
+  // register Blockchain
+  // TODO: do propper blockchain setup (hardforks, etc...)
+  container.registerFactory('blockchain', (db) => new Blockchain({ db }), ['chain-db'])
 
   // register KitsunetDriver options
-  container.registerFactory('kitsunet-driver-options',
+  container.registerFactory('kitsunet-driver',
     (node, kitsunetNode, isBridge, sliceManager, discovery, blockchain) => {
-      return {
+      return new KitsunetDriver({
         node,
         kitsunetNode,
         isBridge,
         sliceManager,
         discovery,
         blockchain
-      }
+      })
     }, [
       'node',
       'kitsunet-node',
@@ -64,18 +65,16 @@ module.exports = (container, options) => {
       'blockchain'
     ])
 
-  container.registerType('kitsunet-driver', KitsunetDriver, ['kitsunet-driver-options'])
-
   // register SliceManager options
-  container.registerFactory('slice-manager-options',
+  container.registerFactory('slice-manager',
     (bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, driver) => {
-      return {
+      return new SliceManager({
         bridgeTracker,
         pubsubTracker,
         kitsunetStore,
         blockTracker,
         driver
-      }
+      })
     }, [
       'bridge-tracker',
       'pubsub-tracker',
@@ -84,11 +83,10 @@ module.exports = (container, options) => {
       'kitsunet-driver'
     ])
 
-  // register SliceManager
-  container.registerType('slice-manager', SliceManager, ['slice-manager-options'])
-
   // register kitsunet
-  container.registerType('kitsunet', Kitsunet, ['slice-manager', 'kitsunet-driver'])
+  container.registerFactory('kitsunet',
+    (sliceManager, driver) => new Kitsunet(sliceManager, driver),
+    ['slice-manager', 'kitsunet-driver'])
 
   return container
 }

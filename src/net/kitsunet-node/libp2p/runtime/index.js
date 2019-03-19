@@ -7,11 +7,11 @@ const TCP = require('libp2p-tcp')
 const MDNS = require('libp2p-mdns')
 const Bootstrap = require('libp2p-bootstrap')
 
-const PeerInfo = promisify(require('peer-info'))
-const PeerId = promisify(require('peer-id'))
+const PeerInfo = promisify(require('peer-info'), false)
+const PeerId = promisify(require('peer-id'), false)
 const Node = require('../node')
 
-async function createNode (identity, addrs, bootstrap) {
+async function createNode ({ identity, addrs, bootstrap }) {
   let id = {}
   const privKey = identity && identity.privKey ? identity.privKey : null
   if (!privKey) {
