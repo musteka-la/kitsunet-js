@@ -1,5 +1,48 @@
 'use strict'
 
-const kitsunetFactory = require('./kitsunet-factory')
+const { Opium } = require('opium-ioc')
+const createDeps = require('./dependencies')
+const ethUtils = require('ethereumjs-util')
 
-module.exports = kitsunetFactory
+const { SliceId } = require('./slice')
+
+const log = require('debug')('kitsunet:kitsunet-factory')
+
+module.exports = async (options) => {
+  const container = new Opium()
+  const deps = createDeps(container, options)
+
+  const kitsunetDep = deps.getDep('kitsunet')
+  const kitsunet = await kitsunetDep.inject()
+
+  let paths = options.slicePath || []
+  let ethAddrs = options.ethAddrs || []
+  if (ethAddrs.length) {
+    paths = paths.concat(ethAddrs.map((a) => {
+      if (ethUtils.isValidAddress(a)) {
+        return ethUtils.keccak256(ethUtils.stripHexPrefix(a)).toString('hex').slice(0, 4)
+      }
+    }))
+  }
+
+  let slices = new Set(paths.map((p) => {
+    return new SliceId({
+      path: String(p),
+      depth: options.sliceDepth
+    })
+  }))
+
+  if (options.sliceFile && options.sliceFile.length > 0) {
+    const sclicesFile = require(options.sliceFile)
+    slices = slices.concat(sclicesFile.slices.map((p) => {
+      return new SliceId({
+        path: String(p),
+        depth: options.sliceDepth
+      })
+    }))
+  }
+
+  kitsunet.sliceManager.track(slices)
+
+  return kitsunet
+}

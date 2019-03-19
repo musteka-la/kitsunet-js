@@ -1,7 +1,7 @@
 'use strict'
 
-const BridgeTracker = require('./kitsunet-bridge')
-const PubSubTracker = require('./kitsunet-pubsub')
+const BridgeTracker = require('./slice-bridge')
+const PubSubTracker = require('./slice-pubsub')
 
 module.exports = {
   BridgeTracker,
