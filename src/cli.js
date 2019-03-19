@@ -2,7 +2,7 @@
 
 const yargs = require('yargs')
 
-const createKitsunet = require('./kitsunet-factory')
+const createKitsunet = require('./')
 
 const options = yargs
   .usage(`Kitsunet cmd client`)
@@ -49,7 +49,7 @@ const options = yargs
       requiresArg: false,
       required: false
     },
-    'slice-bridge': {
+    bridge: {
       alias: 'b',
       description: 'enable bridge mode - read slices from the rpc',
       requiresArg: false,
@@ -103,11 +103,11 @@ async function run () {
     config = options.config
   }
 
-  const identity = options.identity ? require(options.identity) : config.identity
-  const addrs = options.libp2pAddrs || config.libp2pAddrs
+  options.identity = options.identity ? require(options.identity) : config.identity
+  options.libp2pAddrs = options.libp2pAddrs || config.libp2pAddrs
 
   try {
-    const { kitsunet } = await createKitsunet({ options, identity, addrs })
+    const { kitsunet } = await createKitsunet(options)
     await kitsunet.start()
 
     process.on('INT', () => {

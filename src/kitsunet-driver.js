@@ -12,7 +12,7 @@ class KitsunetDriver extends Peer {
     isBridge,
     sliceManager,
     discovery,
-    chain, // blockchain
+    blockchain,
     trie
   }) {
     super()
@@ -21,7 +21,7 @@ class KitsunetDriver extends Peer {
     this.multicast = node.multicast
     this._slices = new Set()
     this._trie = trie
-    this._chain = chain
+    this._chain = blockchain
     this._kitsunetNode = kitsunetNode
     this._sliceManager = sliceManager
     this._discovery = discovery

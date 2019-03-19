@@ -18,7 +18,7 @@ class SliceId {
   }
 
   get id () {
-    return `${this.path}-${this.depth}-${this.root}`
+    return `${this.path}-${this.depth}${this.root ? '-' + this.root : ''}`
   }
 
   serialize () {

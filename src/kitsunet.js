@@ -3,9 +3,10 @@
 const EE = require('safe-event-emitter')
 
 class Kitsunet extends EE {
-  constructor (sliceManager) {
+  constructor (sliceManager, driver) {
     super()
-    this._sliceManager = sliceManager
+    this.sliceManager = sliceManager
+    this.driver = driver
   }
 
   /**
@@ -15,6 +16,7 @@ class Kitsunet extends EE {
   * @return {Slice}
   */
   async getSlice (slice) {
+    this._sliceManager.getSlice(slice)
   }
 
   /**
@@ -23,6 +25,7 @@ class Kitsunet extends EE {
    * @return {Slice}
    */
   async getLatestSlice () {
+    return this._sliceManager.getLatestSlice()
   }
 
   /**
@@ -31,6 +34,7 @@ class Kitsunet extends EE {
    * @param {Number} block - the block number to get the slice for
    */
   async getSliceForBlock (block) {
+    this._sliceManager.getSliceForBlock(block)
   }
 
   /**
@@ -39,6 +43,17 @@ class Kitsunet extends EE {
  * @param {Number} blockHash - the block hash to get the slice for
  */
   async getSliceForBlockHash (blockHash) {
+    this._sliceManager.getSliceForBlockHash(blockHash)
+  }
+
+  async start () {
+    await this._sliceManager.start()
+    await this._driver.start()
+  }
+
+  async stop () {
+    await this._sliceManager.stop()
+    await this._driver.stop()
   }
 }
 

@@ -1,7 +1,7 @@
 'use strict'
 
 const BaseTracker = require('./base')
-const { fetcher } = require('../slice-fetcher')
+const { fetcher } = require('./slice-fetcher')
 const { Slice } = require('../slice')
 
 const nextTick = require('async/nextTick')

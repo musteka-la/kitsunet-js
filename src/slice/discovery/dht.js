@@ -10,11 +10,11 @@ class DhtDiscovery extends Discovery {
   /**
    * Discover nodes for slices using the kademlia DHT
    *
-   * @param {KademliaDHT} dht - the libp2p kademlia dht instance
+   * @param {Libp2p} node - the libp2p kademlia dht instance
    */
-  constructor (dht) {
+  constructor (node) {
     super()
-    this._dht = dht
+    this._dht = node.dht
   }
 
   async _makeKeyId (sliceId) {
