@@ -90,7 +90,7 @@ class KitsunetNode extends EE {
     if (!this.connected.has(id)) {
       try {
         this.dialing.set(id, true)
-        const conn = await this.node.dialProtocol(this.node, peer, proto)
+        const conn = await this.node.dialProtocol(peer, proto)
         this.emit('kitsunet:peer', { id, conn })
       } catch (err) {
         log(err)

@@ -2,15 +2,15 @@
 
 const BaseTracker = require('./base')
 const fetcher = require('./slice-fetcher')
-const { Slice } = require('../slice')
+const { Slice } = require('../')
+const utils = require('ethereumjs-util')
 
 const nextTick = require('async/nextTick')
 const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
 
 class KitsunetBridge extends BaseTracker {
   constructor ({ rpcUrl, slices, blockTracker }) {
-    super()
-    this.slices = new Set(slices)
+    super({ slices })
     this.rpcUrl = rpcUrl
     this._blockTracker = blockTracker
 
@@ -21,16 +21,16 @@ class KitsunetBridge extends BaseTracker {
   /**
   * Handle blocks via the `latest` event
   *
-  * @param {Block} block - an rpc (JSON) block
+  * @param {Block} header - an rpc (JSON) block
   */
-  _blockHandler (block) {
+  _blockHandler (header) {
     nextTick(() => {
       this.slices.forEach(async (slice) => {
         const { path, depth, isStorage } = slice
-        const fetchedSlice = await this.fetchSlice({
-          path,
+        const fetchedSlice = await this.fetcher({
+          path: path,
           depth,
-          root: block.stateRoot,
+          root: utils.bufferToHex(header.stateRoot),
           isStorage
         })
         this.emit('slice', new Slice(fetchedSlice))
@@ -41,10 +41,9 @@ class KitsunetBridge extends BaseTracker {
   /**
    * Stop tracking the provided slices
    *
-   * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
+   * @param {Set<SliceId>} slices - the slices to stop tracking
    */
   async untrack (slices) {
-    slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach((slice) => this.slices.delete(slice))
   }
 
@@ -52,11 +51,10 @@ class KitsunetBridge extends BaseTracker {
    * This will discover, connect and start tracking
    * the requested slices from the network.
    *
-   * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
+   * @param {Set<SliceId>} slices - a slice or an Set of slices to track
    */
   async track (slices) {
-    slices = Array.isArray(slices) ? slices : [slices]
-    this.slices = new Set(this.slices, slices)
+    this.slices = new Set([...this.slices, ...slices])
   }
 
   /**
@@ -80,11 +78,13 @@ class KitsunetBridge extends BaseTracker {
   }
 
   async start () {
-    this._blockTracker.on('block', this._blockHandler)
+    await this._blockTracker.start()
+    this._blockTracker.on('latest', this._blockHandler)
   }
 
   async stop () {
-    this._blockTracker.removeListener('block', this._blockHandler)
+    await this._blockTracker.stop()
+    this._blockTracker.removeListener('latest', this._blockHandler)
   }
 }
 

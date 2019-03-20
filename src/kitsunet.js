@@ -3,10 +3,10 @@
 const EE = require('safe-event-emitter')
 
 class Kitsunet extends EE {
-  constructor (sliceManager, driver) {
+  constructor (sliceManager, kitsunetDriver) {
     super()
     this.sliceManager = sliceManager
-    this.driver = driver
+    this.kitsunetDriver = kitsunetDriver
   }
 
   /**
@@ -16,7 +16,7 @@ class Kitsunet extends EE {
   * @return {Slice}
   */
   async getSlice (slice) {
-    this._sliceManager.getSlice(slice)
+    this.sliceManager.getSlice(slice)
   }
 
   /**
@@ -25,7 +25,7 @@ class Kitsunet extends EE {
    * @return {Slice}
    */
   async getLatestSlice () {
-    return this._sliceManager.getLatestSlice()
+    return this.sliceManager.getLatestSlice()
   }
 
   /**
@@ -34,7 +34,7 @@ class Kitsunet extends EE {
    * @param {Number} block - the block number to get the slice for
    */
   async getSliceForBlock (block) {
-    this._sliceManager.getSliceForBlock(block)
+    this.sliceManager.getSliceForBlock(block)
   }
 
   /**
@@ -43,17 +43,20 @@ class Kitsunet extends EE {
  * @param {Number} blockHash - the block hash to get the slice for
  */
   async getSliceForBlockHash (blockHash) {
-    this._sliceManager.getSliceForBlockHash(blockHash)
+    this.sliceManager.getSliceForBlockHash(blockHash)
   }
 
   async start () {
-    await this._sliceManager.start()
-    await this._driver.start()
+    // driver should be started first,
+    // it loads up libp2p node and other
+    // essentials
+    await this.kitsunetDriver.start()
+    await this.sliceManager.start()
   }
 
   async stop () {
-    await this._sliceManager.stop()
-    await this._driver.stop()
+    await this.sliceManager.stop()
+    await this.kitsunetDriver.stop()
   }
 }
 

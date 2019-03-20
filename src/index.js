@@ -26,19 +26,13 @@ module.exports = async (options) => {
   }
 
   let slices = new Set(paths.map((p) => {
-    return new SliceId({
-      path: String(p),
-      depth: options.sliceDepth
-    })
+    return new SliceId(p, options.sliceDepth)
   }))
 
   if (options.sliceFile && options.sliceFile.length > 0) {
     const sclicesFile = require(options.sliceFile)
     slices = slices.concat(sclicesFile.slices.map((p) => {
-      return new SliceId({
-        path: String(p),
-        depth: options.sliceDepth
-      })
+      return new SliceId(p, options.sliceDepth)
     }))
   }
 

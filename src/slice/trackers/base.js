@@ -3,10 +3,16 @@
 const EE = require('safe-event-emitter')
 
 class BaseTracker extends EE {
+  constructor ({ slices }) {
+    super()
+    this.slices = slices || new Set()
+    this._isStarted = false
+  }
+
   /**
  * Stop tracking the provided slices
  *
- * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
+ * @param {Set<SliceId>} slices - the slices to stop tracking
  */
   async untrack (slices) {
     throw new Error('not implemented!')
@@ -16,7 +22,7 @@ class BaseTracker extends EE {
    * This will discover, connect and start tracking
    * the requested slices from the network.
    *
-   * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
+   * @param {Set<SliceId>} slices - a slice or an Set of slices to track
    */
   async track (slices) {
     throw new Error('not implemented!')

@@ -1,23 +1,24 @@
 'use strict'
 
-const BridgetTracker = require('./slice-bridge')
-const PubsubTracker = require('./slice-pubsub')
+const BridgetTracker = require('./bridge')
+const PubsubTracker = require('./pubsub')
 
 const KitsunetBlockTracker = require('kitsunet-block-tracker')
 const HttpProvider = require('ethjs-provider-http')
 const PollingBlockTracker = require('eth-block-tracker')
 const EthQuery = require('eth-query')
 
-module.exports = (container) => {
+module.exports = (container, options) => {
   container.registerFactory('eth-http-provider',
-    (options) => new HttpProvider(options.rpcUrl),
-    ['options'])
+    () => options.bridge ? new HttpProvider(options.rpcUrl) : null)
 
   container.registerFactory('polling-block-provider',
-    (provider) => new PollingBlockTracker({ provider }),
+    (provider) => options.bridge ? new PollingBlockTracker({ provider }) : null,
     ['eth-http-provider'])
 
-  container.registerType('eth-query', EthQuery, ['eth-http-provider'])
+  container.registerFactory('eth-query',
+    (provider) => options.bridge ? new EthQuery(provider) : null,
+    ['eth-http-provider'])
 
   container.registerFactory('block-tracker',
     (node, blockTracker, ethQuery) => new KitsunetBlockTracker({ node, blockTracker, ethQuery }),
