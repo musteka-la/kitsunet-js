@@ -5,26 +5,26 @@ const SliceId = require('./slice/slice-id')
 const EE = require('safe-event-emitter')
 
 class SliceManager extends EE {
-  constructor ({ bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, driver }) {
+  constructor ({ bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, kitsunetDriver }) {
     super()
 
     assert(blockTracker, 'blockTracker should be supplied')
     assert(kitsunetStore, 'kitsunetStore should be supplied')
-    assert(driver, 'driver should be supplied')
-    driver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
+    assert(kitsunetDriver, 'driver should be supplied')
+    kitsunetDriver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
 
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
     this._blockTracker = blockTracker
     this._kitsunetStore = kitsunetStore
-    this._driver = driver
-    this._isBridge = driver.isBridge
+    this._kitsunetDriver = kitsunetDriver
+    this._isBridge = kitsunetDriver.isBridge
 
     this._setUp()
   }
 
   _setUp () {
-    if (this.isBridge) {
+    if (this._isBridge) {
       this._bridgeTracker.on('slice', (slice) => {
         this._pubsubTracker.publish(slice)
       })

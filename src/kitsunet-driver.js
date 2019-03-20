@@ -10,20 +10,15 @@ class KitsunetDriver extends Peer {
     node,
     kitsunetNode,
     isBridge,
-    sliceManager,
     discovery,
-    blockchain,
-    trie
+    blockchain
   }) {
     super()
     this.node = node
     this.isBridge = Boolean(isBridge)
     this.multicast = node.multicast
-    this._slices = new Set()
-    this._trie = trie
-    this._chain = blockchain
+    this._blockChain = blockchain
     this._kitsunetNode = kitsunetNode
-    this._sliceManager = sliceManager
     this._discovery = discovery
     this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
   }
@@ -59,26 +54,21 @@ class KitsunetDriver extends Peer {
   }
 
   /**
-   * Start the client
+   * Start the driver
    */
   async start () {
     await this.node.start()
-    await this._blockTracker.start()
-    await this._pubSubSliceTracker.start()
-    await this._sliceTracker.start()
+    await this._kitsunetNode.start()
 
     // await this._stats.start()
-
-    this._registerSlices()
   }
 
   /**
-   * Stop the client
+   * Stop the driver
    */
   async stop () {
     await this.node.stop()
-    await this._blockTracker.stop()
-    await this._sliceTracker.stop()
+    await this._kitsunetNode.stop()
 
     // await this._stats.stop()
   }

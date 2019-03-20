@@ -1,7 +1,7 @@
 'use strict'
 
-const BridgeTracker = require('./slice-bridge')
-const PubSubTracker = require('./slice-pubsub')
+const BridgeTracker = require('./bridge')
+const PubSubTracker = require('./pubsub')
 const dependencies = require('./dependencies')
 
 module.exports = {

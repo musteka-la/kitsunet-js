@@ -7,7 +7,6 @@ const { createNode, KitsunetNode } = require('./net/kitsunet-node')
 const { DhtDiscovery } = require('./slice/discovery')
 const Blockchain = require('ethereumjs-blockchain')
 const Level = require('level')
-const path = require('path')
 
 const { dependencies: trackerDeps } = require('./slice/trackers')
 const { dependencies: storeDependencies } = require('./stores')
@@ -17,7 +16,6 @@ module.exports = async (container, options) => {
   container = storeDependencies(container, options)
 
   container.registerInstance('options', options)
-  container.registerInstance('is-bridge', Boolean(options.bridge))
 
   // register node
   container.registerFactory('node', async (options) => createNode({
@@ -34,7 +32,7 @@ module.exports = async (container, options) => {
 
   // register chain db
   container.registerFactory('chain-db', (options) => {
-    return Level(path.resolve(options.chainDbPath || './kitsunet/chain-db/'))
+    return Level(options.chainDb)
   }, ['options'])
 
   // register Blockchain
@@ -43,33 +41,31 @@ module.exports = async (container, options) => {
 
   // register KitsunetDriver options
   container.registerFactory('kitsunet-driver',
-    (node, kitsunetNode, isBridge, sliceManager, discovery, blockchain) => {
+    (node, kitsunetNode, options, discovery, blockchain) => {
       return new KitsunetDriver({
         node,
         kitsunetNode,
-        isBridge,
-        sliceManager,
+        isBridge: options.bridge,
         discovery,
         blockchain
       })
     }, [
       'node',
       'kitsunet-node',
-      'is-bridge',
-      'slice-manager',
+      'options',
       'kitsunet-discovery',
       'blockchain'
     ])
 
   // register SliceManager options
   container.registerFactory('slice-manager',
-    (bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, driver) => {
+    (bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, kitsunetDriver) => {
       return new SliceManager({
         bridgeTracker,
         pubsubTracker,
         kitsunetStore,
         blockTracker,
-        driver
+        kitsunetDriver
       })
     }, [
       'bridge-tracker',
@@ -81,7 +77,7 @@ module.exports = async (container, options) => {
 
   // register kitsunet
   container.registerFactory('kitsunet',
-    (sliceManager, driver) => new Kitsunet(sliceManager, driver),
+    (sliceManager, kitsunetDriver) => new Kitsunet(sliceManager, kitsunetDriver),
     ['slice-manager', 'kitsunet-driver'])
 
   return container

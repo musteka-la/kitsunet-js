@@ -18,12 +18,12 @@ const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }) => {
 
 class KitsunetPubSub extends BaseTracker {
   constructor ({ node, slices, namespace, depth }) {
-    super()
+    super({ slices })
     this._multicast = node.multicast
+    this._node = node
     this._namespace = namespace || DEFAULT_TOPIC_NAMESPACE
     this._depth = depth || DEFAULT_DEPTH
     this._forwardedSlicesCache = createCache()
-    this._slices = new Set(slices) // slice ids
 
     this._slicesHook = this._slicesHook.bind(this)
     this._handleSlice = this._handleSlice.bind(this)
@@ -57,7 +57,7 @@ class KitsunetPubSub extends BaseTracker {
    */
   _makeSliceTopic (slice) {
     const { path, depth } = slice
-    return `${this._namespace}-${path}-${depth || this._depth}`
+    return `${this._namespace}/${path}-${depth || this._depth}`
   }
 
   /**
@@ -113,10 +113,9 @@ class KitsunetPubSub extends BaseTracker {
   /**
    * Stop tracking the provided slices
    *
-   * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
+   * @param {Set<SliceId>} slices - the slices to stop tracking
    */
   async untrack (slices) {
-    slices = Array.isArray(slices) ? slices : [slices]
     slices.forEach(async (slice) => {
       await this._multicast.unsubscribe(this._makeSliceTopic(slice))
       this.slice.delete(slice)
@@ -127,14 +126,17 @@ class KitsunetPubSub extends BaseTracker {
    * This will discover, connect and start tracking
    * the requested slices from the network.
    *
-   * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
+   * @param {Set<SliceId>} slices - a slice or an Set of slices to track
    */
   async track (slices) {
-    slices = Array.isArray(slices) ? slices : [slices]
-    slices.forEach(async (slice) => {
-      if (this.isTracking(slice)) return
+    this.slices = new Set([...this.slices, ...slices])
+
+    if (!this._isStarted) return
+
+    this.slices.forEach(async (slice) => {
+      if (await this.isTracking(slice)) return
       await this._multicast.subscribe(this._makeSliceTopic(slice), this._slicesHook)
-      this._slices.add(slice)
+      this.slices.add(slice)
     })
   }
 
@@ -145,8 +147,8 @@ class KitsunetPubSub extends BaseTracker {
    * @returns {Boolean}
    */
   async isTracking (slice) {
-    return (this._slices.has(slice) &&
-    this._multicast.ls().indexOf(this._makeSliceTopic(slice)) > -1)
+    return (this.slices.has(slice) &&
+    await this._multicast.ls().indexOf(this._makeSliceTopic(slice)) > -1)
   }
 
   /**
@@ -156,17 +158,20 @@ class KitsunetPubSub extends BaseTracker {
    */
   async publish (slice) {
     if (!this.isTracking(slice)) {
-      this.trackSlice(slice)
+      this.trackSlice([slice])
     }
     this._multicast.publish(this._makeSliceTopic(slice), slice.serialize())
   }
 
   async start () {
-    this.track(this.slice)
+    this._isStarted = true
+    // track once libp2p is started
+    this.track(this.slices)
   }
 
   async stop () {
-    this.untrack(this._slices)
+    this.untrack(this.slices)
+    this._isStarted = false
   }
 }
 

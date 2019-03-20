@@ -2,7 +2,7 @@
 const request = require('request')
 const payload = require('./payload')
 
-module.exports = async function (uri) {
+module.exports = (uri) => {
   return ({ path, depth, root, isStorage }) => {
     return new Promise((resolve, reject) => {
       request.post({

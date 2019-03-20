@@ -1,6 +1,8 @@
 'use strict'
 
 const yargs = require('yargs')
+const path = require('path')
+const fs = require('fs')
 
 const createKitsunet = require('./')
 
@@ -33,21 +35,13 @@ const options = yargs
       alias: 'r',
       description: 'bridge rpc url <http[s]://host:port>',
       requiresArg: true,
-      required: true
+      required: false
     },
     'rpc-poll-interval': {
       description: 'rpc poll interval in milliseconds',
       requiresArg: true,
       required: false,
       default: 10 * 1000
-    },
-    'rpc-enable-tracker': {
-      description: 'enable block tracker to propagate over libp2p multicast',
-      alias: 't',
-      type: 'boolean',
-      default: false,
-      requiresArg: false,
-      required: false
     },
     bridge: {
       alias: 'b',
@@ -56,6 +50,14 @@ const options = yargs
       required: false,
       default: false,
       type: 'boolean'
+    },
+    'chain-db': {
+      alias: 'D',
+      description: 'the blockchain db path',
+      requiresArg: true,
+      required: false,
+      default: './.kitsunet/chain-db/',
+      type: 'string'
     },
     'slice-path': {
       alias: 'p',
@@ -105,6 +107,11 @@ async function run () {
 
   options.identity = options.identity ? require(options.identity) : config.identity
   options.libp2pAddrs = options.libp2pAddrs || config.libp2pAddrs
+
+  options.chainDb = path.resolve(options.chainDb)
+  if (!fs.existsSync(options.chainDb)) {
+    fs.mkdirSync(options.chainDb, { recursive: true, mode: 0o755 })
+  }
 
   try {
     const kitsunet = await createKitsunet(options)
