@@ -1,6 +1,6 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const EE = require('events')
 const { NodeTypes } = require('./constants')
 
 const log = require('debug')('kitsunet:kitsunet-driver')
@@ -41,7 +41,7 @@ class KitsunetDriver extends EE {
    */
   async findAndConnect (slices) {
     const peers = this.findPeers(slices)
-    peers.forEach((peer) => this.kitsunetNode.dial(peer))
+    Promise.all(peers.map((peer) => this.kitsunetDialer.dial(peer)))
   }
 
   /**
@@ -61,10 +61,6 @@ class KitsunetDriver extends EE {
     await this.kitsunetRpc.start()
     await this.kitsunetDialer.start()
 
-    this.kitsunetDialer.on('kitsunet:discovery', (peerInfo) => {
-      this.kitsunetRpc.dial(peerInfo)
-    })
-
     // await this._stats.start()
   }
 
@@ -72,8 +68,8 @@ class KitsunetDriver extends EE {
    * Stop the driver
    */
   async stop () {
-    await this.kitsunetDialer.stop()
     await this.kitsunetRpc.stop()
+    await this.kitsunetDialer.stop()
 
     // await this._stats.stop()
   }

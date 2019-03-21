@@ -1,7 +1,8 @@
 'use strict'
 
 const assert = require('assert')
-const EE = require('safe-event-emitter')
+const EE = require('events')
+const promisify = require('promisify-this')
 
 const nextTick = require('async/nextTick')
 
@@ -30,6 +31,7 @@ class KitsunetDialer extends EE {
     this.discovered = new Map()
     this.dialing = new Map()
 
+    // store discovered peers to dial them later
     node.on('peer:discovery', (peerInfo) => {
       if (this.discovered.size > MAX_PEERS_DISCOVERED) return
       this.discovered.set(peerInfo.id.toB58String(), peerInfo)
@@ -46,7 +48,6 @@ class KitsunetDialer extends EE {
         resolve()
       })
     })
-
     await this.node.start()
     return starter
   }
@@ -59,7 +60,6 @@ class KitsunetDialer extends EE {
       })
     })
     await this.node.stop()
-
     return stopper
   }
 
@@ -72,13 +72,13 @@ class KitsunetDialer extends EE {
       if (this.discovered.size > 0) {
         const [id, peer] = this.discovered.entries().next().value
         this.discovered.delete(id)
-        return this._dial(peer)
+        return this.dial(peer)
       }
     }
   }
 
-  async _dial (peer) {
-    const id = peer.id.toB58String()
+  async dial (peerInfo, proto) {
+    const id = peerInfo.id.toB58String()
     if (this.dialing.has(id)) {
       log(`dial already in progress for ${id}`)
       return
@@ -87,7 +87,8 @@ class KitsunetDialer extends EE {
     if (!this.connected.has(id)) {
       try {
         this.dialing.set(id, true)
-        await this.node.dial(peer)
+        await this.node.dialProtocol(peerInfo, proto)
+        nextTick(() => this.emit('kitsunet:peer-dialed', peerInfo))
       } catch (err) {
         log(err)
       } finally {

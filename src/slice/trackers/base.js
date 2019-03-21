@@ -1,6 +1,6 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const EE = require('events')
 
 class BaseTracker extends EE {
   constructor ({ slices }) {

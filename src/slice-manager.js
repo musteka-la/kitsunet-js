@@ -2,7 +2,7 @@
 
 const assert = require('assert')
 const SliceId = require('./slice/slice-id')
-const EE = require('safe-event-emitter')
+const EE = require('events')
 
 class SliceManager extends EE {
   constructor ({ bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, kitsunetDriver }) {
