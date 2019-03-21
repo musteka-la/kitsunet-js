@@ -36,8 +36,18 @@ module.exports = async (container, options) => {
 
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',
-    (node, sliceManager) => new KistunetRpc({ node, sliceManager }),
-    ['node', 'slice-manager'])
+    (node, sliceManager, kitsunetDialer, kitsunetDriver) => new KistunetRpc({
+      node,
+      sliceManager,
+      kitsunetDialer,
+      kitsunetDriver
+    }),
+    [
+      'node',
+      'slice-manager',
+      'kitsunet-dialer',
+      'kitsunet-driver'
+    ])
 
   // register chain db
   container.registerFactory('chain-db', (options) => {

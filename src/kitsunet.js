@@ -1,6 +1,6 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const EE = require('events')
 
 class Kitsunet extends EE {
   constructor (sliceManager, kitsunetDriver) {

@@ -1,8 +1,8 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const EE = require('events')
 
-const { Types: NodeTypes } = require('../../constants')
+const { NodeTypes } = require('../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
 const Kitsunet = require('./')
@@ -10,10 +10,10 @@ const Kitsunet = require('./')
 const log = require('debug')('kitsunet:kitsunet-proto')
 
 class Peer extends EE {
-  constructor (peerInfo, ksnNode) {
+  constructor (peerInfo, kitsunetRpc) {
     super()
     this.peerInfo = peerInfo
-    this._ksnNode = ksnNode
+    this.kitsunetRpc = kitsunetRpc
 
     this.version = null
     this.userAgent = null
@@ -22,23 +22,33 @@ class Peer extends EE {
     this.nodeType = NodeTypes.NODE
   }
 
+  get idB58 () {
+    return this.peerInfo.id.toB58String()
+  }
+
   async _handleRpc (msg) {
     switch (msg.type) {
-      case MsgType.HELLO: {
-        this.version = Kitsunet.version
-        this.userAgent = Kitsunet.userAgent
-        this.sliceIds = msg.sliceIds ? msg.forEach(s => this.sliceIds.add(s)) : this.sliceIds
-        this.latestBlock = msg.latestBlock
-        this.nodeType = msg.nodeType
-
-        return this.hello()
+      case MsgType.IDENTIFY: {
+        return {
+          type: MsgType.IDENTIFY,
+          status: Status.OK,
+          data: {
+            version: Kitsunet.version,
+            userAgent: Kitsunet.userAgent,
+            nodeType: this.kitsunetRpc.nodeType,
+            latestBlock: this.kitsunetRpc.latestBlock,
+            sliceIds: this.kitsunetRpc.sliceIds
+          }
+        }
       }
 
       case MsgType.SLICES: {
         return {
           type: MsgType.SLICES,
           status: Status.OK,
-          slices: this._ksnNode.slices
+          data: {
+            slices: this.kitsunetRpc.slices
+          }
         }
       }
 
@@ -46,7 +56,9 @@ class Peer extends EE {
         return {
           type: MsgType.SLICE_ID,
           status: Status.OK,
-          slices: this._ksnNode.sliceIds
+          data: {
+            slices: this.kitsunetRpc.sliceIds
+          }
         }
       }
 
@@ -54,7 +66,9 @@ class Peer extends EE {
         return {
           type: MsgType.HEADERS,
           status: Status.OK,
-          slices: this._ksnNode.headers
+          data: {
+            slices: this.kitsunetRpc.headers
+          }
         }
       }
 
@@ -62,7 +76,9 @@ class Peer extends EE {
         return {
           type: MsgType.NODE_TYPE,
           status: Status.OK,
-          slices: this._ksnNode.nodeType
+          data: {
+            slices: this.kitsunetRpc.nodeType
+          }
         }
       }
 
@@ -75,35 +91,34 @@ class Peer extends EE {
   }
 
   async _sendRequest (msg) {
-    const res = await this._ksnNode.sendRequest(this, msg)
+    const res = await this.kitsunetRpc.sendRequest(this.peerInfo, msg)
 
-    if (res.status !== Status.OK) {
+    if (res && res.status !== Status.OK) {
       throw res.error ? new Error(this.error) : new Error('')
     }
 
     return res
   }
 
-  async hello () {
+  async identify () {
     const res = await this._sendRequest({
-      type: MsgType.HELLO,
-      status: Status.OK,
-      version: this._ksnNode.version,
-      userAgent: this._ksnNode.userAgent,
-      nodeType: this._ksnNode.nodeType,
-      latestBlock: this._ksnNode.latestBlock,
-      sliceIds: this._ksnNode.sliceIds
+      type: MsgType.IDENTIFY
     })
 
-    return res.sliceIds
+    this.version = res.data.version
+    this.userAgent = res.data.userAgent
+    this.sliceIds = res.data.sliceIds
+    this.latestBlock = res.data.latestBlock
+    this.nodeType = res.data.nodeType
+
+    return res
   }
 
   async sliceIds () {
     const res = await this._sendRequest({
       type: MsgType.SLICE_ID
     })
-
-    return res.sliceIds
+    return res.data.sliceIds
   }
 
   async slices () {
@@ -111,7 +126,7 @@ class Peer extends EE {
       type: MsgType.SLICES
     })
 
-    return res.slices
+    return res.data.slices
   }
 
   async headers () {
@@ -119,7 +134,7 @@ class Peer extends EE {
       type: MsgType.HEADERS
     })
 
-    return res.headers
+    return res.data.headers
   }
 
   async nodeType () {
@@ -127,7 +142,7 @@ class Peer extends EE {
       type: MsgType.NODE_TYPE
     })
 
-    return res.nodeType
+    return res.data.nodeType
   }
 
   async ping () {

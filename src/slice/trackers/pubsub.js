@@ -35,7 +35,7 @@ class KitsunetPubSub extends BaseTracker {
    * @param {Slice} slice - slice to subscribe to
    */
   _subscribe (slice) {
-    this._multicast.addFrwdHook(this._makeSliceTopic(slice), [this._slicesHook])
+    this._multicast.addFrwdHooks(this._makeSliceTopic(slice), [this._slicesHook])
     this._multicast.subscribe(this._makeSliceTopic(slice), this._handleSlice)
   }
 
@@ -45,7 +45,7 @@ class KitsunetPubSub extends BaseTracker {
    * @param {Slice} slice - slice to unsubscribe from
    */
   _unsubscribe (slice) {
-    this._multicast.removeFrwdHook(this._makeSliceTopic(slice), this._slicesHook)
+    this._multicast.removeFrwdHooks(this._makeSliceTopic(slice), this._slicesHook)
     this._multicast.unsubscribe(this._makeSliceTopic(slice), this._handleSlice)
   }
 
@@ -74,7 +74,7 @@ class KitsunetPubSub extends BaseTracker {
   _slicesHook (peer, msg, cb) {
     let slice = null
     try {
-      slice = cbor.parse(msg.data)
+      slice = cbor.decode(msg.data)
       if (!slice) {
         return cb(new Error(`No slice in message!`))
       }
@@ -103,7 +103,7 @@ class KitsunetPubSub extends BaseTracker {
    */
   _handleSlice (msg) {
     try {
-      const slice = cbor.parse(msg.data)
+      const slice = cbor.decode(msg.data)
       this.emit(`slice`, new Slice(slice))
     } catch (err) {
       log(err)
@@ -117,7 +117,7 @@ class KitsunetPubSub extends BaseTracker {
    */
   async untrack (slices) {
     slices.forEach(async (slice) => {
-      await this._multicast.unsubscribe(slice)
+      await this._unsubscribe(slice)
       this.slice.delete(slice)
     })
   }
@@ -135,7 +135,7 @@ class KitsunetPubSub extends BaseTracker {
 
     this.slices.forEach(async (slice) => {
       if (await this.isTracking(slice)) return
-      this._subscribe(this._makeSliceTopic(slice))
+      this._subscribe(slice)
       this.slices.add(slice)
     })
   }

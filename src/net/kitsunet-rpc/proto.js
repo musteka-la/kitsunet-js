@@ -5,7 +5,7 @@ const proto = `
 message Kitsunet {
   enum MsgType {
     UNKNOWN_MSG   = 0;
-    HELLO         = 1;
+    IDENTIFY      = 1;
     SLICES        = 2;
     SLICE_ID      = 3;
     HEADERS       = 4;
@@ -50,19 +50,15 @@ message Kitsunet {
       repeated Types type = 1;
     }
 
-    message Hello {
+    message Identify {
       optional string   version       = 1; // e.g. kitsunet-js/0.0.1
       optional string   userAgent     = 2; // e.g. kitsunet-js/0.0.1
       optional NodeType nodeType      = 3; // the node type - brige, edge, normal
-      optional Headers  latestBlock   = 4; // rlp encoded block header, should be only one in the Hello message
+      optional Headers  latestBlock   = 4; // rlp encoded block header
       optional SliceId  sliceIds      = 5; // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
-      // a compression flag, currently only supports snappy compression
-      // if set, all subsequent messages are compressed with the provided 
-      // algorithm
-      optional Compression  compress   = 6;// [default = NONE];
     }
 
-    optional Hello    hello     = 1;
+    optional Identify identify  = 1;
     repeated Slices   slices    = 2;
     repeated Headers  headers   = 3;
     optional NodeType type      = 4;

@@ -1,14 +1,13 @@
 'use strict'
 
-const EE = require('safe-event-emitter')
+const EE = require('events')
 const pull = require('pull-stream')
 const pbb = require('pull-protocol-buffers')
-const promisify = require('promisify-this')
 const Peer = require('./peer')
 const nextTick = require('async/nextTick')
-const KitsunetProto = require('./proto')
+const KitsunetProto = require('./proto').Kitsunet
 
-const { Status, MsgType } = KitsunetProto
+const { Status } = KitsunetProto
 
 const log = require('debug')('kitsunet:kitsunet-proto')
 
@@ -24,14 +23,25 @@ class KitsunetRpc extends EE {
     return 'ksn-js'
   }
 
-  constructor ({ node, sliceManager, kitsunetDriver }) {
+  /**
+   * Construct the KSN libp2p protocol handler
+   *
+   * @param {opts} Object
+   * @param {Node} node
+   * @param {sliceManager} sliceManager
+   * @param {KitsunetDriver} kitsunetDriver
+   * @param {KitsunetDialer} kitsunetDialer
+   */
+  constructor ({ node, sliceManager, kitsunetDriver, kitsunetDialer }) {
     super()
     this._node = node
     this._peers = new Map()
     this.sliceManager = sliceManager
     this.kitsunetDriver = kitsunetDriver
+    this.kitsunetDialer = kitsunetDialer
 
     this._handler = this._handler.bind(this)
+    this.dialPeer = this.dialPeer.bind(this)
   }
 
   get nodeType () {
@@ -39,7 +49,7 @@ class KitsunetRpc extends EE {
   }
 
   get latestBlock () {
-    return this.sliceManager.latestBlock
+    return this.kitsunetDriver.latestBlock
   }
 
   get sliceIds () {
@@ -54,62 +64,119 @@ class KitsunetRpc extends EE {
     return this.kitsunetDriver.headers
   }
 
+  /**
+   * Handle incoming requests
+   *
+   * @param {String} _ - protocol string (discarded)
+   * @param {Connection} conn - libp2p connection stream
+   */
   async _handler (_, conn) {
-    try {
-      const peerInfo = promisify(await conn.getPeerInfo())
-      this._processConn(peerInfo, conn)
-    } catch (err) {
-      log('Failed to identify incoming conn', err)
-      return pull(pull.empty(), conn)
-    }
+    const peer = await this._processConn(conn)
+    this._handleRpc(peer, conn)
   }
 
-  async sendRequest (peer, msg) {
-    const conn = await this.node.dialProtocol(peer.peerInfo, codec)
-    pull(
-      pull.values([msg]),
-      pbb.encode(KitsunetRpc),
-      conn,
-      pull.decode(KitsunetRpc),
-      pull.collect((err, data) => {
+  /**
+   * Dial and identify a remote peer
+   *
+   * @param {PeerInfo} peerInfo - the peer info to dial
+   */
+  async dialPeer (peerInfo) {
+    const conn = await this._dial(peerInfo)
+    const peer = await this._processConn(conn)
+    peer.identify()
+  }
+
+  /**
+   * Dial a peer on the kitsunet protocol
+   *
+   * @param {PeerInfo} peerInfo
+   */
+  async _dial (peerInfo) {
+    return this._node.dialProtocol(peerInfo, codec)
+  }
+
+  /**
+   * Send a request to the remote peer
+   *
+   * @param {PeerInfo} peerInfo - the peer to send the request to
+   * @param {Object} msg - the message to send to the remote peer
+   */
+  async sendRequest (peerInfo, msg) {
+    // NOTE: this doesn't create a connection every time.
+    // libp2p muxes and re-uses sockets,
+    // so the connection only gets establish once and
+    // what's used here is a muxed stream over the socket
+    const conn = await this._dial(peerInfo)
+
+    return new Promise((resolve, reject) => {
+      pull(
+        pull.values([msg]),
+        pbb.encode(KitsunetProto),
+        conn,
+        pbb.decode(KitsunetProto),
+        pull.collect((err, data) => {
+          if (err) {
+            log(err)
+            return reject(err)
+          }
+
+          if (data && data.length) {
+            return resolve(data[0])
+          }
+
+          resolve()
+        })
+      )
+    })
+  }
+
+  /**
+   * Create a new KitsunetPeer (RPC handler) or return an existing one
+   *
+   * @param {Connection} conn
+   */
+  async _processConn (conn) {
+    return new Promise((resolve, reject) => {
+      conn.getPeerInfo((err, peerInfo) => {
         if (err) {
-          log(err)
-          throw err
+          const errMsg = 'Failed to identify incoming conn'
+          log(errMsg, err)
+          pull(pull.empty(), conn)
+          return reject(errMsg)
         }
 
-        if (data && data.length) {
-          return data[0]
+        const idB58 = peerInfo.id.toB58String()
+        if (!peerInfo) {
+          throw new Error(`could not resolve peer for ${idB58}, connection ignored`)
         }
+
+        let peer = this._peers.get(idB58)
+        if (!peer) {
+          peer = new Peer(peerInfo, this)
+          this._peers.set(idB58, peer)
+          nextTick(() => this.emit('kitsunet:peer', peer))
+        }
+        return resolve(peer)
       })
-    )
+    })
   }
 
-  async _processConn (peerInfo, conn) {
-    const idB58 = peerInfo.id.toB58String()
-
+  /**
+   * Dispatch the rpc message to the correct peer
+   *
+   * @param {KitsunetPeer} peer
+   * @param {Connection} conn
+   */
+  async _handleRpc (peer, conn) {
     pull(
       conn,
       pbb.decode(KitsunetProto),
       pull.asyncMap(async (msg, cb) => {
-        const { type } = msg.Msg
-
         try {
-          let peer = this._peers.get(idB58)
-          if (type === MsgType.HELLO) {
-            peer = peer || new Peer(peerInfo, this)
-            this._peers.set(idB58, peer)
-            const res = await peer._handleRpc(msg.Msg)
-            nextTick(() => this.emit('kitsunet:peer', peer))
-            return cb(null, res)
-          } else if (type > MsgType.HELLO && type <= MsgType.NODE_TYPE) {
-            if (!peer) {
-              throw new Error(`unknown peer ${idB58}`)
-            }
-
-            peer._handleRpc(msg.Msg)
+          if (msg) {
+            return cb(null, await peer._handleRpc(msg))
           } else {
-            const errMsg = 'unknown message or no data in message!'
-            throw new Error(errMsg)
+            throw new Error('unknown message or no data in message')
           }
         } catch (err) {
           log(err)
@@ -122,22 +189,26 @@ class KitsunetRpc extends EE {
         }
       }),
       pbb.encode(KitsunetProto),
-      conn,
-      pull.onEnd((err) => {
-        if (err) {
-          log(err)
-        }
-
-        nextTick(() => this.emit('kitsunet:disconnect', peerInfo))
-        this._peers.delete(idB58)
-      })
+      conn
     )
   }
 
+  /**
+   * Register protocol handlers and events
+   *
+   * Register a handler that for every dialed peer will
+   * try to identify it as a kitsunet peer
+   */
   async start () {
     this._node.handle(codec, this._handler)
+    this.kitsunetDialer.on('kitsunet:peer-dialed', async (peerInfo) => {
+      this.dialPeer(peerInfo)
+    })
   }
 
+  /**
+   * Unregister handlers
+   */
   async stop () {
     this._node.unhandle(codec)
   }
