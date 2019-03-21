@@ -1,9 +1,13 @@
 'use strict'
 
-const Peer = require('./peer')
-const createRpc = require('./rpc-factory')
+const KistunetRpc = require('./kitsunet-rpc')
+const KitsunetDialer = require('./kitsunet-dialer')
+const Node = require('./libp2p')
+const createNode = require('./libp2p/runtime')
 
 module.exports = {
-  Peer,
-  createRpc
+  KitsunetDialer,
+  KistunetRpc,
+  Node,
+  createNode
 }

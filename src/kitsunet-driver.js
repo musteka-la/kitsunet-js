@@ -1,14 +1,15 @@
 'use strict'
 
-const { Peer } = require('./peer')
-const { TYPES } = require('./constants')
+const EE = require('safe-event-emitter')
+const { NodeTypes } = require('./constants')
 
 const log = require('debug')('kitsunet:kitsunet-driver')
 
-class KitsunetDriver extends Peer {
+class KitsunetDriver extends EE {
   constructor ({
     node,
-    kitsunetNode,
+    kitsunetDialer,
+    kitsunetRpc,
     isBridge,
     discovery,
     blockchain
@@ -16,11 +17,11 @@ class KitsunetDriver extends Peer {
     super()
     this.node = node
     this.isBridge = Boolean(isBridge)
-    this.multicast = node.multicast
-    this._blockChain = blockchain
-    this._kitsunetNode = kitsunetNode
-    this._discovery = discovery
-    this.nodeType = this.isBridge ? TYPES.BRIDGE : TYPES.NORMAL
+    this.blockChain = blockchain
+    this.kitsunetDialer = kitsunetDialer
+    this.kitsunetRpc = kitsunetRpc
+    this.discovery = discovery
+    this.nodeType = this.isBridge ? NodeTypes.BRIDGE : NodeTypes.NODE
   }
 
   /**
@@ -50,15 +51,19 @@ class KitsunetDriver extends Peer {
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
   async announce (slices) {
-    return this._discovery.announce(slices)
+    return this.discovery.announce(slices)
   }
 
   /**
    * Start the driver
    */
   async start () {
-    await this.node.start()
-    await this._kitsunetNode.start()
+    await this.kitsunetRpc.start()
+    await this.kitsunetDialer.start()
+
+    this.kitsunetDialer.on('kitsunet:discovery', (peerInfo) => {
+      this.kitsunetRpc.dial(peerInfo)
+    })
 
     // await this._stats.start()
   }
@@ -67,8 +72,8 @@ class KitsunetDriver extends Peer {
    * Stop the driver
    */
   async stop () {
-    await this.node.stop()
-    await this._kitsunetNode.stop()
+    await this.kitsunetDialer.stop()
+    await this.kitsunetRpc.stop()
 
     // await this._stats.stop()
   }

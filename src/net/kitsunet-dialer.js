@@ -7,13 +7,15 @@ const nextTick = require('async/nextTick')
 
 const log = require('debug')('kitsunet:node')
 
-const proto = '/kitsunet/1.0.0'
-
 const MAX_PEERS = 25
 const MAX_PEERS_DISCOVERED = 250
 const INTERVAL = 60 * 1000 // every minute
 
-class KitsunetNode extends EE {
+/**
+ * A dialer module that handles ambient
+ * node discovery and such
+ */
+class KitsunetDialer extends EE {
   constructor ({ node, maxPeers, interval }) {
     super()
 
@@ -28,27 +30,6 @@ class KitsunetNode extends EE {
     this.discovered = new Map()
     this.dialing = new Map()
 
-    node.handle(proto, (_, conn) => {
-      conn.getPeerInfo((err, peerInfo) => {
-        if (err) return log(err)
-        const id = peerInfo.id.toB58String()
-        nextTick(() => this.connected.set(id, peerInfo))
-        this.emit('kitsunet:peer', { id, conn })
-      })
-    })
-
-    node.on('peer:connect', (peerInfo) => {
-      this.connected.set(peerInfo.id.toB58String(), peerInfo)
-      nextTick(() => this.emit('kitsunet:connect', peerInfo))
-      log(`peer connected ${peerInfo.id.toB58String()}`)
-    })
-
-    node.on('peer:disconnect', (peerInfo) => {
-      this.connected.delete(peerInfo.id.toB58String())
-      nextTick(() => this.emit('kitsunet:disconnect', peerInfo))
-      log(`peer disconnected ${peerInfo.id.toB58String()}`)
-    })
-
     node.on('peer:discovery', (peerInfo) => {
       if (this.discovered.size > MAX_PEERS_DISCOVERED) return
       this.discovered.set(peerInfo.id.toB58String(), peerInfo)
@@ -58,16 +39,32 @@ class KitsunetNode extends EE {
   }
 
   async start () {
-    this.tryConnect()
-    this.intervalTimer = setInterval(this.tryConnect.bind(this), this.interval)
+    const starter = new Promise((resolve) => {
+      this.node.on('start', () => {
+        this.tryConnect()
+        this.intervalTimer = setInterval(this.tryConnect.bind(this), this.interval)
+        resolve()
+      })
+    })
+
+    await this.node.start()
+    return starter
   }
 
   async stop () {
-    clearInterval(this.intervalTimer)
+    const stopper = new Promise((resolve) => {
+      this.node.on('start', () => {
+        clearInterval(this.intervalTimer)
+        resolve()
+      })
+    })
+    await this.node.stop()
+
+    return stopper
   }
 
-  get id () {
-    return this.node.id.toB58String()
+  get b58Id () {
+    return this.b58Id
   }
 
   async tryConnect () {
@@ -75,12 +72,12 @@ class KitsunetNode extends EE {
       if (this.discovered.size > 0) {
         const [id, peer] = this.discovered.entries().next().value
         this.discovered.delete(id)
-        return this.dial(peer)
+        return this._dial(peer)
       }
     }
   }
 
-  async dial (peer) {
+  async _dial (peer) {
     const id = peer.id.toB58String()
     if (this.dialing.has(id)) {
       log(`dial already in progress for ${id}`)
@@ -90,8 +87,7 @@ class KitsunetNode extends EE {
     if (!this.connected.has(id)) {
       try {
         this.dialing.set(id, true)
-        const conn = await this.node.dialProtocol(peer, proto)
-        this.emit('kitsunet:peer', { id, conn })
+        await this.node.dial(peer)
       } catch (err) {
         log(err)
       } finally {
@@ -105,4 +101,4 @@ class KitsunetNode extends EE {
   }
 }
 
-module.exports = KitsunetNode
+module.exports = KitsunetDialer
