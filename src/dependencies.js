@@ -3,7 +3,7 @@
 const Kitsunet = require('./kitsunet')
 const SliceManager = require('./slice-manager')
 const KitsunetDriver = require('./kitsunet-driver')
-const { createNode, KitsunetNode } = require('./net/kitsunet-node')
+const { createNode, KitsunetDialer, KistunetRpc } = require('./net')
 const { DhtDiscovery } = require('./slice/discovery')
 const Blockchain = require('ethereumjs-blockchain')
 const Level = require('level')
@@ -25,10 +25,19 @@ module.exports = async (container, options) => {
   }), ['options'])
 
   // register dht discovery
-  container.registerFactory('kitsunet-discovery', (node) => new DhtDiscovery(node), ['node'])
+  container.registerFactory('kitsunet-discovery',
+    (node) => new DhtDiscovery(node),
+    ['node'])
 
-  // register kitsunet node
-  container.registerFactory('kitsunet-node', (node) => new KitsunetNode({ node }), ['node'])
+  // register kitsunet dialer
+  container.registerFactory('kitsunet-dialer',
+    (node) => new KitsunetDialer({ node }),
+    ['node'])
+
+  // register kitsunet rpc
+  container.registerFactory('kitsunet-rpc',
+    (node, sliceManager) => new KistunetRpc({ node, sliceManager }),
+    ['node', 'slice-manager'])
 
   // register chain db
   container.registerFactory('chain-db', (options) => {
@@ -37,21 +46,23 @@ module.exports = async (container, options) => {
 
   // register Blockchain
   // TODO: do propper blockchain setup (hardforks, etc...)
-  container.registerFactory('blockchain', (db) => new Blockchain({ db }), ['chain-db'])
+  container.registerFactory('blockchain',
+    (db) => new Blockchain({ db }),
+    ['chain-db'])
 
   // register KitsunetDriver options
   container.registerFactory('kitsunet-driver',
-    (node, kitsunetNode, options, discovery, blockchain) => {
+    (node, kitsunetDialer, options, discovery, blockchain) => {
       return new KitsunetDriver({
         node,
-        kitsunetNode,
+        kitsunetDialer,
         isBridge: options.bridge,
         discovery,
         blockchain
       })
     }, [
       'node',
-      'kitsunet-node',
+      'kitsunet-dialer',
       'options',
       'kitsunet-discovery',
       'blockchain'
@@ -77,8 +88,11 @@ module.exports = async (container, options) => {
 
   // register kitsunet
   container.registerFactory('kitsunet',
-    (sliceManager, kitsunetDriver) => new Kitsunet(sliceManager, kitsunetDriver),
-    ['slice-manager', 'kitsunet-driver'])
+    (sliceManager, kitsunetDriver, kitsunetRpc) => {
+      kitsunetDriver.kitsunetRpc = kitsunetRpc // circular dep
+      return new Kitsunet(sliceManager, kitsunetDriver)
+    },
+    ['slice-manager', 'kitsunet-driver', 'kitsunet-rpc'])
 
   return container
 }

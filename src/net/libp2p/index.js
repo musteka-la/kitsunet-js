@@ -67,6 +67,10 @@ class Node extends Libp2p {
     return this.peerInfo.id
   }
 
+  get b58Id () {
+    return this.node.id.toB58String()
+  }
+
   start (callback) {
     super.start((err) => {
       if (err) {

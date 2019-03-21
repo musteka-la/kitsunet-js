@@ -117,7 +117,7 @@ class KitsunetPubSub extends BaseTracker {
    */
   async untrack (slices) {
     slices.forEach(async (slice) => {
-      await this._multicast.unsubscribe(this._makeSliceTopic(slice))
+      await this._multicast.unsubscribe(slice)
       this.slice.delete(slice)
     })
   }
@@ -135,7 +135,7 @@ class KitsunetPubSub extends BaseTracker {
 
     this.slices.forEach(async (slice) => {
       if (await this.isTracking(slice)) return
-      await this._multicast.subscribe(this._makeSliceTopic(slice), this._slicesHook)
+      this._subscribe(this._makeSliceTopic(slice))
       this.slices.add(slice)
     })
   }
@@ -148,7 +148,7 @@ class KitsunetPubSub extends BaseTracker {
    */
   async isTracking (slice) {
     return (this.slices.has(slice) &&
-    await this._multicast.ls().indexOf(this._makeSliceTopic(slice)) > -1)
+    (await this._multicast.ls()).indexOf(this._makeSliceTopic(slice)) > -1)
   }
 
   /**

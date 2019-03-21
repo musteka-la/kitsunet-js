@@ -1,9 +1,9 @@
 'use strict'
 
-exports.TYPES = {
+exports.NodeTypes = {
   BRIDGE: 0,
   EXIT: 1,
-  NORMAL: 2
+  NODE: 2
 }
 
 exports.DEFAULT_DEPTH = 10
