@@ -2,21 +2,22 @@
 
 const assert = require('assert')
 const SliceId = require('./slice/slice-id')
-const EE = require('events')
 
-class SliceManager extends EE {
-  constructor ({ bridgeTracker, pubsubTracker, kitsunetStore, blockTracker, kitsunetDriver }) {
-    super()
+const { BaseTracker } = require('./slice/trackers')
+
+class SliceManager extends BaseTracker {
+  constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver }) {
+    super({})
 
     assert(blockTracker, 'blockTracker should be supplied')
-    assert(kitsunetStore, 'kitsunetStore should be supplied')
+    assert(slicesStore, 'slicesStore should be supplied')
     assert(kitsunetDriver, 'driver should be supplied')
     kitsunetDriver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
 
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
     this._blockTracker = blockTracker
-    this._kitsunetStore = kitsunetStore
+    this._slicesStore = slicesStore
     this._kitsunetDriver = kitsunetDriver
     this._isBridge = kitsunetDriver.isBridge
 
@@ -31,7 +32,7 @@ class SliceManager extends EE {
     }
 
     this._pubsubTracker.on('slice', (slice) => {
-      this._kitsunetStore.put(slice)
+      this._slicesStore.put(slice)
       this.emit('slice', slice)
     })
   }
@@ -91,8 +92,23 @@ class SliceManager extends EE {
    * @return {Slice}
   */
   async getSlice (sliceId) {
-    const slice = await this._kitsunetStore.getById(sliceId)
+    const slice = await this._slicesStore.getById(sliceId)
     if (slice) return slice
+  }
+
+  /**
+   * Get all slices
+   */
+  async getSlices () {
+    return this.kitsunetStore.getSlices()
+  }
+
+  getSliceIds () {
+    // dedup
+    return [...new Set([
+      ...this._pubsubTracker.slices,
+      ...this._bridgeTracker.slices
+    ])]
   }
 
   /**
@@ -103,7 +119,7 @@ class SliceManager extends EE {
    */
   async getLatestSlice (prefix, depth) {
     const block = await this._blockTracker.getLatestBlock()
-    return this._kitsunetStore.getById(new SliceId(prefix, depth, block.stateRoot))
+    return this._slicesStore.getById(new SliceId(prefix, depth, block.stateRoot))
   }
 
   /**
@@ -114,7 +130,7 @@ class SliceManager extends EE {
    * @param {Number} depth
    */
   async getSliceForBlock (block, prefix, depth) {
-    return this._kitsunetStore.getById(new SliceId({ prefix, depth, root: block.stateRoot }))
+    return this._slicesStore.getById(new SliceId({ prefix, depth, root: block.stateRoot }))
   }
 
   async start () {

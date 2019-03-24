@@ -5,11 +5,11 @@ const EE = require('events')
 const { NodeTypes } = require('../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
-const Kitsunet = require('./')
+const { SliceId } = require('../../slice')
 
 const log = require('debug')('kitsunet:kitsunet-proto')
 
-class Peer extends EE {
+class RpcPeer extends EE {
   constructor (peerInfo, kitsunetRpc) {
     super()
     this.peerInfo = peerInfo
@@ -27,17 +27,21 @@ class Peer extends EE {
   }
 
   async _handleRpc (msg) {
+    log('got request', msg)
     switch (msg.type) {
       case MsgType.IDENTIFY: {
+        const latestBlock = Buffer.from(await this.kitsunetRpc.latestBlock)
         return {
           type: MsgType.IDENTIFY,
           status: Status.OK,
           data: {
-            version: Kitsunet.version,
-            userAgent: Kitsunet.userAgent,
-            nodeType: this.kitsunetRpc.nodeType,
-            latestBlock: this.kitsunetRpc.latestBlock,
-            sliceIds: this.kitsunetRpc.sliceIds
+            identify: {
+              version: this.kitsunetRpc.VERSION,
+              userAgent: this.kitsunetRpc.USER_AGENT,
+              nodeType: this.kitsunetRpc.nodeType,
+              latestBlock,
+              sliceIds: this.kitsunetRpc.sliceIds
+            }
           }
         }
       }
@@ -91,12 +95,17 @@ class Peer extends EE {
   }
 
   async _sendRequest (msg) {
+    log('sending request', msg)
     const res = await this.kitsunetRpc.sendRequest(this.peerInfo, msg)
 
     if (res && res.status !== Status.OK) {
-      throw res.error ? new Error(this.error) : new Error('')
+      const err = res.error ? new Error(this.error) : new Error('unknown error!')
+      log(err)
+
+      throw err
     }
 
+    log('got response', res)
     return res
   }
 
@@ -105,11 +114,16 @@ class Peer extends EE {
       type: MsgType.IDENTIFY
     })
 
-    this.version = res.data.version
-    this.userAgent = res.data.userAgent
-    this.sliceIds = res.data.sliceIds
-    this.latestBlock = res.data.latestBlock
-    this.nodeType = res.data.nodeType
+    this.version = res.data.identify.version
+    this.userAgent = res.data.identify.userAgent
+
+    this.sliceIds = res.data.identify.sliceIds
+      ? res.data.identify.sliceIds.map((s) => {
+        return new SliceId(s.toString())
+      }) : []
+
+    this.latestBlock = res.data.identify.latestBlock ? res.data.identify.latestBlock.toString('hex') : 0x0
+    this.nodeType = res.data.identify.nodeType
 
     return res
   }
@@ -154,4 +168,4 @@ class Peer extends EE {
   }
 }
 
-module.exports = Peer
+module.exports = RpcPeer

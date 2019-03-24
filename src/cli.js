@@ -117,6 +117,10 @@ async function run () {
     const kitsunet = await createKitsunet(options)
     await kitsunet.start()
 
+    // process.on('unhandledRejection', function (reason, p) {
+    //   console.dir(reason)
+    // })
+
     process.on('INT', () => {
       kitsunet.stop()
     })

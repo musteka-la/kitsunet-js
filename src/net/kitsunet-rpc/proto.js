@@ -14,7 +14,7 @@ message Kitsunet {
     PING          = 7;
   }
 
-  enum Types {
+  enum NodeType {
     UNKNOWN_TYPE  = 0;
     NORMAL        = 1;
     EDGE          = 2;
@@ -33,42 +33,27 @@ message Kitsunet {
     ERROR         = 2;
   }
 
-  message Data {
-    message SliceId {
-      repeated string sliceId = 1; // [packed = true];
-    }
-
-    message Slices {
-      repeated bytes slices = 1; // [packed = true]; // a list of slices
-    }
-
-    message Headers {
-      repeated bytes headers = 1; // [packed = true]; // a list of rlp encoded block headers
-    }
-
-    message NodeType {
-      repeated Types type = 1;
-    }
-
-    message Identify {
-      optional string   version       = 1; // e.g. kitsunet-js/0.0.1
-      optional string   userAgent     = 2; // e.g. kitsunet-js/0.0.1
-      optional NodeType nodeType      = 3; // the node type - brige, edge, normal
-      optional Headers  latestBlock   = 4; // rlp encoded block header
-      optional SliceId  sliceIds      = 5; // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
-    }
-
-    optional Identify identify  = 1;
-    repeated Slices   slices    = 2;
-    repeated Headers  headers   = 3;
-    optional NodeType type      = 4;
-    repeated SliceId  sliceIds  = 5;
+  message Identify {
+    optional string   version      = 1; // e.g. kitsunet-js/0.0.1
+    optional string   userAgent    = 2; // e.g. kitsunet-js/0.0.1
+    optional NodeType nodeType     = 3; // the node type - brige, edge, normal
+    optional bytes    latestBlock  = 4; // block number
+    repeated bytes    sliceIds     = 5; // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
   }
 
-  optional MsgType type   = 1 [default = UNKNOWN_MSG]; // the message type
-  optional Status status  = 2;  // only used for responses - OK for success ERROR for errors
-  optional string error   = 3;  // only used for responses - if status == ERROR, this might contain an error string
-  optional Data   data    = 4;  // the data of the request/response
+  message Data {
+    optional Identify identify  = 1;
+    repeated bytes    slices    = 2;
+    repeated bytes    headers   = 3;
+    optional NodeType type      = 4;
+    repeated bytes    sliceIds  = 5;
+    optional bytes    latestBlock  = 6;
+  }
+
+  optional MsgType  type    = 1 [default = UNKNOWN_MSG]; // the message type
+  optional Status   status  = 2;  // only used for responses - OK for success ERROR for errors
+  optional string   error   = 3;  // only used for responses - if status == ERROR, this might contain an error string
+  optional Data     data    = 4;  // the data of the request/response
 }
 `
 
