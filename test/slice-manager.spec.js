@@ -20,9 +20,7 @@ const sliceData = loadFixture('test/fixtures/account.json')
 
 describe('slice manager', () => {
   const slice = new Slice(JSON.parse(sliceData).result)
-  const datastore = promisify(new MemoryDatastore())
-  const store = new Store(datastore)
-  const kitsunetStore = new KitsunetStore(store)
+  const kitsunetStore = new KitsunetStore(new MemoryDatastore())
 
   it('should track slices', async () => {
     const tracker = {

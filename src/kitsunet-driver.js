@@ -2,6 +2,8 @@
 
 const EE = require('events')
 const { NodeTypes } = require('./constants')
+const promisify = require('promisify-this')
+const { Header } = require('ethereumjs-blockchain')
 
 const log = require('debug')('kitsunet:kitsunet-driver')
 
@@ -12,16 +14,43 @@ class KitsunetDriver extends EE {
     kitsunetRpc,
     isBridge,
     discovery,
-    blockchain
+    blockchain,
+    blockTracker
   }) {
     super()
+
     this.node = node
     this.isBridge = Boolean(isBridge)
-    this.blockChain = blockchain
+    this.blockChain = promisify(blockchain)
     this.kitsunetDialer = kitsunetDialer
     this.kitsunetRpc = kitsunetRpc
     this.discovery = discovery
+    this.blockTracker = blockTracker
     this.nodeType = this.isBridge ? NodeTypes.BRIDGE : NodeTypes.NODE
+
+    // TODO: this is a workaround, headers
+    // should come from the blockchain
+    this._headers = new Set()
+
+    this._init()
+  }
+
+  async _init () {
+    // TODO: this needs to be reworked as a proper light sync
+    // Currently the ethereumjs-blockchain doesn't support
+    // checkpointed syncs, which is essential for any light client,
+    // hence we just store the headers elsewhere
+    this.blockTracker.on('latest', async (header) => {
+      this._headers.add(header)
+    })
+  }
+
+  async getLatestBlock () {
+    return this.blockTracker.getLatestBlock()
+  }
+
+  getHeaders () {
+    return [...this._headers]
   }
 
   /**

@@ -1,7 +1,6 @@
 'use strict'
 
 const Cache = require('lru-cache')
-const cbor = require('borc')
 
 const BaseTracker = require('./base')
 const Slice = require('../slice')
@@ -74,7 +73,7 @@ class KitsunetPubSub extends BaseTracker {
   _slicesHook (peer, msg, cb) {
     let slice = null
     try {
-      slice = cbor.decode(msg.data)
+      slice = new Slice(msg.data)
       if (!slice) {
         return cb(new Error(`No slice in message!`))
       }
@@ -84,9 +83,9 @@ class KitsunetPubSub extends BaseTracker {
     }
 
     const peerId = peer.info.id.toB58String()
-    const slices = this._forwardedSlicesCache.has(peerId) || createCache()
-    if (!slices.has(slice.sliceId)) {
-      slices.set(slice.sliceId, true)
+    const slices = this._forwardedSlicesCache.get(peerId) || createCache()
+    if (!slices.has(slice.id)) {
+      slices.set(slice.id, true)
       this._forwardedSlicesCache.set(peerId, slices)
       return cb(null, msg)
     }
@@ -103,8 +102,7 @@ class KitsunetPubSub extends BaseTracker {
    */
   _handleSlice (msg) {
     try {
-      const slice = cbor.decode(msg.data)
-      this.emit(`slice`, new Slice(slice))
+      this.emit(`slice`, new Slice(msg.data))
     } catch (err) {
       log(err)
     }
