@@ -91,6 +91,13 @@ const options = yargs
       config: true,
       requiresArg: true,
       required: false
+    },
+    'dial-interval': {
+      alias: 'df',
+      description: 'dial frequency',
+      requiresArg: true,
+      required: false,
+      type: 'integer'
     }
   })
   .help('help')
