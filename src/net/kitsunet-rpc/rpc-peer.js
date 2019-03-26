@@ -6,6 +6,7 @@ const { NodeTypes } = require('../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
 const { SliceId } = require('../../slice')
+const BN = require('bn.js')
 
 const log = require('debug')('kitsunet:kitsunet-proto')
 
@@ -30,7 +31,7 @@ class RpcPeer extends EE {
     log('got request', msg)
     switch (msg.type) {
       case MsgType.IDENTIFY: {
-        const latestBlock = Buffer.from(await this.kitsunetRpc.latestBlock)
+        const latestBlock = new BN(await this.kitsunetRpc.latestBlock)
         return {
           type: MsgType.IDENTIFY,
           status: Status.OK,
@@ -39,7 +40,7 @@ class RpcPeer extends EE {
               version: this.kitsunetRpc.VERSION,
               userAgent: this.kitsunetRpc.USER_AGENT,
               nodeType: this.kitsunetRpc.nodeType,
-              latestBlock,
+              latestBlock: latestBlock.toBuffer(),
               sliceIds: this.kitsunetRpc.sliceIds
             }
           }
@@ -122,7 +123,7 @@ class RpcPeer extends EE {
         return new SliceId(s.toString())
       }) : []
 
-    this.latestBlock = res.data.identify.latestBlock ? res.data.identify.latestBlock.toString('hex') : 0x0
+    this.latestBlock = res.data.identify.latestBlock ? new BN(res.data.identify.latestBlock) : new BN(0x0)
     this.nodeType = res.data.identify.nodeType
 
     return res

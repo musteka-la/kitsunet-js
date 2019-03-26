@@ -8,7 +8,7 @@ const Bootstrap = require('libp2p-bootstrap')
 
 const PeerInfo = promisify(require('peer-info'), false)
 const PeerId = promisify(require('peer-id'), false)
-const Node = require('../node')
+const Node = require('../')
 
 async function createNode ({ identity, addrs, bootstrap }) {
   let id = {}
