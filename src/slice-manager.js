@@ -118,8 +118,8 @@ class SliceManager extends BaseTracker {
    * @param {SliceId} slice
    */
   async getLatestSlice (slice) {
-    const block = await this._blockTracker.getLatestBlock()
-    return this._slicesStore.getById(new SliceId(slice.prefix, slice.depth, block.stateRoot))
+    const block = await this.blockTracker.getLatestBlock()
+    return this._slicesStore.getById(new SliceId(slice.path, slice.depth, block.stateRoot))
   }
 
   /**
@@ -129,8 +129,8 @@ class SliceManager extends BaseTracker {
    * @param {SliceId} slice
    */
   async getSliceForBlock (block, slice) {
-    const blockHeader = await this._blockTracker.getBlockByNumber(block)
-    return this._slicesStore.getById(new SliceId(slice.prefix, slice.depth, blockHeader.stateRoot))
+    const blockHeader = await this.blockTracker.getBlockByNumber(block)
+    return this._slicesStore.getById(new SliceId(slice.path, slice.depth, blockHeader.stateRoot))
   }
 
   async start () {
@@ -138,6 +138,7 @@ class SliceManager extends BaseTracker {
       await this._bridgeTracker.start()
     }
 
+    await this.blockTracker.start()
     await this._pubsubTracker.start()
   }
 
@@ -146,6 +147,7 @@ class SliceManager extends BaseTracker {
       await this._bridgeTracker.stop()
     }
 
+    await this.blockTracker.stop()
     await this._pubsubTracker.stop()
   }
 }

@@ -31,7 +31,7 @@ module.exports = async (container, options) => {
 
   // register kitsunet dialer
   container.registerFactory('kitsunet-dialer',
-    (node) => new KitsunetDialer({ node }),
+    (node) => new KitsunetDialer({ node, interval: options.dialInterval }),
     ['node'])
 
   // register kitsunet rpc

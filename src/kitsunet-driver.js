@@ -28,6 +28,9 @@ class KitsunetDriver extends EE {
     this.blockTracker = blockTracker
     this.nodeType = this.isBridge ? NodeTypes.BRIDGE : NodeTypes.NODE
 
+    // peers
+    this.peers = new Map()
+
     // TODO: this is a workaround, headers
     // should come from the blockchain
     this._headers = new Set()
@@ -95,6 +98,14 @@ class KitsunetDriver extends EE {
     await this.kitsunetDialer.start()
 
     // await this._stats.start()
+
+    this.kitsunetRpc.on('kitsunet:peer-connected', (peer) => {
+      this.peers.set(peer.idB58, peer)
+    })
+
+    this.kitsunetRpc.on('kitsunet:peer-disconnected', (peer) => {
+      this.peers.delete(peer.idB58)
+    })
   }
 
   /**
@@ -103,6 +114,9 @@ class KitsunetDriver extends EE {
   async stop () {
     await this.kitsunetRpc.stop()
     await this.kitsunetDialer.stop()
+
+    this.kitsunetRpc.removeEventListener('kitsunet:peer-connected')
+    this.kitsunetRpc.removeEventListener('kitsunet:peer-disconnected')
 
     // await this._stats.stop()
   }

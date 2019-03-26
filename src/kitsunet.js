@@ -26,6 +26,10 @@ class Kitsunet extends EE {
     return this.sliceManager.blockTracker
   }
 
+  get peers () {
+    return this.kitsunetDriver.peers
+  }
+
   /**
   * Get a slice
   *
@@ -37,7 +41,7 @@ class Kitsunet extends EE {
       slice = new SliceId(slice)
     }
 
-    this.sliceManager.getSlice(slice)
+    return this.sliceManager.getSlice(slice)
   }
 
   /**
@@ -60,7 +64,7 @@ class Kitsunet extends EE {
       slice = new SliceId(slice)
     }
 
-    this.sliceManager.getSliceForBlock(blockRef)
+    return this.sliceManager.getSliceForBlock(blockRef, slice)
   }
 
   async start () {

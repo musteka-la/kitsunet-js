@@ -42,6 +42,12 @@ class KitsunetRpc extends EE {
 
     this._handler = this._handler.bind(this)
     this.dialPeer = this.dialPeer.bind(this)
+
+    this._node.on('peer:disconnect', (peerInfo) => {
+      const idB58 = peerInfo.id.toB58String()
+      this._peers.delete(idB58)
+      this.emit('kitsunet:peer-disconnected', peerInfo)
+    })
   }
 
   get nodeType () {
@@ -86,9 +92,17 @@ class KitsunetRpc extends EE {
    * @param {PeerInfo} peerInfo - the peer info to dial
    */
   async dialPeer (peerInfo) {
+    const idB58 = peerInfo.id.toB58String()
+    if (this._peers.has(idB58)) {
+      return this._peers.get(idB58)
+    }
+
     const conn = await this._dial(peerInfo)
     const peer = await this._processConn(conn)
-    peer.identify()
+    if (await peer.identify()) {
+      this._peers.set(idB58, peer)
+      return peer
+    }
   }
 
   /**
@@ -159,7 +173,7 @@ class KitsunetRpc extends EE {
         if (!peer) {
           peer = new RpcPeer(peerInfo, this)
           this._peers.set(idB58, peer)
-          nextTick(() => this.emit('kitsunet:peer', peer))
+          nextTick(() => this.emit('kitsunet:peer-connected', peer))
         }
         return resolve(peer)
       })
