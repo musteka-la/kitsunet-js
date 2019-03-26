@@ -2,20 +2,41 @@
 
 const EE = require('events')
 
+const { SliceId } = require('./slice')
+
+const DEFUALT_DEPTH = 10
+
 class Kitsunet extends EE {
-  constructor (sliceManager, kitsunetDriver) {
+  constructor (sliceManager, kitsunetDriver, depth) {
     super()
     this.sliceManager = sliceManager
     this.kitsunetDriver = kitsunetDriver
+    this.depth = depth || DEFUALT_DEPTH
+  }
+
+  get node () {
+    return this.kitsunetDriver.node
+  }
+
+  get peerInfo () {
+    return this.kitsunetDriver.peerInfo
+  }
+
+  get blockTracker () {
+    return this.sliceManager.blockTracker
   }
 
   /**
   * Get a slice
   *
-  * @param {SliceId} slice - the slice to return
+  * @param {SliceId|String} slice - the slice to return
   * @return {Slice}
   */
   async getSlice (slice) {
+    if (typeof slice === 'string') {
+      slice = new SliceId(slice)
+    }
+
     this.sliceManager.getSlice(slice)
   }
 
@@ -31,25 +52,18 @@ class Kitsunet extends EE {
   /**
    * Get the slice for a block
    *
-   * @param {Number} block - the block number to get the slice for
+   * @param {String|Number} blockRef - the block tag to get the slice for
+   * @param {SliceId|String} slice - the slice id to retrieve
    */
-  async getSliceForBlock (block) {
-    this.sliceManager.getSliceForBlock(block)
-  }
+  async getSliceForBlock (blockRef, slice) {
+    if (typeof slice === 'string') {
+      slice = new SliceId(slice)
+    }
 
-  /**
- * Get the slice for a block hash
- *
- * @param {Number} blockHash - the block hash to get the slice for
- */
-  async getSliceForBlockHash (blockHash) {
-    this.sliceManager.getSliceForBlockHash(blockHash)
+    this.sliceManager.getSliceForBlock(blockRef)
   }
 
   async start () {
-    // driver should be started first,
-    // it loads up libp2p node and other
-    // essentials
     await this.kitsunetDriver.start()
     await this.sliceManager.start()
   }

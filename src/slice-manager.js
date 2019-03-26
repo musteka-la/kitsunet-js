@@ -14,9 +14,10 @@ class SliceManager extends BaseTracker {
     assert(kitsunetDriver, 'driver should be supplied')
     kitsunetDriver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
 
+    this.blockTracker = blockTracker
+
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
-    this._blockTracker = blockTracker
     this._slicesStore = slicesStore
     this._kitsunetDriver = kitsunetDriver
     this._isBridge = kitsunetDriver.isBridge
@@ -114,23 +115,22 @@ class SliceManager extends BaseTracker {
   /**
    * Get the latest slice for prefix
    *
-   * @param {String} prefix
-   * @param {Number} depth
+   * @param {SliceId} slice
    */
-  async getLatestSlice (prefix, depth) {
+  async getLatestSlice (slice) {
     const block = await this._blockTracker.getLatestBlock()
-    return this._slicesStore.getById(new SliceId(prefix, depth, block.stateRoot))
+    return this._slicesStore.getById(new SliceId(slice.prefix, slice.depth, block.stateRoot))
   }
 
   /**
    * Get the slice for a block
    *
    * @param {Number} block
-   * @param {String} prefix
-   * @param {Number} depth
+   * @param {SliceId} slice
    */
-  async getSliceForBlock (block, prefix, depth) {
-    return this._slicesStore.getById(new SliceId({ prefix, depth, root: block.stateRoot }))
+  async getSliceForBlock (block, slice) {
+    const blockHeader = await this._blockTracker.getBlockByNumber(block)
+    return this._slicesStore.getById(new SliceId(slice.prefix, slice.depth, blockHeader.stateRoot))
   }
 
   async start () {

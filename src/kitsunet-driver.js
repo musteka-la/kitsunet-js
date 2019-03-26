@@ -35,6 +35,10 @@ class KitsunetDriver extends EE {
     this._init()
   }
 
+  get peerInfo () {
+    return this.node.peerInfo
+  }
+
   async _init () {
     // TODO: this needs to be reworked as a proper light sync
     // Currently the ethereumjs-blockchain doesn't support
