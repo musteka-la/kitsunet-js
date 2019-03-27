@@ -77,7 +77,7 @@ class KitsunetDialer extends EE {
     }
   }
 
-  async dial (peerInfo, proto) {
+  async dial (peerInfo) {
     const id = peerInfo.id.toB58String()
     if (this.dialing.has(id)) {
       log(`dial already in progress for ${id}`)
@@ -87,7 +87,7 @@ class KitsunetDialer extends EE {
     if (!this.connected.has(id)) {
       try {
         this.dialing.set(id, true)
-        await this.node.dialProtocol(peerInfo, proto)
+        await this.node.dialProtocol(peerInfo)
         nextTick(() => this.emit('kitsunet:peer-dialed', peerInfo))
       } catch (err) {
         log(err)

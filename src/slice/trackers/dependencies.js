@@ -25,8 +25,13 @@ module.exports = (container, options) => {
     ['node', 'polling-block-provider', 'eth-query'])
 
   container.registerFactory('bridge-tracker',
-    (options, blockTracker) => new BridgetTracker({ rpcUrl: options.rpcUrl, blockTracker }),
-    ['options', 'block-tracker'])
+    (options, blockTracker, rpcBlockTracker, ethQuery) => new BridgetTracker({
+      rpcUrl: options.rpcUrl,
+      blockTracker,
+      rpcBlockTracker,
+      ethQuery
+    }),
+    ['options', 'block-tracker', 'polling-block-provider', 'eth-query'])
 
   container.registerFactory('pubsub-tracker',
     (node, options) => new PubsubTracker({ node, depth: options.sliceDepth }),

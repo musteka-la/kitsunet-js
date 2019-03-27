@@ -47,6 +47,15 @@ class BaseTracker extends EE {
     throw new Error('not implemented!')
   }
 
+  /**
+   * Get the requested slice
+   *
+   * @param {SliceId} slice
+   */
+  async getSlice (slice) {
+    throw new Error('not implemented!')
+  }
+
   async start () {
     throw new Error('not implemented!')
   }

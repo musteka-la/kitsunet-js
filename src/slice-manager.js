@@ -5,6 +5,8 @@ const SliceId = require('./slice/slice-id')
 
 const { BaseTracker } = require('./slice/trackers')
 
+const log = require('debug')('kitsunet:kitsunet-slice-manager')
+
 class SliceManager extends BaseTracker {
   constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver }) {
     super({})
@@ -20,13 +22,13 @@ class SliceManager extends BaseTracker {
     this._pubsubTracker = pubsubTracker
     this._slicesStore = slicesStore
     this._kitsunetDriver = kitsunetDriver
-    this._isBridge = kitsunetDriver.isBridge
+    this.isBridge = Boolean(kitsunetDriver.isBridge)
 
     this._setUp()
   }
 
   _setUp () {
-    if (this._isBridge) {
+    if (this.isBridge) {
       this._bridgeTracker.on('slice', (slice) => {
         this._pubsubTracker.publish(slice)
       })
@@ -44,7 +46,7 @@ class SliceManager extends BaseTracker {
    * @param {Set<SliceId>|SliceId} slices - the slices to stop tracking
    */
   async untrack (slices) {
-    if (this._isBridge) {
+    if (this.isBridge) {
       this._bridgeTracker.untrack(slices)
     }
 
@@ -58,7 +60,7 @@ class SliceManager extends BaseTracker {
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
   async track (slices) {
-    if (this._isBridge) {
+    if (this.isBridge) {
       this._bridgeTracker.track(slices)
     }
     this._pubsubTracker.track(slices)
@@ -71,7 +73,7 @@ class SliceManager extends BaseTracker {
    * @returns {Boolean}
    */
   async isTracking (slice) {
-    let tracking = await this._bridgeTracker ? this._bridgeTracker.isTracking(slice) : true
+    let tracking = this.isBridge ? await this._bridgeTracker.isTracking(slice) : true
     if (tracking) return this._pubsubTracker.isTracking(slice)
     return false
   }
@@ -87,23 +89,9 @@ class SliceManager extends BaseTracker {
   }
 
   /**
-   * Get a slice
-   *
-   * @param {SliceId} sliceId - the slice to return
-   * @return {Slice}
-  */
-  async getSlice (sliceId) {
-    const slice = await this._slicesStore.getById(sliceId)
-    if (slice) return slice
-  }
-
-  /**
-   * Get all slices
+   * Get all slice ids currently being tracker
+   * @returns {Array<SliceId>}
    */
-  async getSlices () {
-    return this.kitsunetStore.getSlices()
-  }
-
   getSliceIds () {
     // dedup
     return [...new Set([
@@ -113,28 +101,76 @@ class SliceManager extends BaseTracker {
   }
 
   /**
-   * Get the latest slice for prefix
+   * Get a slice
    *
-   * @param {SliceId} slice
+   * @param {SliceId} sliceId - the slice to return
+   * @return {Slice}
+  */
+  async getSlice (sliceId) {
+    try {
+      const slice = await this._slicesStore.getById(sliceId)
+      return slice
+    } catch (e) {
+      log(e)
+      if (this.isBridge) {
+        this.track([sliceId])
+        return this._bridgeTracker.getSlice(sliceId)
+      }
+    }
+  }
+
+  /**
+   * Get all slices
+   *
+   * @returns {Array<Slice>} - an array of slice objects
    */
-  async getLatestSlice (slice) {
-    const block = await this.blockTracker.getLatestBlock()
-    return this._slicesStore.getById(new SliceId(slice.path, slice.depth, block.stateRoot))
+  async getSlices () {
+    try {
+      return this._slicesStore.getSlices()
+    } catch (e) {
+      log(e)
+    }
   }
 
   /**
    * Get the slice for a block
    *
-   * @param {Number} block
+   * @param {Number} number
    * @param {SliceId} slice
    */
-  async getSliceForBlock (block, slice) {
-    const blockHeader = await this.blockTracker.getBlockByNumber(block)
-    return this._slicesStore.getById(new SliceId(slice.path, slice.depth, blockHeader.stateRoot))
+  async getSliceForBlock (number, slice) {
+    let _slice = null
+    try {
+      const block = await this._kitsunetDriver.getBlockByNumber(number)
+      if (block) {
+        _slice = new SliceId(slice.path, slice.depth, block.header.stateRoot.toString('hex'))
+        _slice = await this._slicesStore.getById(_slice)
+        return _slice // wont run catch if return in place
+      }
+    } catch (e) {
+      log(e)
+      // otherwise, try resolving the slice
+      return this._resolveSlice(_slice)
+    }
+  }
+
+  async _resolveSlice (slice) {
+    // track the slice if not tracking already
+    if (!await this.isTracking(slice)) {
+      // track slice, we might already be subscribed to it
+      this.track([slice])
+    }
+
+    // if in bridge mode, just get it from the bridge
+    if (this.isBridge) {
+      return this._bridgeTracker.getSlice(slice)
+    }
+
+    this._kitsunetDriver.resolveSlices([slice])
   }
 
   async start () {
-    if (this._isBridge) {
+    if (this.isBridge) {
       await this._bridgeTracker.start()
     }
 
@@ -143,7 +179,7 @@ class SliceManager extends BaseTracker {
   }
 
   async stop () {
-    if (this._isBridge) {
+    if (this.isBridge) {
       await this._bridgeTracker.stop()
     }
 
