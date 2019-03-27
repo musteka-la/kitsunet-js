@@ -59,11 +59,12 @@ class RpcPeer extends EE {
       }
 
       case MsgType.SLICES: {
+        const slices = await this.kitsunetRpc.getSlices(msg.payload.slices)
         return {
           type: MsgType.SLICES,
           status: Status.OK,
           payload: {
-            slices: await this.kitsunetRpc.getSlices(msg.payload.slices)
+            slices
           }
         }
       }
@@ -83,7 +84,7 @@ class RpcPeer extends EE {
           type: MsgType.HEADERS,
           status: Status.OK,
           payload: {
-            slices: this.kitsunetRpc.getHeaders()
+            slices: await this.kitsunetRpc.getHeaders()
           }
         }
       }
@@ -171,13 +172,13 @@ class RpcPeer extends EE {
     const res = await this._sendRequest({
       type: MsgType.SLICES,
       payload: {
-        slices: slices ? slices.map((s) => Buffer.from(s.id)) : null
+        slices: slices ? slices.map((s) => s.serialize()) : null
       }
     })
 
     let _slices = null
     if (res.payload.slices) {
-      _slices = res.payload.slices.map((s) => new SliceId(s))
+      _slices = res.payload.slices.map((s) => new Slice(s))
     }
 
     return _slices

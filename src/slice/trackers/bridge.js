@@ -71,7 +71,8 @@ class KitsunetBridge extends BaseTracker {
    */
   async _fetchSlice (sliceId) {
     const { path, depth, root, isStorage } = sliceId
-    return this.fetcher({ path, depth, root: utils.bufferToHex(root), isStorage })
+    log('fetching slice %s, %d, %s, %d', path, depth, root, isStorage)
+    return this.fetcher({ path, depth, root, isStorage })
   }
 
   /**

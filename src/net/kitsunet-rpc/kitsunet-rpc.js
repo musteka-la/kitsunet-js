@@ -72,7 +72,9 @@ class KitsunetRpc extends EE {
   }
 
   async getSlices (slices) {
-    return Promise.all(slices.map((s) => this.sliceManager.getSlice(new SliceId(s.toString()))))
+    return Promise.all(slices.map((s) => {
+      return (this.sliceManager.getSlice(new SliceId(s)))
+    })).then((slices) => slices.map((s) => s.serialize()))
   }
 
   async getHeaders () {

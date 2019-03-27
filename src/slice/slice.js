@@ -52,6 +52,10 @@ class Slice extends SliceId {
     return this._nodes
   }
 
+  get leaves () {
+    return this._parsed.leaves
+  }
+
   serialize () {
     return cbor.encode({
       __sliceId__: super.serialize(),
@@ -59,7 +63,8 @@ class Slice extends SliceId {
         head: this.head,
         stem: this.stem,
         sliceNodes: this.sliceNodes
-      }
+      },
+      leaves: this.leaves
     })
   }
 }

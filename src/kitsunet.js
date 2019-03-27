@@ -33,11 +33,14 @@ class Kitsunet extends EE {
   * Get a slice
   *
   * @param {SliceId|String} slice - the slice to return
+  * TODO: remove this - need to modify Geth to handle storage slices just any any other slice
+  * @param {Boolean} storage - weather the slice is a storage slice
   * @return {Slice}
   */
-  async getSlice (slice) {
+  async getSlice (slice, storage) {
     if (typeof slice === 'string') {
-      slice = new SliceId(slice)
+      const [ path, depth, root ] = slice.split('-')
+      slice = new SliceId(path, depth, root, storage)
     }
 
     return this.sliceManager.getSlice(slice)
