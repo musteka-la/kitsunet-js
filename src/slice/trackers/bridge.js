@@ -4,36 +4,43 @@ const BaseTracker = require('./base')
 const fetcher = require('./slice-fetcher')
 const { Slice } = require('../')
 const utils = require('ethereumjs-util')
+const promisify = require('promisify-this')
+
+const blockFromRpc = require('ethereumjs-block/from-rpc')
 
 const nextTick = require('async/nextTick')
 const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
 
 class KitsunetBridge extends BaseTracker {
-  constructor ({ rpcUrl, slices, blockTracker }) {
+  constructor ({ rpcUrl, slices, blockTracker, rpcBlockTracker, ethQuery }) {
     super({ slices })
     this.rpcUrl = rpcUrl
     this._blockTracker = blockTracker
+    this._rpcBlockTracker = rpcBlockTracker
+    this._ethQuery = promisify(ethQuery)
 
     this.fetcher = fetcher(this.rpcUrl)
     this._blockHandler = this._blockHandler.bind(this)
   }
 
+  async _handleSlice (slice) {
+    slice = new Slice(slice)
+    this.emit('slice', slice)
+    return slice
+  }
+
   /**
   * Handle blocks via the `latest` event
   *
-  * @param {Block} header - an rpc (JSON) block
+  * @param {Block} number - an rpc (JSON) block
   */
-  _blockHandler (header) {
-    nextTick(() => {
+  _blockHandler (number) {
+    nextTick(async () => {
+      const block = await this._ethQuery.getBlockByNumber(number, false)
+      this._blockTracker.publish(blockFromRpc(block))
       this.slices.forEach(async (slice) => {
-        const { path, depth, isStorage } = slice
-        const fetchedSlice = await this.fetcher({
-          path: path,
-          depth,
-          root: utils.bufferToHex(header.stateRoot),
-          isStorage
-        })
-        this.emit('slice', new Slice(fetchedSlice))
+        slice.root = block.stateRoot
+        this._handleSlice(await this._fetchSlice(slice))
       })
     })
   }
@@ -64,7 +71,7 @@ class KitsunetBridge extends BaseTracker {
    */
   async _fetchSlice (sliceId) {
     const { path, depth, root, isStorage } = sliceId
-    return this.fetcher({ path, depth, root, isStorage })
+    return this.fetcher({ path, depth, root: utils.bufferToHex(root), isStorage })
   }
 
   /**
@@ -77,14 +84,24 @@ class KitsunetBridge extends BaseTracker {
     return this.slices.has(sliceId)
   }
 
+  /**
+   * Get the requested slice
+   *
+   * @param {SliceId} slice
+  */
+  async getSlice (slice) {
+    const _slice = await this._fetchSlice(slice)
+    return this._handleSlice(_slice)
+  }
+
   async start () {
     await this._blockTracker.start()
-    this._blockTracker.on('latest', this._blockHandler)
+    this._rpcBlockTracker.on('latest', this._blockHandler)
   }
 
   async stop () {
     await this._blockTracker.stop()
-    this._blockTracker.removeListener('latest', this._blockHandler)
+    this._rpcBlockTracker.removeListener('latest', this._blockHandler)
   }
 }
 

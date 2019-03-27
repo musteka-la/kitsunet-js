@@ -3,7 +3,6 @@
 const EE = require('events')
 const { NodeTypes } = require('./constants')
 const promisify = require('promisify-this')
-const { Header } = require('ethereumjs-blockchain')
 
 const log = require('debug')('kitsunet:kitsunet-driver')
 
@@ -52,8 +51,19 @@ class KitsunetDriver extends EE {
     })
   }
 
+  /**
+   * Get the latest block
+   */
   async getLatestBlock () {
     return this.blockTracker.getLatestBlock()
+  }
+
+  /**
+   * Get a block by number
+   * @param {String|Number} block - the number of the block to retrieve
+   */
+  async getBlockByNumber (block) {
+    return this.blockTracker.getBlockByNumber(block)
   }
 
   getHeaders () {
@@ -67,7 +77,7 @@ class KitsunetDriver extends EE {
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
   async findPeers (slice) {
-    this.discovery.findPeers(slice)
+    return this.discovery.findPeers(slice)
   }
 
   /**
@@ -76,8 +86,52 @@ class KitsunetDriver extends EE {
    * @param {Array<SliceId>} slices - the slices to find the peers for
    */
   async findAndConnect (slices) {
-    const peers = this.findPeers(slices)
-    Promise.all(peers.map((peer) => this.kitsunetDialer.dial(peer)))
+    const peers = await this.findPeers(slices)
+    return Promise.all(peers.map((peer) => this.kitsunetDialer.dial(peer)))
+  }
+
+  async _rpcResolve (slices, peers) {
+    const resolve = async (peer) => {
+      // first check if the peer has already reported
+      // tracking the slice
+      const _peers = await slices.map((slice) => {
+        if (peer.sliceIds.has(`${slice.path}-${slice.depth}`) ||
+          peer.nodeType === NodeTypes.BRIDGE ||
+          peer.nodeType === NodeTypes.EXIT) {
+          return peer
+        }
+      }).filter(Boolean)
+
+      if (_peers && _peers.length) {
+        return Promise.race(_peers.map(p => p.getSlices(slices)))
+      }
+    }
+
+    for (const p of peers) {
+      let resolved = await resolve(p)
+      if (resolved && resolved.length) return resolved
+      await p.getSliceIds() // refresh the ids
+      resolved = await resolve(p)
+      if (resolved && resolved.length) return resolved
+    }
+  }
+
+  /**
+   * Find the requested slices, by trying different
+   * underlying mechanisms
+   *
+   * 1) RPC - ask each peer for the slice, if that fails
+   * 2) Discovery - ask different discovery mechanisms to
+   * find peers tracking the requested slices
+   * 3) RPC - repeat 1st step with the new peers
+   *
+   * @param {Array<SliceId>} slices
+   */
+  async resolveSlices (slices) {
+    const resolved = await this._rpcResolve(slices, this.peers.values())
+    if (resolved && resolved.length) return resolved
+    const peers = await this.findAndConnect(slices)
+    if (peers) return this._rpcResolve(slices, peers)
   }
 
   /**

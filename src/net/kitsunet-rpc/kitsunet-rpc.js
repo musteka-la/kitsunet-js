@@ -5,8 +5,8 @@ const pull = require('pull-stream')
 const pbb = require('pull-protocol-buffers')
 const RpcPeer = require('./rpc-peer')
 const nextTick = require('async/nextTick')
+const { SliceId } = require('../../slice')
 const KitsunetProto = require('./proto').Kitsunet
-
 const { Status } = KitsunetProto
 
 const log = require('debug')('kitsunet:kitsunet-proto')
@@ -54,24 +54,28 @@ class KitsunetRpc extends EE {
     return this.kitsunetDriver.nodeType
   }
 
-  get latestBlock () {
+  async getLatestBlock () {
     return this.kitsunetDriver.getLatestBlock()
   }
 
-  get sliceIds () {
+  getSliceIds () {
     const ids = this.sliceManager.getSliceIds()
     if (ids) {
-      return ids.map(s => Buffer.from(s.id))
+      return ids.map((s) => Buffer.from(`${s.path}-${s.depth}`))
     }
 
     return []
   }
 
-  get slices () {
-    return this.sliceManager.getSlices()
+  async getSliceById (slice) {
+    return this.sliceManager.getSliceById(slice)
   }
 
-  get headers () {
+  async getSlices (slices) {
+    return Promise.all(slices.map((s) => this.sliceManager.getSlice(new SliceId(s.toString()))))
+  }
+
+  async getHeaders () {
     return this.kitsunetDriver.getHeaders()
   }
 
@@ -98,11 +102,7 @@ class KitsunetRpc extends EE {
     }
 
     const conn = await this._dial(peerInfo)
-    const peer = await this._processConn(conn)
-    if (await peer.identify()) {
-      this._peers.set(idB58, peer)
-      return peer
-    }
+    return this._processConn(conn)
   }
 
   /**
@@ -156,7 +156,7 @@ class KitsunetRpc extends EE {
    */
   async _processConn (conn) {
     return new Promise((resolve, reject) => {
-      conn.getPeerInfo((err, peerInfo) => {
+      conn.getPeerInfo(async (err, peerInfo) => {
         if (err) {
           const errMsg = 'Failed to identify incoming conn'
           log(errMsg, err)
@@ -173,7 +173,14 @@ class KitsunetRpc extends EE {
         if (!peer) {
           peer = new RpcPeer(peerInfo, this)
           this._peers.set(idB58, peer)
-          nextTick(() => this.emit('kitsunet:peer-connected', peer))
+          if (await peer.identify()) {
+            nextTick(() => this.emit('kitsunet:peer-connected', peer))
+          } else {
+            this._peers.delete(idB58)
+            const errMsg = new Error(`could not perform kitsunet identify for peer ${idB58}`)
+            log(errMsg)
+            return reject(errMsg)
+          }
         }
         return resolve(peer)
       })

@@ -44,7 +44,8 @@ class SliceStore {
    */
   async getById (sliceId) {
     const key = `${SLICE_PREFIX}/${sliceId.path}/${sliceId.depth}/${sliceId.root}`
-    return new Slice(await this._store.get(new Key(key)))
+    const raw = await this._store.get(new Key(key))
+    return new Slice(raw)
   }
 
   /**

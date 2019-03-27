@@ -5,10 +5,16 @@ const EE = require('events')
 const { NodeTypes } = require('../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
-const { SliceId } = require('../../slice')
+const { SliceId, Slice } = require('../../slice')
 const BN = require('bn.js')
 
 const log = require('debug')('kitsunet:kitsunet-proto')
+
+function errResponse (type) {
+  const err = `unknown message type ${type}`
+  log(err)
+  return { status: Status.ERROR, error: err }
+}
 
 class RpcPeer extends EE {
   constructor (peerInfo, kitsunetRpc) {
@@ -31,19 +37,24 @@ class RpcPeer extends EE {
     log('got request', msg)
     switch (msg.type) {
       case MsgType.IDENTIFY: {
-        const latestBlock = new BN(await this.kitsunetRpc.latestBlock)
-        return {
-          type: MsgType.IDENTIFY,
-          status: Status.OK,
-          data: {
-            identify: {
-              version: this.kitsunetRpc.VERSION,
-              userAgent: this.kitsunetRpc.USER_AGENT,
-              nodeType: this.kitsunetRpc.nodeType,
-              latestBlock: latestBlock.toBuffer(),
-              sliceIds: this.kitsunetRpc.sliceIds
+        try {
+          const block = await this.kitsunetRpc.getLatestBlock()
+          return {
+            type: MsgType.IDENTIFY,
+            status: Status.OK,
+            payload: {
+              identify: {
+                version: this.kitsunetRpc.VERSION,
+                userAgent: this.kitsunetRpc.USER_AGENT,
+                nodeType: this.kitsunetRpc.nodeType,
+                latestBlock: block ? block.header.number : new BN(0).toBuffer(),
+                sliceIds: this.kitsunetRpc.getSliceIds()
+              }
             }
           }
+        } catch (e) {
+          log(e)
+          return errResponse(msg.type, e)
         }
       }
 
@@ -51,8 +62,8 @@ class RpcPeer extends EE {
         return {
           type: MsgType.SLICES,
           status: Status.OK,
-          data: {
-            slices: this.kitsunetRpc.slices
+          payload: {
+            slices: await this.kitsunetRpc.getSlices(msg.payload.slices)
           }
         }
       }
@@ -61,8 +72,8 @@ class RpcPeer extends EE {
         return {
           type: MsgType.SLICE_ID,
           status: Status.OK,
-          data: {
-            slices: this.kitsunetRpc.sliceIds
+          payload: {
+            sliceIds: this.kitsunetRpc.getSliceIds()
           }
         }
       }
@@ -71,8 +82,8 @@ class RpcPeer extends EE {
         return {
           type: MsgType.HEADERS,
           status: Status.OK,
-          data: {
-            slices: this.kitsunetRpc.headers
+          payload: {
+            slices: this.kitsunetRpc.getHeaders()
           }
         }
       }
@@ -81,16 +92,14 @@ class RpcPeer extends EE {
         return {
           type: MsgType.NODE_TYPE,
           status: Status.OK,
-          data: {
+          payload: {
             slices: this.kitsunetRpc.nodeType
           }
         }
       }
 
       default: {
-        const err = `unknown message type ${msg.type}`
-        log(err)
-        return { status: Status.ERROR, error: err }
+        errResponse(msg.type)
       }
     }
   }
@@ -110,56 +119,95 @@ class RpcPeer extends EE {
     return res
   }
 
+  /**
+   * initiate the identify flow
+   */
   async identify () {
     const res = await this._sendRequest({
       type: MsgType.IDENTIFY
     })
 
-    this.version = res.data.identify.version
-    this.userAgent = res.data.identify.userAgent
+    this.version = res.payload.identify.version
+    this.userAgent = res.payload.identify.userAgent
 
-    this.sliceIds = res.data.identify.sliceIds
-      ? res.data.identify.sliceIds.map((s) => {
-        return new SliceId(s.toString())
-      }) : []
+    this.sliceIds = res.payload.identify.sliceIds
+      ? new Set(res.payload.identify.sliceIds.map((s) => new SliceId(s.toString())))
+      : new Set()
 
-    this.latestBlock = res.data.identify.latestBlock ? new BN(res.data.identify.latestBlock) : new BN(0x0)
-    this.nodeType = res.data.identify.nodeType
-
+    this.latestBlock = res.payload.identify.latestBlock
+    this.nodeType = res.payload.identify.nodeType
     return res
   }
 
-  async sliceIds () {
+  /**
+   * Get all slice ids for the peer
+   */
+  async getSliceIds () {
     const res = await this._sendRequest({
       type: MsgType.SLICE_ID
     })
-    return res.data.sliceIds
+
+    let ids = []
+    if (res.payload.sliceIds) {
+      ids = new Set(res.payload.sliceIds.map((s) => s.toString()))
+    }
+
+    this.sliceIds = ids
+    return ids
   }
 
-  async slices () {
+  /**
+  * Get slices for the provided ids or all the
+  * slices the peer is holding
+  *
+  * TODO: this needs rethinking, do we really want to return all slices?
+  * It might not be necessary and the complexity introduced when sending large
+  * amounts of data might not worth it?
+  * For now this just sends ALL the slices, so beware!
+  *
+  * @param {Array<SliceId>} slices - optional
+  */
+  async getSlices (slices) {
     const res = await this._sendRequest({
-      type: MsgType.SLICES
+      type: MsgType.SLICES,
+      payload: {
+        slices: slices ? slices.map((s) => Buffer.from(s.id)) : null
+      }
     })
 
-    return res.data.slices
+    let _slices = null
+    if (res.payload.slices) {
+      _slices = res.payload.slices.map((s) => new SliceId(s))
+    }
+
+    return _slices
   }
 
+  /**
+   * Get all headers
+   */
   async headers () {
     const res = await this._sendRequest({
       type: MsgType.HEADERS
     })
 
-    return res.data.headers
+    return res.payload.headers
   }
 
+  /**
+   * Get Node type - bridge, edge, node
+   */
   async nodeType () {
     const res = await this._sendRequest(this, {
       type: MsgType.NODE_TYPE
     })
 
-    return res.data.nodeType
+    return res.payload.nodeType
   }
 
+  /**
+   * Ping peer
+   */
   async ping () {
     await this._sendRequest(this, {
       type: MsgType.PING

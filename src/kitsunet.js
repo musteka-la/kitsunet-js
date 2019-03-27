@@ -12,6 +12,9 @@ class Kitsunet extends EE {
     this.sliceManager = sliceManager
     this.kitsunetDriver = kitsunetDriver
     this.depth = depth || DEFUALT_DEPTH
+
+    this.sliceManager.blockTracker.on('latest', (block) => this.emit('latest', block))
+    this.sliceManager.blockTracker.on('sync', ({ block, oldBlock }) => this.emit('sync', { block, oldBlock }))
   }
 
   get node () {
@@ -20,10 +23,6 @@ class Kitsunet extends EE {
 
   get peerInfo () {
     return this.kitsunetDriver.peerInfo
-  }
-
-  get blockTracker () {
-    return this.sliceManager.blockTracker
   }
 
   get peers () {
@@ -45,26 +44,33 @@ class Kitsunet extends EE {
   }
 
   /**
-   * Get the latest slice
-   *
-   * @return {Slice}
-   */
-  async getLatestSlice () {
-    return this.sliceManager.getLatestSlice()
-  }
-
-  /**
    * Get the slice for a block
    *
-   * @param {String|Number} blockRef - the block tag to get the slice for
+   * @param {String|Number} block - the block tag to get the slice for
    * @param {SliceId|String} slice - the slice id to retrieve
    */
-  async getSliceForBlock (blockRef, slice) {
+  async getSliceForBlock (block, slice) {
     if (typeof slice === 'string') {
       slice = new SliceId(slice)
     }
 
-    return this.sliceManager.getSliceForBlock(blockRef, slice)
+    return this.sliceManager.getSliceForBlock(block, slice)
+  }
+
+  /**
+   * Get the latest block
+   */
+  async getLatestBlock () {
+    return this.kitsunetDriver.getLatestBlock()
+  }
+
+  /**
+   * Get a block by number
+   *
+   * @param {String|Number} block - the block number, if string is passed assumed to be in hex
+   */
+  async getBlockByNumber (block) {
+    return this.kitsunetDriver.getBlockByNumber(block)
   }
 
   async start () {

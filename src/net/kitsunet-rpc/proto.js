@@ -42,18 +42,18 @@ message Kitsunet {
   }
 
   message Data {
-    optional Identify identify  = 1;
-    repeated bytes    slices    = 2;
-    repeated bytes    headers   = 3;
-    optional NodeType type      = 4;
-    repeated bytes    sliceIds  = 5;
-    optional bytes    latestBlock  = 6;
+    optional Identify identify    = 1;
+    repeated bytes    slices      = 2;
+    repeated bytes    headers     = 3;
+    optional NodeType type        = 4;
+    repeated bytes    sliceIds    = 5;
+    optional bytes    latestBlock = 6;
   }
 
   optional MsgType  type    = 1 [default = UNKNOWN_MSG]; // the message type
   optional Status   status  = 2;  // only used for responses - OK for success ERROR for errors
   optional string   error   = 3;  // only used for responses - if status == ERROR, this might contain an error string
-  optional Data     data    = 4;  // the data of the request/response
+  optional Data     payload = 4;  // the data of the request/response
 }
 `
 
