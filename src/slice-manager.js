@@ -116,6 +116,8 @@ class SliceManager extends BaseTracker {
         this.track([sliceId])
         return this._bridgeTracker.getSlice(sliceId)
       }
+
+      return this._resolveSlice(sliceId)
     }
   }
 
@@ -166,7 +168,7 @@ class SliceManager extends BaseTracker {
       return this._bridgeTracker.getSlice(slice)
     }
 
-    this._kitsunetDriver.resolveSlices([slice])
+    return (await this._kitsunetDriver.resolveSlices([slice]) || [])[0]
   }
 
   async start () {

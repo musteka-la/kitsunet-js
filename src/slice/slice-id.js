@@ -5,7 +5,7 @@ const cbor = require('borc')
 class SliceId {
   static parse (path, depth, root, isStorage) {
     if (Buffer.isBuffer(path)) {
-      [path, depth, root, isStorage] = cbor.decode(path)
+      ({ path, depth, root, isStorage } = cbor.decode(path))
     } else if (typeof path === 'string' && path.includes('-')) {
       [path, depth, root] = path.split('-')
     }
@@ -14,7 +14,7 @@ class SliceId {
   }
 
   constructor (path = '0x0000', depth = 10, root = null, isStorage = false) {
-    [this.path, this.depth, this.root] = SliceId.parse(path, depth, root, isStorage)
+    [this.path, this.depth, this.root, this.isStorage] = SliceId.parse(path, depth, root, isStorage)
   }
 
   get id () {
