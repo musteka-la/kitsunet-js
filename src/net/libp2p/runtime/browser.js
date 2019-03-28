@@ -41,7 +41,7 @@ async function createNode ({ identity, addrs, bootstrap }) {
       peerDiscovery: {
         bootstrap: {
           list: bootstrap,
-          interval: 1000
+          interval: 10000
         }
       }
     }

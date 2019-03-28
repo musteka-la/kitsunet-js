@@ -13,14 +13,14 @@ class KitsunetDriver extends EE {
     kitsunetRpc,
     isBridge,
     discovery,
-    blockchain,
+    // blockchain,
     blockTracker
   }) {
     super()
 
     this.node = node
     this.isBridge = Boolean(isBridge)
-    this.blockChain = promisify(blockchain)
+    // this.blockChain = promisify(blockchain)
     this.kitsunetDialer = kitsunetDialer
     this.kitsunetRpc = kitsunetRpc
     this.discovery = discovery
@@ -87,7 +87,9 @@ class KitsunetDriver extends EE {
    */
   async findAndConnect (slices) {
     const peers = await this.findPeers(slices)
-    return Promise.all(peers.map((peer) => this.kitsunetDialer.dial(peer)))
+    if (peers && peers.length) {
+      return Promise.all(peers.map((peer) => this.kitsunetDialer.dial(peer)))
+    }
   }
 
   async _rpcResolve (slices, peers) {
@@ -131,7 +133,7 @@ class KitsunetDriver extends EE {
     const resolved = await this._rpcResolve(slices, this.peers.values())
     if (resolved && resolved.length) return resolved
     const peers = await this.findAndConnect(slices)
-    if (peers) return this._rpcResolve(slices, peers)
+    if (peers && peers.length) return this._rpcResolve(slices, peers)
   }
 
   /**
@@ -151,14 +153,13 @@ class KitsunetDriver extends EE {
     await this.kitsunetRpc.start()
     await this.kitsunetDialer.start()
 
-    // await this._stats.start()
-
     this.kitsunetRpc.on('kitsunet:peer-connected', (peer) => {
       this.peers.set(peer.idB58, peer)
     })
 
-    this.kitsunetRpc.on('kitsunet:peer-disconnected', (peer) => {
-      this.peers.delete(peer.idB58)
+    this.kitsunetRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
+      const idB58 = peerInfo.id.toB58String()
+      this.peers.delete(idB58)
     })
   }
 

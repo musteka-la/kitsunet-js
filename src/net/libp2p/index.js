@@ -1,17 +1,14 @@
 'use strict'
 
-const Multiplex = require('libp2p-mplex')
+const Multiplex = require('pull-mplex')
 const SPDY = require('libp2p-spdy')
 const SECIO = require('libp2p-secio')
 const Libp2p = require('libp2p')
 const DHT = require('libp2p-kad-dht')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 const promisify = require('promisify-this')
-
 const createMulticast = require('libp2p-multicast-conditional/src/api')
-
 const parallel = require('async/parallel')
-
 const { Discovery } = require('libp2p-rendezvous')
 
 const RNDVZ_DISCOVERY_INTERVAL = 60 * 1000
@@ -34,11 +31,11 @@ class Node extends Libp2p {
       },
       config: {
         relay: {
-          enabled: true
+          enabled: false
         },
-        dht: {},
-        EXPERIMENTAL: {
-          dht: false
+        dht: {
+          kBucketSize: 20,
+          enabled: true
         }
       }
     }

@@ -112,6 +112,8 @@ async function run () {
     config = options.config
   }
 
+  options.NODE_ENV = process.env.NODE_ENV || 'prod'
+
   options.identity = options.identity ? require(options.identity) : config.identity
   options.libp2pAddrs = options.libp2pAddrs || config.libp2pAddrs
 

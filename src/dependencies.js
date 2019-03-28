@@ -5,6 +5,9 @@ const SliceManager = require('./slice-manager')
 const KitsunetDriver = require('./kitsunet-driver')
 const { createNode, KitsunetDialer, KitsunetRpc } = require('./net')
 const { DhtDiscovery } = require('./slice/discovery')
+const { TelemetryClient, connectViaPost } = require('kitsunet-telemetry')
+const Libp2pStats = require('kitsunet-reporters')
+const { KitsunetStats } = require('./stats')
 // const { default: Blockchain, Header } = require('ethereumjs-blockchain')
 // const Level = require('level')
 
@@ -33,6 +36,23 @@ module.exports = async (container, options) => {
   container.registerFactory('kitsunet-dialer',
     (node) => new KitsunetDialer({ node, interval: options.dialInterval }),
     ['node'])
+
+  container.registerFactory('telemetry-connection', (options) => {
+    return connectViaPost({ devMode: options.NODE_ENV === 'dev' })
+  }, ['options'])
+
+  container.registerFactory('telemetry', (node, connection) => {
+    const clientId = node.peerInfo.id.toB58String()
+    return new TelemetryClient({ node, clientId, connection })
+  }, [ 'node', 'telemetry-connection' ])
+
+  container.registerFactory('kitsunet-stats', (kitsunetRpc, node) => {
+    return new KitsunetStats({ kitsunetRpc, node })
+  }, ['kitsunet-rpc', 'node'])
+
+  container.registerFactory('libp2p-stats', (node) => {
+    return new Libp2pStats({ node })
+  }, ['node'])
 
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',
@@ -64,14 +84,16 @@ module.exports = async (container, options) => {
 
   // register KitsunetDriver options
   container.registerFactory('kitsunet-driver',
-    (node, kitsunetDialer, options, discovery, blockTracker) => {
+    (node, kitsunetDialer, options, discovery, blockTracker, telemetry, stats) => {
       return new KitsunetDriver({
         node,
         kitsunetDialer,
         isBridge: options.bridge,
         discovery,
         // blockchain, // TODO: needs a checkpointed blockchain (in the works)
-        blockTracker
+        blockTracker,
+        telemetry,
+        stats
       })
     }, [
       'node',
@@ -79,7 +101,9 @@ module.exports = async (container, options) => {
       'options',
       'kitsunet-discovery',
       // 'blockchain',
-      'block-tracker'
+      'block-tracker',
+      'telemetry',
+      'libp2p-stats'
     ])
 
   // register SliceManager options
@@ -102,14 +126,24 @@ module.exports = async (container, options) => {
 
   // register kitsunet
   container.registerFactory('kitsunet',
-    (sliceManager, kitsunetDriver, kitsunetRpc) => {
+    (sliceManager, kitsunetDriver, kitsunetRpc, telemetry, libp2pStats, kitsunetStats) => {
       kitsunetDriver.kitsunetRpc = kitsunetRpc // circular dep
-      return new Kitsunet(sliceManager, kitsunetDriver)
+      telemetry.setStateHandler(() => {
+        return {
+          libp2p: libp2pStats.getState(),
+          kitsunet: kitsunetStats.getState()
+        }
+      })
+
+      return new Kitsunet(sliceManager, kitsunetDriver, telemetry, libp2pStats, kitsunetStats)
     },
     [
       'slice-manager',
       'kitsunet-driver',
-      'kitsunet-rpc'
+      'kitsunet-rpc',
+      'telemetry',
+      'libp2p-stats',
+      'kitsunet-stats'
     ])
 
   return container

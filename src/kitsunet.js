@@ -1,17 +1,21 @@
 'use strict'
 
 const EE = require('events')
-
 const { SliceId } = require('./slice')
+const nextTick = require('async/nextTick')
 
 const DEFUALT_DEPTH = 10
 
 class Kitsunet extends EE {
-  constructor (sliceManager, kitsunetDriver, depth) {
+  constructor (sliceManager, kitsunetDriver, telemetry, libp2pStats, kitsunetStats, depth = DEFUALT_DEPTH) {
     super()
     this.sliceManager = sliceManager
     this.kitsunetDriver = kitsunetDriver
-    this.depth = depth || DEFUALT_DEPTH
+    this.kitsunetStats = kitsunetStats
+    this.libp2pStats = libp2pStats
+    this.telemetry = telemetry
+
+    this.depth = depth
 
     this.sliceManager.blockTracker.on('latest', (block) => this.emit('latest', block))
     this.sliceManager.blockTracker.on('sync', ({ block, oldBlock }) => this.emit('sync', { block, oldBlock }))
@@ -79,11 +83,23 @@ class Kitsunet extends EE {
   async start () {
     await this.kitsunetDriver.start()
     await this.sliceManager.start()
+
+    await this.libp2pStats.start()
+    await this.kitsunetStats.start()
+    await this.telemetry.start()
+
+    nextTick(() => this.emit('kitsunet:start'))
   }
 
   async stop () {
     await this.sliceManager.stop()
     await this.kitsunetDriver.stop()
+
+    await this.libp2pStats.stop()
+    await this.kitsunetStats.stop()
+    await this.telemetry.stop()
+
+    nextTick(() => this.emit('kitsunet:stop'))
   }
 }
 
