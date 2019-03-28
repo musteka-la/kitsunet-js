@@ -4,7 +4,8 @@
 const { pingPeer } = require('./ping')
 
 const assert = require('assert')
-const log = require('debug')('kitsunet:telemetry:client')
+const debug = require('debug')
+const log = debug('kitsunet:telemetry:client')
 
 const clientState = {
   // kitsunet peers

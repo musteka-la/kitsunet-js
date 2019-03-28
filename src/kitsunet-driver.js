@@ -2,9 +2,9 @@
 
 const EE = require('events')
 const { NodeTypes } = require('./constants')
-const promisify = require('promisify-this')
 
-const log = require('debug')('kitsunet:kitsunet-driver')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-driver')
 
 class KitsunetDriver extends EE {
   constructor ({

@@ -5,7 +5,8 @@ const SliceId = require('./slice/slice-id')
 
 const { BaseTracker } = require('./slice/trackers')
 
-const log = require('debug')('kitsunet:kitsunet-slice-manager')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-slice-manager')
 
 class SliceManager extends BaseTracker {
   constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver }) {

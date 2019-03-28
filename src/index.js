@@ -6,7 +6,8 @@ const ethUtils = require('ethereumjs-util')
 
 const { SliceId } = require('./slice')
 
-const log = require('debug')('kitsunet:kitsunet-factory')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-factory')
 
 module.exports = async (options) => {
   const container = new Opium('kitsunet')

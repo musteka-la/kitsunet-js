@@ -3,13 +3,13 @@
 const BaseTracker = require('./base')
 const fetcher = require('./slice-fetcher')
 const { Slice } = require('../')
-const utils = require('ethereumjs-util')
 const promisify = require('promisify-this')
 
 const blockFromRpc = require('ethereumjs-block/from-rpc')
 
 const nextTick = require('async/nextTick')
-const log = require('debug')('kitsunet:kitsunet-bridge-tracker')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-bridge-tracker')
 
 class KitsunetBridge extends BaseTracker {
   constructor ({ rpcUrl, slices, blockTracker, rpcBlockTracker, ethQuery }) {
