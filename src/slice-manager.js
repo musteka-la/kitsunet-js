@@ -64,6 +64,9 @@ class SliceManager extends BaseTracker {
       this._bridgeTracker.track(slices)
     }
     this._pubsubTracker.track(slices)
+
+    // if we're tracking a slice, make it discoverable
+    this._kitsunetDriver.announce(slices)
   }
 
   /**

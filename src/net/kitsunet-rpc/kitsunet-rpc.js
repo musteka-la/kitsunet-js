@@ -12,7 +12,7 @@ const { Status } = KitsunetProto
 const log = require('debug')('kitsunet:kitsunet-proto')
 
 const _VERSION = '1.0.0'
-const codec = `/kitsunet/proto/${_VERSION}`
+const codec = `/kitsunet/client/${_VERSION}`
 
 class KitsunetRpc extends EE {
   get VERSION () {

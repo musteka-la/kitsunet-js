@@ -2,7 +2,8 @@
 
 const Discovery = require('./base')
 const promisify = require('promisify-this')
-const multihashing = promisify(require('multihashing'))
+const multihashing = promisify(require('multihashing-async'))
+const CID = require('cids')
 
 const TIMEOUT = 1000 * 60 // one minute
 
@@ -14,11 +15,12 @@ class DhtDiscovery extends Discovery {
    */
   constructor (node) {
     super()
-    this._dht = node.dht
+    this.contentRouting = promisify(node.contentRouting)
   }
 
   async _makeKeyId (sliceId) {
-    return multihashing.digest(sliceId.serialize(), 'sha2-256')
+    const key = await multihashing(sliceId.serialize(), 'sha2-256')
+    return new CID(key)
   }
 
   /**
@@ -28,16 +30,21 @@ class DhtDiscovery extends Discovery {
    * @returns {Array<PeerInfo>} peers - an array of peers tracking the slice
    */
   async findPeers (sliceId) {
-    return this._dht.findProviders(await this._makeKeyId(sliceId), TIMEOUT)
+    return Promise.all(sliceId.map(async (s) => {
+      return this.contentRouting.findProviders(await this._makeKeyId(s), TIMEOUT)
+    }).filter(Boolean))
   }
 
   /**
-   * Announces slice to the network using whatever mechanisms are available, e.g DHT, RPC, etc...
+   * Announces slice to the network using whatever
+   * mechanisms are available, e.g DHT, RPC, etc...
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
   async announce (slices) {
-    slices.forEach(async (sliceId) => this._dht.provide(await this._makeKeyId(sliceId)))
+    slices.forEach(async (sliceId) => {
+      return this.contentRouting.provide(await this._makeKeyId(sliceId))
+    })
   }
 }
 

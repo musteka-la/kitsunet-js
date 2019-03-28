@@ -36,7 +36,9 @@ module.exports = async (options) => {
     }))
   }
 
-  kitsunet.sliceManager.track(slices)
-
+  kitsunet.on('kitsunet:start', () => {
+    log('kitsunet started')
+    kitsunet.sliceManager.track(slices)
+  })
   return kitsunet
 }

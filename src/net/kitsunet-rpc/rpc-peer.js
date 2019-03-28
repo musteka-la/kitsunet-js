@@ -99,6 +99,13 @@ class RpcPeer extends EE {
         }
       }
 
+      case MsgType.PING: {
+        return {
+          type: MsgType.PING,
+          status: Status.OK
+        }
+      }
+
       default: {
         errResponse(msg.type)
       }
@@ -199,7 +206,7 @@ class RpcPeer extends EE {
    * Get Node type - bridge, edge, node
    */
   async nodeType () {
-    const res = await this._sendRequest(this, {
+    const res = await this._sendRequest({
       type: MsgType.NODE_TYPE
     })
 
@@ -210,7 +217,7 @@ class RpcPeer extends EE {
    * Ping peer
    */
   async ping () {
-    await this._sendRequest(this, {
+    await this._sendRequest({
       type: MsgType.PING
     })
 
