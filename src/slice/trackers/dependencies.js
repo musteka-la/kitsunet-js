@@ -36,8 +36,8 @@ module.exports = (container, options) => {
     ['options', 'block-tracker', 'polling-block-provider', 'eth-query'])
 
   container.registerFactory('pubsub-tracker',
-    (node, options) => new PubsubTracker({ node, depth: options.sliceDepth }),
-    ['node', 'options'])
+    (node) => new PubsubTracker({ node, depth: options.sliceDepth }),
+    ['node'])
 
   return container
 }

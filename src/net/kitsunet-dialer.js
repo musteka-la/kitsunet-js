@@ -2,11 +2,11 @@
 
 const assert = require('assert')
 const EE = require('events')
-const promisify = require('promisify-this')
 
 const nextTick = require('async/nextTick')
 
-const log = require('debug')('kitsunet:node')
+const debug = require('debug')
+const log = debug('kitsunet:node')
 
 const MAX_PEERS = 25
 const MAX_PEERS_DISCOVERED = 250

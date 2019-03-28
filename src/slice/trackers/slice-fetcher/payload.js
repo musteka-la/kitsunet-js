@@ -1,7 +1,8 @@
 'use strict'
 
 const utils = require('ethereumjs-util')
-const log = require('debug')('kitsunet:kitsunet-rpc-fetcher')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-rpc-fetcher')
 
 module.exports = ({ path, depth, root, isStorage }) => {
   const payload = {

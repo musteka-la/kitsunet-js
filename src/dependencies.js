@@ -5,27 +5,26 @@ const SliceManager = require('./slice-manager')
 const KitsunetDriver = require('./kitsunet-driver')
 const { createNode, KitsunetDialer, KitsunetRpc } = require('./net')
 const { DhtDiscovery } = require('./slice/discovery')
-const { TelemetryClient, connectViaPost } = require('kitsunet-telemetry')
-const Libp2pStats = require('kitsunet-reporters')
-const { KitsunetStats } = require('./stats')
 // const { default: Blockchain, Header } = require('ethereumjs-blockchain')
 // const Level = require('level')
 
 const { dependencies: trackerDeps } = require('./slice/trackers')
 const { dependencies: storeDependencies } = require('./stores')
+const { dependencies: telemetryDependencies } = require('./stats')
 
 module.exports = async (container, options) => {
   container = trackerDeps(container, options)
-  container = storeDependencies(container, options)
+  container = storeDependencies(container)
+  container = telemetryDependencies(container, options)
 
   container.registerInstance('options', options)
 
   // register node
-  container.registerFactory('node', async (options) => createNode({
+  container.registerFactory('node', async () => createNode({
     identity: options.identity,
     addrs: options.libp2pAddrs,
     bootstrap: options.libp2pBootstrap || []
-  }), ['options'])
+  }))
 
   // register dht discovery
   container.registerFactory('kitsunet-discovery',
@@ -36,23 +35,6 @@ module.exports = async (container, options) => {
   container.registerFactory('kitsunet-dialer',
     (node) => new KitsunetDialer({ node, interval: options.dialInterval }),
     ['node'])
-
-  container.registerFactory('telemetry-connection', (options) => {
-    return connectViaPost({ devMode: options.NODE_ENV === 'dev' })
-  }, ['options'])
-
-  container.registerFactory('telemetry', (node, connection) => {
-    const clientId = node.peerInfo.id.toB58String()
-    return new TelemetryClient({ node, clientId, connection })
-  }, [ 'node', 'telemetry-connection' ])
-
-  container.registerFactory('kitsunet-stats', (kitsunetRpc, node) => {
-    return new KitsunetStats({ kitsunetRpc, node })
-  }, ['kitsunet-rpc', 'node'])
-
-  container.registerFactory('libp2p-stats', (node) => {
-    return new Libp2pStats({ node })
-  }, ['node'])
 
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',

@@ -8,7 +8,8 @@ const { MsgType, Status } = require('./proto').Kitsunet
 const { SliceId, Slice } = require('../../slice')
 const BN = require('bn.js')
 
-const log = require('debug')('kitsunet:kitsunet-proto')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-proto')
 
 function errResponse (type) {
   const err = `unknown message type ${type}`

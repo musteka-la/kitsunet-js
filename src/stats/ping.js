@@ -1,6 +1,7 @@
 'use strict'
 
-const log = require('debug')('kitsunet:telemetry:ping')
+const debug = require('debug')
+const log = debug('kitsunet:telemetry:ping')
 
 const sec = 1000
 const min = 1000 * 60

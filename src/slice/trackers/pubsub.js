@@ -5,7 +5,8 @@ const Cache = require('lru-cache')
 const BaseTracker = require('./base')
 const Slice = require('../slice')
 
-const log = require('debug')('kitsunet:kitsunet-pubsub-tracker')
+const debug = require('debug')
+const log = debug('kitsunet:kitsunet-pubsub-tracker')
 
 const DEFAULT_TOPIC_NAMESPACE = `/kitsunet/slice`
 const DEFAULT_SLICE_TIMEOUT = 300 * 1000
@@ -90,7 +91,7 @@ class KitsunetPubSub extends BaseTracker {
       return cb(null, msg)
     }
 
-    const skipMsg = `already forwarded to peer ${peerId}, skipping slice ${slice.sliceId}`
+    const skipMsg = `already forwarded to peer ${peerId}, skipping slice ${slice.id}`
     log(skipMsg)
     return cb(skipMsg)
   }
