@@ -4,7 +4,7 @@ const yargs = require('yargs')
 const path = require('path')
 const fs = require('fs')
 
-const createKitsunet = require('./')
+const createKitsunet = require('../src')
 
 const options = yargs
   .usage(`Kitsunet cmd client`)
