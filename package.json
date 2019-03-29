@@ -5,11 +5,10 @@
   "main": "src/index.js",
   "scripts": {
     "test": "aegir test",
-    "postinstall": "patch-package",
     "lint": "aegir lint"
   },
   "bin": {
-    "kitsunet": "src/cli.js"
+    "kitsunet": "bin/cli.js"
   },
   "browser": {
     "./src/net/libp2p/runtime/index.js": "./src/net/libp2p/runtime/browser.js"
@@ -77,7 +76,6 @@
     "aegir": "^18.2.1",
     "chai": "^4.2.0",
     "deep-equal-in-any-order": "^1.0.13",
-    "dirty-chai": "^2.0.1",
-    "patch-package": "^5.1.1"
+    "dirty-chai": "^2.0.1"
   }
 }
