@@ -8,6 +8,17 @@ const bourne = require('bourne')
 const cbor = require('borc')
 
 class Slice extends SliceId {
+  constructor (data) {
+    const parsed = Slice.parse(data)
+    const [path, depth, root] = parsed.sliceId.split('-')
+
+    // call super after parsing the slice
+    super(path, depth, root)
+
+    this._parsed = parsed
+    this._nodes = { ...this.head, ...this.sliceNodes, ...this.stem }
+  }
+
   static parse (data) {
     let parsed
     if (Buffer.isBuffer(data)) {
@@ -23,17 +34,6 @@ class Slice extends SliceId {
     }
 
     return parsed
-  }
-
-  constructor (data) {
-    const parsed = Slice.parse(data)
-    const [path, depth, root] = parsed.sliceId.split('-')
-
-    // call super after parsing the slice
-    super(path, depth, root)
-
-    this._parsed = parsed
-    this._nodes = { ...this.head, ...this.sliceNodes, ...this.stem }
   }
 
   get head () {

@@ -21,8 +21,8 @@ class Node extends Libp2p {
       peerInfo,
       modules: {
         streamMuxer: [
-          SPDY,
-          Multiplex
+          Multiplex,
+          SPDY
         ],
         connEncryption: [
           SECIO

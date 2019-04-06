@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "aegir test",
-    "lint": "aegir lint"
+    "lint": "aegir lint",
+    "build": "aegir build"
   },
   "bin": {
     "kitsunet": "bin/cli.js"
@@ -30,7 +31,7 @@
     "eth-query": "^2.1.2",
     "ethereumjs-account": "^3.0.0",
     "ethereumjs-block": "^2.2.0",
-    "ethereumjs-blockchain": "^3.4.0",
+    "ethereumjs-blockchain": "github:musteka-la/ethereumjs-blockchain",
     "ethereumjs-util": "^6.0.0",
     "ethjs": "~0.4.0",
     "ethjs-provider-http": "^0.1.6",
