@@ -24,13 +24,18 @@ class SliceStore {
     }
   }
 
+  static _mkKey (...entries) {
+    entries.unshift(`/${SLICE_PREFIX}`)
+    return entries.join('/')
+  }
+
   /**
    * Lookup all slices with a path
    *
    * @param {SliceId} sliceId - the slices to look for
    */
   async getByPath (sliceId) {
-    const key = `${SLICE_PREFIX}/${sliceId.path}`
+    const key = SliceStore._mkKey(sliceId.path)
     const slices = await this._store.query({ prefix: key })
     if (slices) {
       return slices.map((s) => new Slice(s))
@@ -43,7 +48,7 @@ class SliceStore {
    * @param {SliceId} sliceId - the slice to lookup
    */
   async getById (sliceId) {
-    const key = `${SLICE_PREFIX}/${sliceId.path}/${sliceId.depth}/${sliceId.root}`
+    const key = SliceStore._mkKey(sliceId.path, sliceId.depth, sliceId.root)
     const raw = await this._store.get(new Key(key))
     return new Slice(raw)
   }
@@ -54,7 +59,7 @@ class SliceStore {
    * @param {Slice} slice - the slice to store
    */
   async put (slice) {
-    const key = `${SLICE_PREFIX}/${slice.path}/${slice.depth}/${slice.root}`
+    const key = SliceStore._mkKey(slice.path, slice.depth, slice.root)
     this._store.put(new Key(key), slice.serialize())
   }
 }

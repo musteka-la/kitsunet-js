@@ -21,9 +21,7 @@ module.exports = (container, options) => {
     ['eth-http-provider'])
 
   container.registerFactory('block-tracker',
-    (node, blockTracker, ethQuery) => {
-      return new KitsunetBlockTracker({ node, blockTracker, ethQuery })
-    },
+    (node, blockTracker, ethQuery) => new KitsunetBlockTracker({ node, blockTracker, ethQuery }),
     ['node', 'polling-block-provider', 'eth-query'])
 
   container.registerFactory('bridge-tracker',

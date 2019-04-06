@@ -17,8 +17,11 @@ class Kitsunet extends EE {
 
     this.depth = depth
 
-    this.sliceManager.blockTracker.on('latest', (block) => this.emit('latest', block))
-    this.sliceManager.blockTracker.on('sync', ({ block, oldBlock }) => this.emit('sync', { block, oldBlock }))
+    this.sliceManager.blockTracker.on('latest', (block) =>
+      this.emit('latest', block))
+
+    this.sliceManager.blockTracker.on('sync', ({ block, oldBlock }) =>
+      this.emit('sync', { block, oldBlock }))
   }
 
   get node () {

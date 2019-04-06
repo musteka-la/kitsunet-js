@@ -92,6 +92,11 @@ class KitsunetDriver extends EE {
     }
   }
 
+  /**
+   *
+   * @param {Array<slices>} slices - slices to resolve from peers
+   * @param {Array<RpcPeer>} peers - peers to query
+   */
   async _rpcResolve (slices, peers) {
     const resolve = async (peer) => {
       // first check if the peer has already reported
