@@ -30,9 +30,15 @@ class DhtDiscovery extends Discovery {
    * @returns {Array<PeerInfo>} peers - an array of peers tracking the slice
    */
   async findPeers (sliceId) {
-    return Promise.all(sliceId.map(async (s) => {
+    let provs = await Promise.all(sliceId.map(async (s) => {
       return this.contentRouting.findProviders(await this._makeKeyId(s), TIMEOUT)
-    }).filter(Boolean))
+    }))
+
+    provs = provs.flat()
+    provs = provs.filter(Boolean)
+    provs = provs.flat()
+
+    return provs
   }
 
   /**

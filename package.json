@@ -32,6 +32,7 @@
     "ethereumjs-account": "^3.0.0",
     "ethereumjs-block": "^2.2.0",
     "ethereumjs-blockchain": "github:musteka-la/ethereumjs-blockchain",
+    "ethereumjs-devp2p": "^2.5.1",
     "ethereumjs-util": "^6.0.0",
     "ethjs": "~0.4.0",
     "ethjs-provider-http": "^0.1.6",
@@ -77,6 +78,7 @@
     "aegir": "^18.2.1",
     "chai": "^4.2.0",
     "deep-equal-in-any-order": "^1.0.13",
-    "dirty-chai": "^2.0.1"
+    "dirty-chai": "^2.0.1",
+    "standard": "^12.0.1"
   }
 }

@@ -1,11 +1,11 @@
 'use strict'
 
 const BaseHandler = require('./base')
-const { MsgType, Status } = require('./proto').Kitsunet
+const { MsgType, Status } = require('../proto').Kitsunet
 
 class Ping extends BaseHandler {
-  constructor (rpcEngine) {
-    super('ping', MsgType.PING, rpcEngine)
+  constructor (rpcEngine, peerInfo) {
+    super('ping', MsgType.PING, rpcEngine, peerInfo)
   }
 
   async handle () {

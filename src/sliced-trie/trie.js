@@ -4,7 +4,7 @@ const assert = require('assert')
 
 const FakeTree = require('fake-merkle-patricia-tree')
 
-const parser = require('../slice-parser')
+const parser = require('./slice-parser')
 const { DEFAULT_DEPTH, DEFAULT_PREFIX_LENGTH } = require('../constants')
 
 const SliceId = require('../slice/slice-id')
