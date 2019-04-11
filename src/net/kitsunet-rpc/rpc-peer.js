@@ -5,6 +5,8 @@ const EE = require('events')
 const { NodeTypes } = require('../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
+const { SliceId } = require('../../slice')
+
 const debug = require('debug')
 const log = debug('kitsunet:kitsunet-proto')
 
@@ -35,20 +37,20 @@ class RpcPeer extends EE {
     this.latestBlock = null
     this.nodeType = NodeTypes.NODE
 
-    this._identify = new Identify(kitsunetRpc)
-    this._headers = new Headers(kitsunetRpc)
-    this._slices = new Slices(kitsunetRpc)
-    this._nodeType = new NodeType(kitsunetRpc)
-    this._sliceIds = new SliceIds(kitsunetRpc)
-    this._ping = new Ping(kitsunetRpc)
+    this._identifyHandler = new Identify(kitsunetRpc, this.peerInfo)
+    this._headersHandler = new Headers(kitsunetRpc, this.peerInfo)
+    this._slicesHandler = new Slices(kitsunetRpc, this.peerInfo)
+    this._nodeTypeHandler = new NodeType(kitsunetRpc, this.peerInfo)
+    this._sliceIdsHandler = new SliceIds(kitsunetRpc, this.peerInfo)
+    this._pingHandler = new Ping(kitsunetRpc, this.peerInfo)
 
     this.handlers = {}
-    this.handlers[MsgType.IDENTIFY] = this._identify
-    this.handlers[MsgType.HEADERS] = this._headers
-    this.handlers[MsgType.SLICES] = this._slices
-    this.handlers[MsgType.NODE_TYPE] = this._nodeType
-    this.handlers[MsgType.SLICE_ID] = this._sliceIds
-    this.handlers[MsgType.PING] = this._ping
+    this.handlers[MsgType.IDENTIFY] = this._identifyHandler
+    this.handlers[MsgType.HEADERS] = this._headersHandler
+    this.handlers[MsgType.SLICES] = this._slicesHandler
+    this.handlers[MsgType.NODE_TYPE] = this._nodeTypeHandler
+    this.handlers[MsgType.SLICE_ID] = this._sliceIdsHandler
+    this.handlers[MsgType.PING] = this._pingHandler
   }
 
   get idB58 () {
@@ -57,7 +59,7 @@ class RpcPeer extends EE {
 
   async _handleRpc (msg) {
     log('got request', msg)
-    if (MsgType.indexOf(msg.type) > -1) {
+    if (msg.type !== MsgType.UNKNOWN) {
       return this.handlers[msg.type].handle(msg)
     }
 
@@ -68,14 +70,26 @@ class RpcPeer extends EE {
    * initiate the identify flow
    */
   async identify () {
-    return this._identify.request()
+    const res = await this._identifyHandler.request()
+    this.version = res.version
+    this.userAgent = res.userAgent
+
+    this.sliceIds = res.sliceIds
+      ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
+      : new Set()
+
+    this.latestBlock = res.latestBlock
+    this.nodeType = res.nodeType
+
+    return res
   }
 
   /**
    * Get all slice ids for the peer
    */
   async getSliceIds () {
-    return this._sliceIds.sliceIds()
+    this.sliceIds = await this._sliceIdsHandler.request()
+    return this.sliceIds
   }
 
   /**
@@ -90,28 +104,28 @@ class RpcPeer extends EE {
   * @param {Array<SliceId>} slices - optional
   */
   async getSlices (slices) {
-    this._slices.request(slices)
+    return this._slicesHandler.request(slices)
   }
 
   /**
    * Get all headers
    */
   async headers () {
-    return this._headers.request()
+    return this._headersHandler.request()
   }
 
   /**
    * Get Node type - bridge, edge, node
    */
   async nodeType () {
-    return this._nodeType.request()
+    return this._nodeTypeHandler.request()
   }
 
   /**
    * Ping peer
    */
   async ping () {
-    return this._ping.request()
+    return this._pingHandler.request()
   }
 }
 

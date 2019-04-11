@@ -8,6 +8,10 @@ const { BaseTracker } = require('./slice/trackers')
 const debug = require('debug')
 const log = debug('kitsunet:kitsunet-slice-manager')
 
+const retry = require('async/retry')
+// const asyncify = require('async/asyncify')
+const asyncApply = require('async/apply')
+
 class SliceManager extends BaseTracker {
   constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver }) {
     super({})
@@ -113,7 +117,7 @@ class SliceManager extends BaseTracker {
   async getSlice (sliceId) {
     try {
       const slice = await this._slicesStore.getById(sliceId)
-      return slice
+      return slice // won't catch if just returned
     } catch (e) {
       log(e)
       if (this.isBridge) {
@@ -121,7 +125,7 @@ class SliceManager extends BaseTracker {
         return this._bridgeTracker.getSlice(sliceId)
       }
 
-      return this._resolveSlice(sliceId)
+      return (await this._resolveSlice(sliceId))[0]
     }
   }
 
@@ -145,18 +149,11 @@ class SliceManager extends BaseTracker {
    * @param {SliceId} slice
    */
   async getSliceForBlock (number, slice) {
-    let _slice = null
-    try {
-      const block = await this._kitsunetDriver.getBlockByNumber(number)
-      if (block) {
-        _slice = new SliceId(slice.path, slice.depth, block.header.stateRoot.toString('hex'))
-        _slice = await this._slicesStore.getById(_slice)
-        return _slice // wont run catch if return in place
-      }
-    } catch (e) {
-      log(e)
-      // otherwise, try resolving the slice
-      return this._resolveSlice(_slice)
+    let _slice = new SliceId(slice.path, slice.depth)
+    const block = await this._kitsunetDriver.getBlockByNumber(number)
+    if (block) {
+      _slice.root = block.header.stateRoot.toString('hex')
+      return this.getSlice(_slice)
     }
   }
 
@@ -172,7 +169,21 @@ class SliceManager extends BaseTracker {
       return this._bridgeTracker.getSlice(slice)
     }
 
-    return (await this._kitsunetDriver.resolveSlices([slice]) || [])[0]
+    return new Promise((resolve, reject) => {
+      retry({
+        times: 10,
+        interval: 3000
+      },
+      async () => {
+        const _slice = await this._kitsunetDriver.resolveSlices([slice])
+        if (_slice) return _slice
+        throw new Error('no slice retrieved, retrying!')
+      },
+      (err, res) => {
+        if (err) return reject(err)
+        resolve(res)
+      })
+    })
   }
 
   async start () {

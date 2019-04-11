@@ -28,7 +28,7 @@ class BaseChain extends EE {
    *
    * @param {Block} block
    */
-  async pubBlock (block) {
+  async pubBlocks (block) {
     throw new Error('not implemented!')
   }
 }

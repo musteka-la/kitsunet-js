@@ -1,11 +1,11 @@
 'use strict'
 
 const BaseHandler = require('./base')
-const { MsgType, Status } = require('./proto').Kitsunet
+const { MsgType, Status } = require('../proto').Kitsunet
 
 class SliceId extends BaseHandler {
-  constructor (rpcEngine) {
-    super('slice-id', MsgType.SLICE_ID, rpcEngine)
+  constructor (rpcEngine, peerInfo) {
+    super('slice-id', MsgType.SLICE_ID, rpcEngine, peerInfo)
   }
 
   async handle () {
@@ -27,8 +27,6 @@ class SliceId extends BaseHandler {
     if (res.payload.sliceIds) {
       ids = new Set(res.payload.sliceIds.map((s) => s.toString()))
     }
-
-    this.request = ids
     return ids
   }
 }

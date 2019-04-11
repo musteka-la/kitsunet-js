@@ -4,7 +4,12 @@ const cbor = require('borc')
 
 class SliceId {
   constructor (path = '0x0000', depth = 10, root = null, isStorage = false) {
-    [this.path, this.depth, this.root, this.isStorage] = SliceId.parse(path, depth, root, isStorage)
+    [
+      this.path,
+      this.depth,
+      this.root,
+      this.isStorage
+    ] = SliceId.parse(path, depth, root, isStorage)
   }
 
   static parse (path, depth, root, isStorage) {

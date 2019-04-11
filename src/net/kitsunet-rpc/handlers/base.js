@@ -7,11 +7,12 @@ const { Status } = require('../proto').Kitsunet
 const debug = require('debug')
 
 class BaseHandler extends EE {
-  constructor (name, id, rpcEngine) {
+  constructor (name, id, rpcEngine, peerInfo) {
     super()
     this.name = name
     this.id = id
     this.rpcEngine = rpcEngine
+    this.peerInfo = peerInfo
     this.log = debug(`kitsunet:kitsunet-proto:base-handler-${this.name}`)
   }
 

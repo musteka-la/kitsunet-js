@@ -1,11 +1,11 @@
 'use strict'
 
 const BaseHandler = require('./base')
-const { MsgType, Status } = require('./proto').Kitsunet
+const { MsgType, Status } = require('../proto').Kitsunet
 
 class Headers extends BaseHandler {
-  constructor (rpcEngine) {
-    super('headers', MsgType.HEADERS, rpcEngine)
+  constructor (rpcEngine, peerInfo) {
+    super('headers', MsgType.HEADERS, rpcEngine, peerInfo)
   }
 
   async handle () {

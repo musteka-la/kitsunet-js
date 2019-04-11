@@ -88,11 +88,19 @@ class KitsunetDriver extends EE {
   async findAndConnect (slices) {
     const peers = await this.findPeers(slices)
     if (peers && peers.length) {
-      return Promise.all(peers.map((peer) => this.kitsunetDialer.dial(peer)))
+      const _peers = await Promise.all(peers.map((peer) => {
+        if (peer.id.toB58String() === this.idB58) {
+          log('cant dial to self, skipping')
+          return
+        }
+        return this.kitsunetDialer.dial(peer)
+      }))
+      return _peers.filter(Boolean)
     }
   }
 
   /**
+   * Resolve slices from remotes
    *
    * @param {Array<slices>} slices - slices to resolve from peers
    * @param {Array<RpcPeer>} peers - peers to query
@@ -136,9 +144,14 @@ class KitsunetDriver extends EE {
    */
   async resolveSlices (slices) {
     const resolved = await this._rpcResolve(slices, this.peers.values())
-    if (resolved && resolved.length) return resolved
+    if (resolved && resolved.length) {
+      return resolved
+    }
+
     const peers = await this.findAndConnect(slices)
-    if (peers && peers.length) return this._rpcResolve(slices, peers)
+    if (peers && peers.length) {
+      return this._rpcResolve(slices, peers)
+    }
   }
 
   /**
