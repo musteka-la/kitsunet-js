@@ -22,6 +22,8 @@ class Kitsunet extends EE {
 
     this.sliceManager.blockTracker.on('sync', ({ block, oldBlock }) =>
       this.emit('sync', { block, oldBlock }))
+
+    this.sliceManager.on('slice', (slice) => this.emit('slice', slice))
   }
 
   get node () {

@@ -118,7 +118,8 @@ class RpcPeer extends EE {
    * Get Node type - bridge, edge, node
    */
   async nodeType () {
-    return this._nodeTypeHandler.request()
+    this.nodeType = await this._nodeTypeHandler.request()
+    return this.nodeType
   }
 
   /**

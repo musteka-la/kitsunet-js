@@ -63,7 +63,7 @@ const options = yargs
       alias: 'p',
       description: 'slice path',
       requiresArg: true,
-      required: true,
+      required: false,
       type: 'array'
     },
     'slice-depth': {
