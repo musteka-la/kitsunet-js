@@ -10,22 +10,15 @@ const { SliceId } = require('../../slice')
 const debug = require('debug')
 const log = debug('kitsunet:kitsunet-proto')
 
-const {
-  Identify,
-  Headers,
-  NodeType,
-  Slices,
-  SliceId: SliceIds,
-  Ping
-} = require('./handlers')
-
 function errResponse (type) {
   const err = `unknown message type ${type}`
   log(err)
   return { status: Status.ERROR, error: err }
 }
 
-class RpcPeer extends EE {
+const Handlers = require('./handlers')
+
+class KsnPeer extends EE {
   constructor (peerInfo, kitsunetRpc) {
     super()
     this.peerInfo = peerInfo
@@ -37,20 +30,12 @@ class RpcPeer extends EE {
     this.latestBlock = null
     this.nodeType = NodeTypes.NODE
 
-    this._identifyHandler = new Identify(kitsunetRpc, this.peerInfo)
-    this._headersHandler = new Headers(kitsunetRpc, this.peerInfo)
-    this._slicesHandler = new Slices(kitsunetRpc, this.peerInfo)
-    this._nodeTypeHandler = new NodeType(kitsunetRpc, this.peerInfo)
-    this._sliceIdsHandler = new SliceIds(kitsunetRpc, this.peerInfo)
-    this._pingHandler = new Ping(kitsunetRpc, this.peerInfo)
-
     this.handlers = {}
-    this.handlers[MsgType.IDENTIFY] = this._identifyHandler
-    this.handlers[MsgType.HEADERS] = this._headersHandler
-    this.handlers[MsgType.SLICES] = this._slicesHandler
-    this.handlers[MsgType.NODE_TYPE] = this._nodeTypeHandler
-    this.handlers[MsgType.SLICE_ID] = this._sliceIdsHandler
-    this.handlers[MsgType.PING] = this._pingHandler
+    Object.keys(Handlers).forEach((handler) => {
+      const Clazz = Handlers[handler]
+      const h = new Clazz(this.kitsunetRpc, this.peerInfo)
+      this.handlers[h.id] = h
+    })
   }
 
   get idB58 () {
@@ -70,7 +55,7 @@ class RpcPeer extends EE {
    * initiate the identify flow
    */
   async identify () {
-    const res = await this._identifyHandler.request()
+    const res = await this.handlers[MsgType.IDENTIFY].request()
     this.version = res.version
     this.userAgent = res.userAgent
 
@@ -88,7 +73,7 @@ class RpcPeer extends EE {
    * Get all slice ids for the peer
    */
   async getSliceIds () {
-    this.sliceIds = await this._sliceIdsHandler.request()
+    this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
     return this.sliceIds
   }
 
@@ -104,21 +89,21 @@ class RpcPeer extends EE {
   * @param {Array<SliceId>} slices - optional
   */
   async getSlices (slices) {
-    return this._slicesHandler.request(slices)
+    return this.handlers[MsgType.SLICES].request()
   }
 
   /**
    * Get all headers
    */
   async headers () {
-    return this._headersHandler.request()
+    return this.handlers[MsgType.HEADERS].request()
   }
 
   /**
    * Get Node type - bridge, edge, node
    */
   async nodeType () {
-    this.nodeType = await this._nodeTypeHandler.request()
+    this.nodeType = await this.handlers[MsgType.NODE_TYPE].request()
     return this.nodeType
   }
 
@@ -126,8 +111,8 @@ class RpcPeer extends EE {
    * Ping peer
    */
   async ping () {
-    return this._pingHandler.request()
+    return this.handlers[MsgType.PING].request()
   }
 }
 
-module.exports = RpcPeer
+module.exports = KsnPeer

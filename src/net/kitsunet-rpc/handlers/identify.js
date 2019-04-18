@@ -4,7 +4,6 @@ const BaseHandler = require('./base')
 const { MsgType, Status } = require('../proto').Kitsunet
 
 const BN = require('bn.js')
-const { SliceId } = require('../../../slice')
 
 class Identify extends BaseHandler {
   constructor (rpcEngine, peerInfo) {

@@ -9,8 +9,6 @@ const debug = require('debug')
 const log = debug('kitsunet:kitsunet-slice-manager')
 
 const retry = require('async/retry')
-// const asyncify = require('async/asyncify')
-const asyncApply = require('async/apply')
 
 class SliceManager extends BaseTracker {
   constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver }) {
@@ -169,6 +167,7 @@ class SliceManager extends BaseTracker {
       return this._bridgeTracker.getSlice(slice)
     }
 
+    let times = 0
     return new Promise((resolve, reject) => {
       retry({
         times: 10,
@@ -177,7 +176,7 @@ class SliceManager extends BaseTracker {
       async () => {
         const _slice = await this._kitsunetDriver.resolveSlices([slice])
         if (_slice) return _slice
-        throw new Error('no slice retrieved, retrying!')
+        throw new Error(`no slice retrieved, retrying ${++times}!`)
       },
       (err, res) => {
         if (err) return reject(err)

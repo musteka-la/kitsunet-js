@@ -6,7 +6,7 @@ const { NodeTypes } = require('./constants')
 const debug = require('debug')
 const log = debug('kitsunet:kitsunet-driver')
 
-class KitsunetDriver extends EE {
+class KsnDriver extends EE {
   constructor ({
     node,
     kitsunetDialer,
@@ -200,4 +200,4 @@ class KitsunetDriver extends EE {
   }
 }
 
-module.exports = KitsunetDriver
+module.exports = KsnDriver

@@ -1,9 +1,9 @@
 'use strict'
 
-const KitsunetRpc = require('./kitsunet-rpc')
-const RpcPeer = require('./rpc-peer')
+const KsnRpc = require('./ksn-rpc')
+const KsnPeer = require('./ksn-peer')
 
 module.exports = {
-  KitsunetRpc,
-  RpcPeer
+  KsnRpc,
+  KsnPeer
 }

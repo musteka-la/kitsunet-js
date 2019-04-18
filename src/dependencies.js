@@ -2,8 +2,8 @@
 
 const Kitsunet = require('./kitsunet')
 const SliceManager = require('./slice-manager')
-const KitsunetDriver = require('./kitsunet-driver')
-const { createNode, KitsunetDialer, KitsunetRpc } = require('./net')
+const KsnDriver = require('./ksn-driver')
+const { createNode, KitsunetDialer, KsnRpc } = require('./net')
 const { DhtDiscovery } = require('./slice/discovery')
 // const { default: Blockchain, Header } = require('ethereumjs-blockchain')
 // const Level = require('level')
@@ -38,11 +38,11 @@ module.exports = async (container, options) => {
 
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',
-    (node, sliceManager, kitsunetDialer, kitsunetDriver) => new KitsunetRpc({
+    (node, sliceManager, kitsunetDialer, KsnDriver) => new KsnRpc({
       node,
       sliceManager,
       kitsunetDialer,
-      kitsunetDriver
+      KsnDriver
     }),
     [
       'node',
@@ -64,10 +64,10 @@ module.exports = async (container, options) => {
   //   },
   //   ['chain-db'])
 
-  // register KitsunetDriver options
+  // register KsnDriver options
   container.registerFactory('kitsunet-driver',
     (node, kitsunetDialer, options, discovery, blockTracker, telemetry, stats) => {
-      return new KitsunetDriver({
+      return new KsnDriver({
         node,
         kitsunetDialer,
         isBridge: options.bridge,
@@ -90,13 +90,13 @@ module.exports = async (container, options) => {
 
   // register SliceManager options
   container.registerFactory('slice-manager',
-    (bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver) => {
+    (bridgeTracker, pubsubTracker, slicesStore, blockTracker, KsnDriver) => {
       return new SliceManager({
         bridgeTracker,
         pubsubTracker,
         slicesStore,
         blockTracker,
-        kitsunetDriver
+        KsnDriver
       })
     }, [
       'bridge-tracker',
@@ -108,8 +108,8 @@ module.exports = async (container, options) => {
 
   // register kitsunet
   container.registerFactory('kitsunet',
-    (sliceManager, kitsunetDriver, kitsunetRpc, telemetry, libp2pStats, kitsunetStats) => {
-      kitsunetDriver.kitsunetRpc = kitsunetRpc // circular dep
+    (sliceManager, KsnDriver, KsnRpc, telemetry, libp2pStats, kitsunetStats) => {
+      KsnDriver.KsnRpc = KsnRpc // circular dep
       telemetry.setStateHandler(() => {
         return {
           libp2p: libp2pStats.getState(),
@@ -117,7 +117,7 @@ module.exports = async (container, options) => {
         }
       })
 
-      return new Kitsunet(sliceManager, kitsunetDriver, telemetry, libp2pStats, kitsunetStats)
+      return new Kitsunet(sliceManager, KsnDriver, telemetry, libp2pStats, kitsunetStats)
     },
     [
       'slice-manager',
