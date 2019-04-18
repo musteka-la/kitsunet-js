@@ -3,7 +3,7 @@
 const EE = require('events')
 const pull = require('pull-stream')
 const pbb = require('pull-protocol-buffers')
-const RpcPeer = require('./rpc-peer')
+const RpcPeer = require('./ksn-peer')
 const nextTick = require('async/nextTick')
 const { SliceId } = require('../../slice')
 const KitsunetProto = require('./proto').Kitsunet
@@ -15,7 +15,7 @@ const log = debug('kitsunet:kitsunet-proto')
 const _VERSION = '1.0.0'
 const codec = `/kitsunet/client/${_VERSION}`
 
-class KitsunetRpc extends EE {
+class KsnRpc extends EE {
   get VERSION () {
     return _VERSION
   }
@@ -243,4 +243,4 @@ class KitsunetRpc extends EE {
   }
 }
 
-module.exports = KitsunetRpc
+module.exports = KsnRpc

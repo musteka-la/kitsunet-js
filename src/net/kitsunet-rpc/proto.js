@@ -21,12 +21,6 @@ message Kitsunet {
     BRIDGE        = 3;
   }
 
-  enum Compression {
-    UNKNOWN_COMPRESSION = 0;
-    NONE                = 1;
-    SNAPPY              = 2; // the only one currently supported 
-  }
-
   enum Status {
     UNKNOWN_ERROR = 0;
     OK            = 1;

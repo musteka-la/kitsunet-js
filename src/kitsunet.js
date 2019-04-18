@@ -7,10 +7,10 @@ const nextTick = require('async/nextTick')
 const DEFUALT_DEPTH = 10
 
 class Kitsunet extends EE {
-  constructor (sliceManager, kitsunetDriver, telemetry, libp2pStats, kitsunetStats, depth = DEFUALT_DEPTH) {
+  constructor (sliceManager, ksnDriver, telemetry, libp2pStats, kitsunetStats, depth = DEFUALT_DEPTH) {
     super()
     this.sliceManager = sliceManager
-    this.kitsunetDriver = kitsunetDriver
+    this.ksnDriver = ksnDriver
     this.kitsunetStats = kitsunetStats
     this.libp2pStats = libp2pStats
     this.telemetry = telemetry
@@ -27,15 +27,15 @@ class Kitsunet extends EE {
   }
 
   get node () {
-    return this.kitsunetDriver.node
+    return this.ksnDriver.node
   }
 
   get peerInfo () {
-    return this.kitsunetDriver.peerInfo
+    return this.ksnDriver.peerInfo
   }
 
   get peers () {
-    return this.kitsunetDriver.peers
+    return this.ksnDriver.peers
   }
 
   /**
@@ -73,7 +73,7 @@ class Kitsunet extends EE {
    * Get the latest block
    */
   async getLatestBlock () {
-    return this.kitsunetDriver.getLatestBlock()
+    return this.ksnDriver.getLatestBlock()
   }
 
   /**
@@ -82,11 +82,11 @@ class Kitsunet extends EE {
    * @param {String|Number} block - the block number, if string is passed assumed to be in hex
    */
   async getBlockByNumber (block) {
-    return this.kitsunetDriver.getBlockByNumber(block)
+    return this.ksnDriver.getBlockByNumber(block)
   }
 
   async start () {
-    await this.kitsunetDriver.start()
+    await this.ksnDriver.start()
     await this.sliceManager.start()
 
     await this.libp2pStats.start()
@@ -98,7 +98,7 @@ class Kitsunet extends EE {
 
   async stop () {
     await this.sliceManager.stop()
-    await this.kitsunetDriver.stop()
+    await this.ksnDriver.stop()
 
     await this.libp2pStats.stop()
     await this.kitsunetStats.stop()
