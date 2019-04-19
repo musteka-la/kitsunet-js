@@ -11,21 +11,21 @@ const log = debug('kitsunet:kitsunet-slice-manager')
 const retry = require('async/retry')
 
 class SliceManager extends BaseTracker {
-  constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, kitsunetDriver }) {
+  constructor ({ bridgeTracker, pubsubTracker, slicesStore, blockTracker, ksnDriver }) {
     super({})
 
     assert(blockTracker, 'blockTracker should be supplied')
     assert(slicesStore, 'slicesStore should be supplied')
-    assert(kitsunetDriver, 'driver should be supplied')
-    kitsunetDriver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
+    assert(ksnDriver, 'driver should be supplied')
+    ksnDriver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
 
     this.blockTracker = blockTracker
 
     this._bridgeTracker = bridgeTracker
     this._pubsubTracker = pubsubTracker
     this._slicesStore = slicesStore
-    this._kitsunetDriver = kitsunetDriver
-    this.isBridge = Boolean(kitsunetDriver.isBridge)
+    this._ksnDriver = ksnDriver
+    this.isBridge = Boolean(ksnDriver.isBridge)
 
     this._setUp()
   }
@@ -69,7 +69,7 @@ class SliceManager extends BaseTracker {
     this._pubsubTracker.track(slices)
 
     // if we're tracking a slice, make it discoverable
-    this._kitsunetDriver.announce(slices)
+    this._ksnDriver.announce(slices)
   }
 
   /**
@@ -148,7 +148,7 @@ class SliceManager extends BaseTracker {
    */
   async getSliceForBlock (number, slice) {
     let _slice = new SliceId(slice.path, slice.depth)
-    const block = await this._kitsunetDriver.getBlockByNumber(number)
+    const block = await this._ksnDriver.getBlockByNumber(number)
     if (block) {
       _slice.root = block.header.stateRoot.toString('hex')
       return this.getSlice(_slice)
@@ -174,7 +174,7 @@ class SliceManager extends BaseTracker {
         interval: 3000
       },
       async () => {
-        const _slice = await this._kitsunetDriver.resolveSlices([slice])
+        const _slice = await this._ksnDriver.resolveSlices([slice])
         if (_slice) return _slice
         throw new Error(`no slice retrieved, retrying ${++times}!`)
       },

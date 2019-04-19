@@ -1,13 +1,13 @@
 'use strict'
 
-const { KitsunetRpc } = require('./kitsunet-rpc')
-const KitsunetDialer = require('./kitsunet-dialer')
+const { KsnRpc } = require('./kitsunet-rpc')
+const KsnDialer = require('./ksn-dialer')
 const Node = require('./libp2p')
 const createNode = require('./libp2p/runtime')
 
 module.exports = {
-  KitsunetDialer,
-  KitsunetRpc,
+  KsnDialer,
+  KsnRpc,
   Node,
   createNode
 }

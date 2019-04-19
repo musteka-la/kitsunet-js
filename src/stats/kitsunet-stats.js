@@ -17,22 +17,22 @@ const clientState = {
 }
 
 class KitsunetStatsTracker {
-  constructor ({ kitsunetRpc, node }) {
+  constructor ({ ksnRpc, node }) {
     assert(node, 'node required')
-    assert(kitsunetRpc, 'kitsunetRpc required')
+    assert(ksnRpc, 'ksnRpc required')
 
     this.started = false
     this.node = node
 
-    this.kitsunetRpc = kitsunetRpc
+    this.ksnRpc = ksnRpc
   }
 
   start () {
-    this.kitsunetRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
+    this.ksnRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
       this.removePeer(peerInfo)
     })
 
-    this.kitsunetRpc.on('kitsunet:peer-connected', (peer) => {
+    this.ksnRpc.on('kitsunet:peer-connected', (peer) => {
       this.addPeer(peer)
       log(`kitsunet peer connected ${peer.idB58}`)
       pingPeer(peer, clientState.peers[peer.idB58])
@@ -42,8 +42,8 @@ class KitsunetStatsTracker {
   }
 
   stop () {
-    this.kitsunetRpc.removeEventHandler('kitsunet:peer-disconnected')
-    this.kitsunetRpc.removeEventHandler('kitsunet:peer-connected')
+    this.ksnRpc.removeEventHandler('kitsunet:peer-disconnected')
+    this.ksnRpc.removeEventHandler('kitsunet:peer-connected')
     this.started = false
   }
 
