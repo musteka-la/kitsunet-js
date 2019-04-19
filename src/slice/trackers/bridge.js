@@ -1,7 +1,6 @@
 'use strict'
 
 const BaseTracker = require('./base')
-const fetcher = require('./slice-fetcher')
 const { Slice } = require('../')
 const promisify = require('promisify-this')
 
@@ -18,8 +17,6 @@ class KitsunetBridge extends BaseTracker {
     this._blockTracker = blockTracker
     this._rpcBlockTracker = rpcBlockTracker
     this._ethQuery = promisify(ethQuery)
-
-    this.fetcher = fetcher(this.rpcUrl)
     this._blockHandler = this._blockHandler.bind(this)
   }
 
@@ -72,7 +69,7 @@ class KitsunetBridge extends BaseTracker {
   async _fetchSlice (sliceId) {
     const { path, depth, root, isStorage } = sliceId
     log('fetching slice %s, %d, %s, %d', path, depth, root, isStorage)
-    return this.fetcher({ path, depth, root, isStorage })
+    return this._ethQuery.getSlice(String(path), depth, root, isStorage)
   }
 
   /**

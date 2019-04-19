@@ -30,16 +30,16 @@ class KsnRpc extends EE {
    * @param {opts} Object
    * @param {Node} node
    * @param {sliceManager} sliceManager
-   * @param {KitsunetDriver} kitsunetDriver
-   * @param {KitsunetDialer} kitsunetDialer
+   * @param {KsnDriver} ksnDriver
+   * @param {KsnDialer} ksnDialer
    */
-  constructor ({ node, sliceManager, kitsunetDriver, kitsunetDialer }) {
+  constructor ({ node, sliceManager, ksnDriver, ksnDialer }) {
     super()
     this._node = node
     this._peers = new Map()
     this.sliceManager = sliceManager
-    this.kitsunetDriver = kitsunetDriver
-    this.kitsunetDialer = kitsunetDialer
+    this.ksnDriver = ksnDriver
+    this.ksnDialer = ksnDialer
 
     this._handler = this._handler.bind(this)
     this.dialPeer = this.dialPeer.bind(this)
@@ -52,11 +52,11 @@ class KsnRpc extends EE {
   }
 
   get nodeType () {
-    return this.kitsunetDriver.nodeType
+    return this.ksnDriver.nodeType
   }
 
   async getLatestBlock () {
-    return this.kitsunetDriver.getLatestBlock()
+    return this.ksnDriver.getLatestBlock()
   }
 
   getSliceIds () {
@@ -79,7 +79,7 @@ class KsnRpc extends EE {
   }
 
   async getHeaders () {
-    return this.kitsunetDriver.getHeaders()
+    return this.ksnDriver.getHeaders()
   }
 
   /**
@@ -230,7 +230,7 @@ class KsnRpc extends EE {
    */
   async start () {
     this._node.handle(codec, this._handler)
-    this.kitsunetDialer.on('kitsunet:peer-dialed', async (peerInfo) => {
+    this.ksnDialer.on('kitsunet:peer-dialed', async (peerInfo) => {
       this.dialPeer(peerInfo)
     })
   }

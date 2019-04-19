@@ -14,11 +14,14 @@ function generateFnFor (methodName) {
   }
 }
 
+/**
+ * Extends EthQuery with getSlice call
+ */
 class KsnEthQuery extends EthQuery {
   constructor (provider) {
     super(provider)
 
-    this.getSLice = generateFnFor('eth_getSlice').bind(this)
+    this.getSlice = generateFnFor('eth_getSlice').bind(this)
   }
 }
 

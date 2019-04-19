@@ -19,10 +19,10 @@ function errResponse (type) {
 const Handlers = require('./handlers')
 
 class KsnPeer extends EE {
-  constructor (peerInfo, kitsunetRpc) {
+  constructor (peerInfo, ksnRpc) {
     super()
     this.peerInfo = peerInfo
-    this.kitsunetRpc = kitsunetRpc
+    this.ksnRpc = ksnRpc
 
     this.version = null
     this.userAgent = null
@@ -33,7 +33,7 @@ class KsnPeer extends EE {
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
       const Clazz = Handlers[handler]
-      const h = new Clazz(this.kitsunetRpc, this.peerInfo)
+      const h = new Clazz(this.ksnRpc, this.peerInfo)
       this.handlers[h.id] = h
     })
   }

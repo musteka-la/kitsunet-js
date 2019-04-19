@@ -9,8 +9,8 @@ const log = debug('kitsunet:kitsunet-driver')
 class KsnDriver extends EE {
   constructor ({
     node,
-    kitsunetDialer,
-    kitsunetRpc,
+    ksnDialer,
+    ksnRpc,
     isBridge,
     discovery,
     // blockchain,
@@ -21,8 +21,8 @@ class KsnDriver extends EE {
     this.node = node
     this.isBridge = Boolean(isBridge)
     // this.blockChain = promisify(blockchain)
-    this.kitsunetDialer = kitsunetDialer
-    this.kitsunetRpc = kitsunetRpc
+    this.ksnDialer = ksnDialer
+    this.ksnRpc = ksnRpc
     this.discovery = discovery
     this.blockTracker = blockTracker
     this.nodeType = this.isBridge ? NodeTypes.BRIDGE : NodeTypes.NODE
@@ -93,7 +93,7 @@ class KsnDriver extends EE {
           log('cant dial to self, skipping')
           return
         }
-        return this.kitsunetDialer.dial(peer)
+        return this.ksnDialer.dial(peer)
       }))
       return _peers.filter(Boolean)
     }
@@ -168,14 +168,14 @@ class KsnDriver extends EE {
    * Start the driver
    */
   async start () {
-    await this.kitsunetRpc.start()
-    await this.kitsunetDialer.start()
+    await this.ksnRpc.start()
+    await this.ksnDialer.start()
 
-    this.kitsunetRpc.on('kitsunet:peer-connected', (peer) => {
+    this.ksnRpc.on('kitsunet:peer-connected', (peer) => {
       this.peers.set(peer.idB58, peer)
     })
 
-    this.kitsunetRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
+    this.ksnRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
       const idB58 = peerInfo.id.toB58String()
       this.peers.delete(idB58)
     })
@@ -185,11 +185,11 @@ class KsnDriver extends EE {
    * Stop the driver
    */
   async stop () {
-    await this.kitsunetRpc.stop()
-    await this.kitsunetDialer.stop()
+    await this.ksnRpc.stop()
+    await this.ksnDialer.stop()
 
-    this.kitsunetRpc.removeEventListener('kitsunet:peer-connected')
-    this.kitsunetRpc.removeEventListener('kitsunet:peer-disconnected')
+    this.ksnRpc.removeEventListener('kitsunet:peer-connected')
+    this.ksnRpc.removeEventListener('kitsunet:peer-disconnected')
 
     // await this._stats.stop()
   }

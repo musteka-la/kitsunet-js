@@ -24,8 +24,8 @@ module.exports = (container, options) => {
     return new TelemetryClient({ node, clientId, connection })
   }, ['node', 'telemetry-ws-connection'])
 
-  container.registerFactory('kitsunet-stats', (kitsunetRpc, node) => {
-    return new KitsunetStats({ kitsunetRpc, node })
+  container.registerFactory('kitsunet-stats', (ksnRpc, node) => {
+    return new KitsunetStats({ ksnRpc, node })
   }, ['kitsunet-rpc', 'node'])
 
   return container
