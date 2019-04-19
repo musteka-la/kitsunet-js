@@ -3,6 +3,7 @@
 const BaseTracker = require('./base')
 const { Slice } = require('../')
 const promisify = require('promisify-this')
+const ethUtils = require('ethereumjs-util')
 
 const blockFromRpc = require('ethereumjs-block/from-rpc')
 
@@ -69,7 +70,7 @@ class KitsunetBridge extends BaseTracker {
   async _fetchSlice (sliceId) {
     const { path, depth, root, isStorage } = sliceId
     log('fetching slice %s, %d, %s, %d', path, depth, root, isStorage)
-    return this._ethQuery.getSlice(String(path), depth, root, isStorage)
+    return this._ethQuery.getSlice(String(path), depth, ethUtils.addHexPrefix(root), isStorage)
   }
 
   /**

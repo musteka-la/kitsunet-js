@@ -89,7 +89,7 @@ class KsnPeer extends EE {
   * @param {Array<SliceId>} slices - optional
   */
   async getSlices (slices) {
-    return this.handlers[MsgType.SLICES].request()
+    return this.handlers[MsgType.SLICES].request(slices)
   }
 
   /**
