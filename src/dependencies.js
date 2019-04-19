@@ -38,11 +38,11 @@ module.exports = async (container, options) => {
 
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',
-    (node, sliceManager, ksnDialer, KsnDriver) => new KsnRpc({
+    (node, sliceManager, ksnDialer, ksnDriver) => new KsnRpc({
       node,
       sliceManager,
       ksnDialer,
-      KsnDriver
+      ksnDriver
     }),
     [
       'node',
