@@ -6,7 +6,7 @@ const PubsubTracker = require('./pubsub')
 const KitsunetBlockTracker = require('kitsunet-block-tracker')
 const HttpProvider = require('ethjs-provider-http')
 const PollingBlockTracker = require('eth-block-tracker')
-const EthQuery = require('../../ksn-query')
+const EthQuery = require('../../ksn-eth-query')
 
 module.exports = (container, options) => {
   container.registerFactory('eth-http-provider',

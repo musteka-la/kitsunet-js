@@ -15,10 +15,10 @@ class Downloader extends EE {
    * @param {Object} Options - options object
    * @param {Number} Options.start - where to start fetching from
    */
-  constructor ({ start, max }) {
+  constructor ({ start, maxBlocks }) {
     super()
     this.start = start
-    this.max = max || MAX_BLOCKS_DOWNLOAD
+    this.maxBlocks = maxBlocks || MAX_BLOCKS_DOWNLOAD
   }
 
   /**
