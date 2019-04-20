@@ -1,5 +1,5 @@
 'use strict'
 
 module.exports = {
-  HttpSync: require('./http-downloader')
+  RpcSync: require('./rpc-downloader')
 }

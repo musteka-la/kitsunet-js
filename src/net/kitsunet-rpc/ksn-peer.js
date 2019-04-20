@@ -32,8 +32,8 @@ class KsnPeer extends EE {
 
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
-      const Clazz = Handlers[handler]
-      const h = new Clazz(this.ksnRpc, this.peerInfo)
+      const h = Reflect.construct(Handlers[handler],
+        [this.ksnRpc, this.peerInfo])
       this.handlers[h.id] = h
     })
   }
