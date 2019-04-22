@@ -1,11 +1,11 @@
 'use strict'
 
-const EE = require('events')
-
 const { NodeTypes } = require('../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
 const { SliceId } = require('../../slice')
+
+const Protocol = require('../../protocol')
 
 const debug = require('debug')
 const log = debug('kitsunet:kitsunet-proto')
@@ -18,7 +18,7 @@ function errResponse (type) {
 
 const Handlers = require('./handlers')
 
-class KsnPeer extends EE {
+class KsnProto extends Protocol {
   constructor (peerInfo, ksnRpc) {
     super()
     this.peerInfo = peerInfo
@@ -32,10 +32,13 @@ class KsnPeer extends EE {
 
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
-      const h = Reflect.construct(Handlers[handler],
-        [this.ksnRpc, this.peerInfo])
+      const h = Reflect.construct(Handlers[handler], [this.ksnRpc, this.peerInfo])
       this.handlers[h.id] = h
     })
+  }
+
+  get id () {
+    return 'ksn'
   }
 
   get idB58 () {
@@ -81,14 +84,9 @@ class KsnPeer extends EE {
   * Get slices for the provided ids or all the
   * slices the peer is holding
   *
-  * TODO: this needs rethinking, do we really want to return all slices?
-  * It might not be necessary and the complexity introduced when sending large
-  * amounts of data might not worth it?
-  * For now this just sends ALL the slices, so beware!
-  *
   * @param {Array<SliceId>} slices - optional
   */
-  async getSlices (slices) {
+  async getSlicesById (slices) {
     return this.handlers[MsgType.SLICES].request(slices)
   }
 
@@ -115,4 +113,4 @@ class KsnPeer extends EE {
   }
 }
 
-module.exports = KsnPeer
+module.exports = KsnProto
