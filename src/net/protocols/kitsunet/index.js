@@ -1,9 +1,9 @@
 'use strict'
 
 const KsnRpc = require('./ksn-rpc')
-const KsnPeer = require('./ksn-peer')
+const KsnProto = require('./ksn-proto')
 
 module.exports = {
   KsnRpc,
-  KsnPeer
+  KsnProto
 }

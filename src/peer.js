@@ -3,16 +3,16 @@
 const EE = require('events')
 
 class Peer extends EE {
-  getBlockTd () {
+  /**
+   * @param {Map<String, Protocol>} protocols - map of protocols, such as 'ksn', 'eth62', etc...
+  */
+  constructor (protocols) {
+    super()
+    this.protocols = protocols
   }
 
-  getHeaderTd () {
-  }
-
-  getBlockHeight () {
-  }
-
-  getHeadersHeight () {
+  getProtoById (id) {
+    return this.protocols.get(id)
   }
 }
 
