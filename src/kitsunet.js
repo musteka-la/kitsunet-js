@@ -7,7 +7,7 @@ const nextTick = require('async/nextTick')
 const DEFUALT_DEPTH = 10
 
 class Kitsunet extends EE {
-  constructor (sliceManager, ksnDriver, telemetry, libp2pStats, kitsunetStats, depth = DEFUALT_DEPTH) {
+  constructor(sliceManager, ksnDriver, telemetry, libp2pStats, kitsunetStats, depth = DEFUALT_DEPTH) {
     super()
     this.sliceManager = sliceManager
     this.ksnDriver = ksnDriver
@@ -48,7 +48,7 @@ class Kitsunet extends EE {
   */
   async getSlice (slice, storage) {
     if (typeof slice === 'string') {
-      const [ path, depth, root ] = slice.split('-')
+      const [path, depth, root] = slice.split('-')
       slice = new SliceId(path, depth, root, storage)
     }
 

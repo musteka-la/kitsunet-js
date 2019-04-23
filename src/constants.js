@@ -1,10 +1,8 @@
-'use strict'
-
-exports.NodeTypes = {
-  BRIDGE: 0,
-  EXIT: 1,
-  NODE: 2
+export enum NodeTypes {
+  BRIDGE,
+  EXIT,
+  NODE
 }
 
-exports.DEFAULT_DEPTH = 10
-exports.DEFAULT_PREFIX_LENGTH = 4
+export const DEFAULT_DEPTH: number = 10
+export const DEFAULT_PREFIX_LENGTH: number = 4

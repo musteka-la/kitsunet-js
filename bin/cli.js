@@ -1,10 +1,10 @@
 'use strict'
 
-const yargs = require('yargs')
-const path = require('path')
-const fs = require('fs')
+import yargs from 'yargs'
+import path from 'path'
+import fs from 'fs'
 
-const createKitsunet = require('../src')
+import createKitsunet from '../src'
 
 const options = yargs
   .usage(`Kitsunet cmd client`)
@@ -104,36 +104,34 @@ const options = yargs
   .alias('help', 'h')
   .argv
 
-run()
+  (async function run () {
+    let config = {}
+    if (options.config) {
+      config = options.config
+    }
 
-async function run () {
-  let config = {}
-  if (options.config) {
-    config = options.config
-  }
+    options.NODE_ENV = process.env.NODE_ENV || 'prod'
 
-  options.NODE_ENV = process.env.NODE_ENV || 'prod'
+    options.identity = options.identity ? require(options.identity) : config.identity
+    options.libp2pAddrs = options.libp2pAddrs || options.libp2PAddrs || config.libp2pAddrs
 
-  options.identity = options.identity ? require(options.identity) : config.identity
-  options.libp2pAddrs = options.libp2pAddrs || options.libp2PAddrs || config.libp2pAddrs
+    options.chainDb = path.resolve(options.chainDb)
+    if (!fs.existsSync(options.chainDb)) {
+      fs.mkdirSync(options.chainDb, { recursive: true, mode: 0o755 })
+    }
 
-  options.chainDb = path.resolve(options.chainDb)
-  if (!fs.existsSync(options.chainDb)) {
-    fs.mkdirSync(options.chainDb, { recursive: true, mode: 0o755 })
-  }
+    try {
+      const kitsunet = await createKitsunet(options)
+      await kitsunet.start()
 
-  try {
-    const kitsunet = await createKitsunet(options)
-    await kitsunet.start()
+      // process.on('unhandledRejection', function (reason, p) {
+      //   console.dir(reason)
+      // })
 
-    // process.on('unhandledRejection', function (reason, p) {
-    //   console.dir(reason)
-    // })
-
-    process.on('INT', () => {
-      kitsunet.stop()
-    })
-  } catch (err) {
-    console.error(err)
-  }
-}
+      process.on('INT', () => {
+        kitsunet.stop()
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  })()

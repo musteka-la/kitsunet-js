@@ -1,15 +1,19 @@
 'use strict'
 
-const Sync = require('./sync')
-const BN = require('bn.js')
+import { Sync } from './sync'
+import BN from 'bn.js'
+import { Chain } from '../chain'
+import { Downloader } from '../downloader'
 
 class RpcSync extends Sync {
-  constructor ({ chain, peers, minPeers, interval, downloader }) {
-    super({ chain, peers, minPeers, interval })
+  protected downloader: Downloader
+
+  constructor(chain: Chain, peers: Array<any>, minPeers: number, interval: number, downloader: Downloader) {
+    super(chain, peers, minPeers, interval)
     this.downloader = downloader
   }
 
-  get type () {
+  get type (): string {
     return 'rpc'
   }
 

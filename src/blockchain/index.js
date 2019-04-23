@@ -1,5 +1,3 @@
 'use strict'
 
-module.exports = {
-  Chain: require('./chain')
-}
+export {Chain} from './chain'

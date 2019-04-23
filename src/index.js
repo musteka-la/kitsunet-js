@@ -9,7 +9,7 @@ const { SliceId } = require('./slice')
 const debug = require('debug')
 const log = debug('kitsunet:kitsunet-factory')
 
-module.exports = async (options) => {
+export async (options) => {
   const container = new Opium('kitsunet')
   const deps = await dependencies(container, options)
 
