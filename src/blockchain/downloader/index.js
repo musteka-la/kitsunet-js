@@ -1,5 +1,2 @@
-'use strict'
-
-module.exports = {
-  RpcSync: require('./rpc-downloader')
-}
+export { Downloader } from './downloader'
+export { RpcDownloader } from './rpc-downloader'

@@ -1,9 +1,13 @@
 'use strict'
 
-const EE = require('events')
-const BN = require('bn.js')
+import {EventEmitter as EE } from 'events'
+import BN from 'bn.js'
+import * as Blockchain from 'ethereumjs-blockchain'
 
-class Chain extends EE {
+export class Chain extends EE {
+  // @property {Blockchain} blockchain - the blockchain object
+  public blockchain: Blockchain = null
+
   /**
    * Create a blockchain
    *
@@ -11,7 +15,7 @@ class Chain extends EE {
    * @param {Blockchain} Options.blockchain
    * @param {BaseSync} Options.sync
    */
-  constructor ({ blockchain }) {
+  constructor (blockchain: Blockchain) {
     super()
     this.blockchain = blockchain
   }
@@ -55,7 +59,7 @@ class Chain extends EE {
    *
    * @returns {Array<Header>}
    */
-  async getLatestHeader () {
+  async getLatestHeader (): Promise<any> {
     return this.blockchain.getLatestHeader()
   }
 
@@ -64,7 +68,7 @@ class Chain extends EE {
    *
    * @returns {Array<Block>}
    */
-  async getLatestBlock () {
+  async getLatestBlock (): Promise<any> {
     return this.blockchain.getLatestBlock()
   }
 
@@ -75,7 +79,7 @@ class Chain extends EE {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Block>} - an array of blocks
    */
-  async getBlocks (from, max) {
+  async getBlocks (from: number, max: number): Promise<Array<any>> {
     return this.blockchain.getBlocks(from, max)
   }
 
@@ -86,7 +90,7 @@ class Chain extends EE {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Header>} - an array of blocks
    */
-  async getHeaders (from, max) {
+  async getHeaders (from:number, max: number): Promise<Array<any>> {
     return this.blockchain.getHeaders(from, max)
   }
 
@@ -95,7 +99,7 @@ class Chain extends EE {
    *
    * @param {Block} block
    */
-  async pubBlocks (block) {
+  putBlocks (block: any): void {
     this.blockchain.pubBlocks(block)
   }
 
@@ -104,9 +108,7 @@ class Chain extends EE {
    *
    * @param {Header} header
    */
-  async pubHeader (header) {
+  putHeader (header: any): void {
     this.blockchain.pubHeaders(header)
   }
 }
-
-module.exports = Chain

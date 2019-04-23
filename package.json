@@ -71,10 +71,14 @@
     "rlp": "^2.2.3",
     "rpc-stream": "^2.1.2",
     "safe-event-emitter": "^1.0.1",
+    "tslint": "^5.16.0",
+    "tslint-config-standard": "^8.0.1",
     "websocket-stream": "^5.1.2",
     "yargs": "^12.0.2"
   },
   "devDependencies": {
+    "@types/bn.js": "^4.11.5",
+    "@types/yargs": "^13.0.0",
     "aegir": "^18.2.1",
     "chai": "^4.2.0",
     "deep-equal-in-any-order": "^1.0.13",
