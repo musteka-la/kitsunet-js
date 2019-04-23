@@ -5,7 +5,7 @@ const pull = require('pull-stream')
 const pbb = require('pull-protocol-buffers')
 const RpcPeer = require('./ksn-proto')
 const nextTick = require('async/nextTick')
-const { SliceId } = require('../../slice')
+const { SliceId } = require('../../../slice')
 const KitsunetProto = require('./proto').Kitsunet
 const { Status } = KitsunetProto
 
