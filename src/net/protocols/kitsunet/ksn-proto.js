@@ -1,9 +1,9 @@
 'use strict'
 
-const { NodeTypes } = require('../../constants')
+const { NodeTypes } = require('../../../constants')
 const { MsgType, Status } = require('./proto').Kitsunet
 
-const { SliceId } = require('../../slice')
+const { SliceId } = require('../../../slice')
 
 const Protocol = require('../../protocol')
 

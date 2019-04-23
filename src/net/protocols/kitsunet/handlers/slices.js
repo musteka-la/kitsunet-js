@@ -3,7 +3,7 @@
 const BaseHandler = require('./base')
 const { MsgType, Status } = require('../proto').Kitsunet
 
-const { Slice } = require('../../../slice')
+const { Slice } = require('../../../../slice')
 
 class Slices extends BaseHandler {
   constructor (rpcEngine, peerInfo) {
