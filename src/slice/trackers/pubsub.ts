@@ -1,13 +1,11 @@
 'use strict'
 
 import Cache from 'lru-cache'
-
 import { BaseTracker } from './base'
-import { Slice } from '../slice'
+import { Slice, SliceId } from '../'
 import debug from 'debug'
 
 const log = debug('kitsunet:kitsunet-pubsub-tracker')
-
 const DEFAULT_TOPIC_NAMESPACE: string = `/kitsunet/slice`
 const DEFAULT_SLICE_TIMEOUT: number = 300 * 1000
 const DEFAULT_DEPTH: number = 10
@@ -17,6 +15,14 @@ const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }) => {
 }
 
 export class KitsunetPubSub extends BaseTracker {
+  _multicast: any
+  _node: any
+  _namespace: any
+  _depth: any
+  _forwardedSlicesCache: Cache<{}, {}>
+  slice: any
+  _isStarted: any
+
   constructor ({ node, slices, namespace, depth }) {
     super({ slices })
     this._multicast = node.multicast
@@ -114,7 +120,7 @@ export class KitsunetPubSub extends BaseTracker {
    *
    * @param {Set<SliceId>} slices - the slices to stop tracking
    */
-  async untrack (slices) {
+  async untrack (slices: Set<SliceId>) {
     slices.forEach(async (slice) => {
       await this._unsubscribe(slice)
       this.slice.delete(slice)
@@ -160,6 +166,14 @@ export class KitsunetPubSub extends BaseTracker {
       this.trackSlice([slice])
     }
     this._multicast.publish(this._makeSliceTopic(slice), slice.serialize())
+  }
+
+  trackSlice (arg0: any[]) {
+    throw new Error('Method not implemented.')
+  }
+
+  getSlice (slice: SliceId): Promise<Slice> {
+    throw new Error('Method not implemented.')
   }
 
   async start () {
