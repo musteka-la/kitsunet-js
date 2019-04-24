@@ -4,9 +4,10 @@
   "description": "Kitsunet mesh node",
   "main": "src/index.js",
   "scripts": {
-    "test": "aegir test",
-    "lint": "aegir lint",
-    "build": "aegir build"
+    "build": "tsc",
+    "test": "npm run build && mocha --require source-map-support/register dist/test/",
+    "lint": "tslint --project tsconfig.json",
+    "lint:fix": "tslint --project tsconfig.json --fix"
   },
   "bin": {
     "kitsunet": "bin/cli.js"
@@ -18,6 +19,8 @@
   "license": "MIT",
   "dependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
+    "@types/defaults-deep": "^0.2.0",
+    "@types/lru-cache": "^5.1.0",
     "async": "^2.6.1",
     "borc": "^2.1.0",
     "bourne": "^1.1.2",
@@ -59,7 +62,8 @@
     "multihashing-async": "^0.5.2",
     "multiplex": "^6.7.0",
     "normalize-keys": "^1.0.0",
-    "opium-ioc": "^2.3.4",
+    "opium-decorator-resolvers": "github:dryajov/opium-decorator-resolvers",
+    "opium-ioc": "^2.4.1",
     "pify": "^4.0.1",
     "promisify-this": "^2.0.2",
     "protons": "^1.0.1",
@@ -77,12 +81,14 @@
     "yargs": "^12.0.2"
   },
   "devDependencies": {
+    "@types/async": "^2.4.1",
     "@types/bn.js": "^4.11.5",
+    "@types/debug": "^4.1.4",
     "@types/yargs": "^13.0.0",
-    "aegir": "^18.2.1",
     "chai": "^4.2.0",
     "deep-equal-in-any-order": "^1.0.13",
     "dirty-chai": "^2.0.1",
+    "source-map-support": "^0.5.12",
     "standard": "^12.0.1"
   }
 }
