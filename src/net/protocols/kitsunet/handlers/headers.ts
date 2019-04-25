@@ -1,14 +1,17 @@
 'use strict'
 
-const BaseHandler = require('./base')
-const { MsgType, Status } = require('../proto').Kitsunet
+import { BaseHandler } from './base'
+import { KsnRpc } from '../ksn-rpc'
+import Kitsunet = require('../proto')
 
-class Headers extends BaseHandler {
-  constructor (rpcEngine, peerInfo) {
+const { MsgType, Status } = Kitsunet
+
+export class Header extends BaseHandler {
+  constructor (rpcEngine: KsnRpc, peerInfo: any) {
     super('headers', MsgType.HEADERS, rpcEngine, peerInfo)
   }
 
-  async handle () {
+  async response (): Promise<any> {
     return {
       type: MsgType.HEADERS,
       status: Status.OK,
@@ -22,9 +25,6 @@ class Headers extends BaseHandler {
     const res = await this.sendRequest({
       type: MsgType.HEADERS
     })
-
     return res.payload.headers
   }
 }
-
-module.exports = Headers

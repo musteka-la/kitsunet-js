@@ -1,14 +1,16 @@
 'use strict'
 
-import BaseHandler from './base'
-import { MsgType, Status } from '../proto'
+import { BaseHandler } from './base'
+import Kitsunet = require('../proto')
+
+const { MsgType, Status } = Kitsunet
 
 export class SliceId extends BaseHandler {
   constructor (rpcEngine, peerInfo) {
     super('slice-id', MsgType.SLICE_ID, rpcEngine, peerInfo)
   }
 
-  async handle () {
+  async response (): Promise<any> {
     return {
       type: MsgType.SLICE_ID,
       status: Status.OK,
@@ -18,15 +20,16 @@ export class SliceId extends BaseHandler {
     }
   }
 
-  async request () {
+  async request (): Promise<any> {
     const res = await this.sendRequest({
       type: MsgType.SLICE_ID
     })
 
-    let ids = []
+    let ids: Set<string> = new Set()
     if (res.payload.sliceIds) {
       ids = new Set(res.payload.sliceIds.map((s) => s.toString()))
     }
+
     return ids
   }
 }

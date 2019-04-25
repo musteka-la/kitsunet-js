@@ -1,18 +1,18 @@
 'use strict'
 
 import EE from 'events'
-import { Status } from '../proto'
 import debug from 'debug'
 import { KsnRpc } from '../ksn-rpc'
+import PeerInfo = require('peer-info')
 
 export abstract class BaseHandler extends EE {
-  name: string
   id: string
-  rpcEngine: KsnRpc
   peerInfo: any
+  name: string
+  rpcEngine: KsnRpc
   log: debug.Debugger
 
-  constructor (name, id, rpcEngine, peerInfo) {
+  constructor (name: string, id: string, rpcEngine: KsnRpc, peerInfo: PeerInfo) {
     super()
     this.name = name
     this.id = id
@@ -21,16 +21,27 @@ export abstract class BaseHandler extends EE {
     this.log = debug(`kitsunet:kitsunet-proto:base-handler-${this.name}`)
   }
 
-  abstract handle<T> (msg) : Promise<T>
+  /**
+   * Handle an incoming message
+   *
+   * @param msg - the message to be sent
+   */
+  abstract response<T> (msg: any): Promise<T>
 
-  async sendRequest (msg) {
+  /**
+   * Send a request
+   *
+   * @param msg - the message to be sent
+   */
+  abstract request<T> (msg?: T): Promise<T>
+
+  protected async sendRequest (msg) {
     this.log('sending request', msg)
-    const res: Status = await this.rpcEngine.sendRequest(this.peerInfo, msg)
+    const res: any = await this.rpcEngine.sendRequest(this.peerInfo, msg)
 
     if (res && res.status !== Status.OK) {
-      const err = res.error ? new Error(this.error) : new Error('unknown error!')
+      const err = res.error ? new Error(res.error) : new Error('unknown error!')
       this.log(err)
-
       throw err
     }
 
@@ -38,8 +49,7 @@ export abstract class BaseHandler extends EE {
     return res
   }
 
-  errResponse (type) {
-    const err = `unknown message type ${type}`
+  errResponse (err: Error) {
     this.log(err)
     return { status: Status.ERROR, error: err }
   }

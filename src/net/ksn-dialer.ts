@@ -1,11 +1,10 @@
 'use strict'
 
-import assert from 'assert'
 import EE from 'events'
-
+import assert from 'assert'
 import { nextTick } from 'async'
-
 import debug from 'debug'
+
 const log = debug('kitsunet:node')
 
 const MAX_PEERS = 25
@@ -14,9 +13,17 @@ const INTERVAL = 60 * 1000 // every minute
 
 /**
  * A dialer module that handles ambient
- * node discovery and such
+ * node discovery and such.
  */
 export class KsnDialer extends EE {
+  maxPeers: any
+  interval: number
+  intervalTimer: NodeJS.Timeout | null
+  node: any
+  connected: Map<any, any>
+  discovered: Map<any, any>
+  dialing: Map<any, any>
+
   constructor ({ node, maxPeers, interval }) {
     super()
 
@@ -55,7 +62,7 @@ export class KsnDialer extends EE {
   async stop () {
     const stopper = new Promise((resolve) => {
       this.node.on('start', () => {
-        clearInterval(this.intervalTimer)
+        if (this.intervalTimer) clearInterval(this.intervalTimer)
         resolve()
       })
     })
@@ -67,7 +74,7 @@ export class KsnDialer extends EE {
     return this.b58Id
   }
 
-  async tryConnect () {
+  tryConnect () {
     if (this.connected.size <= this.maxPeers) {
       if (this.discovered.size > 0) {
         const [id, peer] = this.discovered.entries().next().value

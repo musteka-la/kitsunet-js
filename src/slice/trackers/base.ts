@@ -8,7 +8,7 @@ export abstract class BaseTracker extends EE {
   slices: Set<Slice>
   isStarted: boolean
 
-  constructor (slices: Set<Slice>) {
+  constructor (slices?: Set<Slice>) {
     super()
     this.slices = slices || new Set()
     this.isStarted = false

@@ -3,6 +3,10 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./definitions"
+    ],
     "lib": [
       "dom",
       "es6",

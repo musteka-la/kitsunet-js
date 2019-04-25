@@ -3,19 +3,25 @@
 import EE from 'events'
 import pull from 'pull-stream'
 import pbb from 'pull-protocol-buffers'
-import RpcPeer from './ksn-proto'
+import { KsnProto } from './ksn-proto'
 import nextTick from 'async/nextTick'
-import { SliceId } from '../../../slice'
-import { Kitsunet as KitsunetProto } from './proto'
+import { SliceId, Slice } from '../../../slice'
+import Kitsunet = require('./proto')
 import debug from 'debug'
 
-const  { Status } = KitsunetProto
+const { Status } = KitsunetProto
 const log = debug('kitsunet:kitsunet-proto')
 
 const _VERSION = '1.0.0'
 const codec = `/kitsunet/client/${_VERSION}`
 
 export class KsnRpc extends EE {
+  node: any
+  peers: Map<any, any>
+  sliceManager: any
+  ksnDriver: any
+  ksnDialer: any
+
   get VERSION () {
     return _VERSION
   }
@@ -35,8 +41,8 @@ export class KsnRpc extends EE {
    */
   constructor ({ node, sliceManager, ksnDriver, ksnDialer }) {
     super()
-    this._node = node
-    this._peers = new Map()
+    this.node = node
+    this.peers = new Map()
     this.sliceManager = sliceManager
     this.ksnDriver = ksnDriver
     this.ksnDialer = ksnDialer
@@ -44,9 +50,9 @@ export class KsnRpc extends EE {
     this._handler = this._handler.bind(this)
     this.dialPeer = this.dialPeer.bind(this)
 
-    this._node.on('peer:disconnect', (peerInfo) => {
+    this.node.on('peer:disconnect', (peerInfo) => {
       const idB58 = peerInfo.id.toB58String()
-      this._peers.delete(idB58)
+      this.peers.delete(idB58)
       this.emit('kitsunet:peer-disconnected', peerInfo)
     })
   }
@@ -75,7 +81,7 @@ export class KsnRpc extends EE {
   async getSlices (slices) {
     return Promise.all(slices.map((s) => {
       return (this.sliceManager.getSlice(new SliceId(s)))
-    })).then((slices) => slices.map((s) => s.serialize()))
+    })).then((slices) => slices.map((s: any) => s.serialize()))
   }
 
   async getHeaders () {
@@ -90,7 +96,7 @@ export class KsnRpc extends EE {
    */
   async _handler (_, conn) {
     const peer = await this._processConn(conn)
-    this._handleRpc(peer, conn)
+    return this._handleRpc(peer, conn)
   }
 
   /**
@@ -100,8 +106,8 @@ export class KsnRpc extends EE {
    */
   async dialPeer (peerInfo) {
     const idB58 = peerInfo.id.toB58String()
-    if (this._peers.has(idB58)) {
-      return this._peers.get(idB58)
+    if (this.peers.has(idB58)) {
+      return this.peers.get(idB58)
     }
 
     const conn = await this._dial(peerInfo)
@@ -114,7 +120,7 @@ export class KsnRpc extends EE {
    * @param {PeerInfo} peerInfo
    */
   async _dial (peerInfo) {
-    return this._node.dialProtocol(peerInfo, codec)
+    return this.node.dialProtocol(peerInfo, codec)
   }
 
   /**
@@ -172,14 +178,14 @@ export class KsnRpc extends EE {
           throw new Error(`could not resolve peer for ${idB58}, connection ignored`)
         }
 
-        let peer = this._peers.get(idB58)
+        let peer = this.peers.get(idB58)
         if (!peer) {
-          peer = new RpcPeer(peerInfo, this)
-          this._peers.set(idB58, peer)
+          peer = new KsnProto(peerInfo, this)
+          this.peers.set(idB58, peer)
           if (await peer.identify()) {
             nextTick(() => this.emit('kitsunet:peer-connected', peer))
           } else {
-            this._peers.delete(idB58)
+            this.peers.delete(idB58)
             const errMsg = new Error(`could not perform kitsunet identify for peer ${idB58}`)
             log(errMsg)
             return reject(errMsg)
@@ -229,9 +235,9 @@ export class KsnRpc extends EE {
    * try to identify it as a kitsunet peer
    */
   async start () {
-    this._node.handle(codec, this._handler)
+    this.node.handle(codec, this._handler)
     this.ksnDialer.on('kitsunet:peer-dialed', async (peerInfo) => {
-      this.dialPeer(peerInfo)
+      return this.dialPeer(peerInfo)
     })
   }
 
@@ -239,6 +245,6 @@ export class KsnRpc extends EE {
    * Unregister handlers
    */
   async stop () {
-    this._node.unhandle(codec)
+    return this.node.unhandle(codec)
   }
 }
