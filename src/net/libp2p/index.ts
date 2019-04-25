@@ -7,7 +7,7 @@ import * as Libp2p from 'libp2p'
 import * as DHT from 'libp2p-kad-dht'
 import * as defaultsDeep from '@nodeutils/defaults-deep'
 import * as promisify from 'promisify-this'
-import * createMulticast from 'libp2p-multicast-conditional/src/api'
+import createMulticast = require('libp2p-multicast-conditional/src/api')
 import parallel from 'async'
 import * as Discovery from 'libp2p-rendezvous'
 

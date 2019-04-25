@@ -54,10 +54,10 @@ export abstract class BaseTracker extends EE {
   /**
    * Start tracker
    */
-  abstract start: Promise<void>
+  abstract start (): Promise<void>
 
   /**
    * Stop tracker
    */
-  abstract stop: Promise<void>
+  abstract stop (): Promise<void>
 }
