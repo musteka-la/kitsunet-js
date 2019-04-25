@@ -15,7 +15,7 @@ export abstract class Downloader extends EE {
   public startBlocs: number = 0
   public maxBlocks: number = MAX_BLOCKS_DOWNLOAD
 
-  constructor(start: number, max: number) {
+  constructor (start: number, max: number) {
     super()
     this.startBlocs = start || 0
     this.maxBlocks = max || MAX_BLOCKS_DOWNLOAD

@@ -30,7 +30,7 @@ export class KsnDriver extends EE {
     isBridge: boolean,
     discovery: Discovery,
     // blockchain,
-    blockTracker: BlockTracker
+    blockTracker: any
   ) {
     super()
 

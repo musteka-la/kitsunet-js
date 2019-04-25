@@ -1,6 +1,6 @@
 'use strict'
 
-import debug from 'debug';
+import debug from 'debug'
 const log = debug('kitsunet:telemetry:ping')
 
 const sec = 1000

@@ -1,5 +1,5 @@
 'use strict'
-const protobuf = require('protons')
+import protobuf = require('protons')
 
 const proto = `
 message Kitsunet {
@@ -51,4 +51,4 @@ message Kitsunet {
 }
 `
 
-module.exports = protobuf(proto)
+export = protobuf(proto)

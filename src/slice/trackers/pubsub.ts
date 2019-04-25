@@ -4,35 +4,38 @@ import Cache from 'lru-cache'
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
 import debug from 'debug'
+import { register } from 'opium-decorator-resolvers'
 
 const log = debug('kitsunet:kitsunet-pubsub-tracker')
 const DEFAULT_TOPIC_NAMESPACE: string = `/kitsunet/slice`
 const DEFAULT_SLICE_TIMEOUT: number = 300 * 1000
 const DEFAULT_DEPTH: number = 10
 
-const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }) => {
+type SliceCache = Cache<string, any>
+
+const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }): SliceCache => {
   return new Cache(options)
 }
 
+@register()
 export class KitsunetPubSub extends BaseTracker {
-  _multicast: any
-  _node: any
-  _namespace: any
-  _depth: any
-  _forwardedSlicesCache: Cache<{}, {}>
-  slice: any
-  _isStarted: any
+  multicast: any
+  node: any
+  namespace: string = DEFAULT_TOPIC_NAMESPACE
+  depth: number = DEFAULT_DEPTH
+  forwardedSlicesCache: SliceCache
+  isStarted: boolean = false
 
-  constructor ({ node, slices, namespace, depth }) {
-    super({ slices })
-    this._multicast = node.multicast
-    this._node = node
-    this._namespace = namespace || DEFAULT_TOPIC_NAMESPACE
-    this._depth = depth || DEFAULT_DEPTH
-    this._forwardedSlicesCache = createCache()
+  constructor (node: any, namespace: string, depth: number, slices?: Set<Slice>) {
+    super(slices)
+    this.multicast = node.multicast
+    this.node = node
+    this.namespace = namespace || DEFAULT_TOPIC_NAMESPACE
+    this.depth = depth || DEFAULT_DEPTH
+    this.forwardedSlicesCache = createCache()
 
-    this._slicesHook = this._slicesHook.bind(this)
-    this._handleSlice = this._handleSlice.bind(this)
+    this.slicesHook = this.slicesHook.bind(this)
+    this.handleSlice = this.handleSlice.bind(this)
   }
 
   /**
@@ -40,9 +43,9 @@ export class KitsunetPubSub extends BaseTracker {
    *
    * @param {Slice} slice - slice to subscribe to
    */
-  _subscribe (slice) {
-    this._multicast.addFrwdHooks(this._makeSliceTopic(slice), [this._slicesHook])
-    this._multicast.subscribe(this._makeSliceTopic(slice), this._handleSlice)
+  private subscribe (slice) {
+    this.multicast.addFrwdHooks(this.makeSliceTopic(slice), [this.slicesHook])
+    this.multicast.subscribe(this.makeSliceTopic(slice), this.handleSlice)
   }
 
   /**
@@ -50,9 +53,9 @@ export class KitsunetPubSub extends BaseTracker {
    *
    * @param {Slice} slice - slice to unsubscribe from
    */
-  _unsubscribe (slice) {
-    this._multicast.removeFrwdHooks(this._makeSliceTopic(slice), this._slicesHook)
-    this._multicast.unsubscribe(this._makeSliceTopic(slice), this._handleSlice)
+  private unsubscribe (slice) {
+    this.multicast.removeFrwdHooks(this.makeSliceTopic(slice), this.slicesHook)
+    this.multicast.unsubscribe(this.makeSliceTopic(slice), this.handleSlice)
   }
 
   /**
@@ -61,9 +64,9 @@ export class KitsunetPubSub extends BaseTracker {
    * @param {Slice|SliceId} slice - a Slice object
    * @returns {String} - a slice topic
    */
-  _makeSliceTopic (slice) {
+  private makeSliceTopic (slice) {
     const { path, depth } = slice
-    return `${this._namespace}/${path}-${depth || this._depth}`
+    return `${this.namespace}/${path}-${depth || this.depth}`
   }
 
   /**
@@ -77,8 +80,8 @@ export class KitsunetPubSub extends BaseTracker {
    * @param {Function} cb - callback
    * @returns {Function}
    */
-  _slicesHook (peer, msg, cb) {
-    let slice = null
+  private slicesHook (peer, msg, cb) {
+    let slice: Slice
     try {
       slice = new Slice(msg.data)
       if (!slice) {
@@ -90,10 +93,10 @@ export class KitsunetPubSub extends BaseTracker {
     }
 
     const peerId = peer.info.id.toB58String()
-    const slices = this._forwardedSlicesCache.get(peerId) || createCache()
+    const slices = this.forwardedSlicesCache.get(peerId) || createCache()
     if (!slices.has(slice.id)) {
       slices.set(slice.id, true)
-      this._forwardedSlicesCache.set(peerId, slices)
+      this.forwardedSlicesCache.set(peerId, slices)
       return cb(null, msg)
     }
 
@@ -107,7 +110,7 @@ export class KitsunetPubSub extends BaseTracker {
    *
    * @param {Msg} msg - the pubsub message
    */
-  _handleSlice (msg) {
+  private handleSlice (msg) {
     try {
       this.emit(`slice`, new Slice(msg.data))
     } catch (err) {
@@ -120,10 +123,10 @@ export class KitsunetPubSub extends BaseTracker {
    *
    * @param {Set<SliceId>} slices - the slices to stop tracking
    */
-  async untrack (slices: Set<SliceId>) {
+  async untrack (slices: Set<Slice>) {
     slices.forEach(async (slice) => {
-      await this._unsubscribe(slice)
-      this.slice.delete(slice)
+      this.unsubscribe(slice)
+      this.slices.delete(slice)
     })
   }
 
@@ -136,11 +139,11 @@ export class KitsunetPubSub extends BaseTracker {
   async track (slices) {
     this.slices = new Set([...this.slices, ...slices])
 
-    if (!this._isStarted) return
+    if (!this.isStarted) return
 
     this.slices.forEach(async (slice) => {
       if (await this.isTracking(slice)) return
-      this._subscribe(slice)
+      this.subscribe(slice)
       this.slices.add(slice)
     })
   }
@@ -153,7 +156,7 @@ export class KitsunetPubSub extends BaseTracker {
    */
   async isTracking (slice) {
     return (this.slices.has(slice) &&
-      (await this._multicast.ls()).indexOf(this._makeSliceTopic(slice)) > -1)
+      (await this.multicast.ls()).indexOf(this.makeSliceTopic(slice)) > -1)
   }
 
   /**
@@ -165,7 +168,7 @@ export class KitsunetPubSub extends BaseTracker {
     if (!this.isTracking(slice)) {
       this.trackSlice([slice])
     }
-    this._multicast.publish(this._makeSliceTopic(slice), slice.serialize())
+    this.multicast.publish(this.makeSliceTopic(slice), slice.serialize())
   }
 
   trackSlice (arg0: any[]) {
@@ -177,13 +180,13 @@ export class KitsunetPubSub extends BaseTracker {
   }
 
   async start () {
-    this._isStarted = true
+    this.isStarted = true
     // track once libp2p is started
     this.track(this.slices)
   }
 
   async stop () {
     this.untrack(this.slices)
-    this._isStarted = false
+    this.isStarted = false
   }
 }

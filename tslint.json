@@ -3,7 +3,10 @@
   "align": [
     true,
     "parameters",
-    "statements"
+    "statements",
+    "arguments",
+    "members",
+    "elements"
   ],
   "space-before-function-paren": true
 }

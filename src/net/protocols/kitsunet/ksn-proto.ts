@@ -1,12 +1,14 @@
 'use strict'
 
 import { NodeTypes } from '../../../constants'
-import { MsgType, Status } from './proto'
 import { SliceId } from '../../../slice'
-import Protocol from '../../protocol'
+import * as Handlers from './handlers'
 import debug from 'debug'
-import Handlers from './handlers'
+import Kitsunet = require('./proto')
+import { KsnRpc } from './ksn-rpc'
+import PeerInfo = require('peer-info')
 
+const { MsgType, Status } = Kitsunet
 const log = debug('kitsunet:kitsunet-proto')
 
 function errResponse (type) {
@@ -15,17 +17,23 @@ function errResponse (type) {
   return { status: Status.ERROR, error: err }
 }
 
-export class KsnProto extends Protocol {
-  constructor (peerInfo, ksnRpc) {
-    super()
+// TODO: should implement base protocol
+export class KsnProto {
+  peerInfo: PeerInfo
+  ksnRpc: KsnRpc
+  version: string | undefined
+  userAgent: string | undefined
+  sliceIds: Set<SliceId>
+  latestBlock: null
+  handlers: {}
+  type: NodeTypes
+
+  constructor (peerInfo: PeerInfo, ksnRpc: KsnRpc) {
     this.peerInfo = peerInfo
     this.ksnRpc = ksnRpc
 
-    this.version = null
-    this.userAgent = null
     this.sliceIds = new Set()
-    this.latestBlock = null
-    this.nodeType = NodeTypes.NODE
+    this.type = NodeTypes.NODE
 
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
@@ -78,11 +86,11 @@ export class KsnProto extends Protocol {
   }
 
   /**
-  * Get slices for the provided ids or all the
-  * slices the peer is holding
-  *
-  * @param {Array<SliceId>} slices - optional
-  */
+   * Get slices for the provided ids or all the
+   * slices the peer is holding
+   *
+   * @param {Array<SliceId>} slices - optional
+   */
   async getSlicesById (slices) {
     return this.handlers[MsgType.SLICES].request(slices)
   }
@@ -98,8 +106,8 @@ export class KsnProto extends Protocol {
    * Get Node type - bridge, edge, node
    */
   async nodeType () {
-    this.nodeType = await this.handlers[MsgType.NODE_TYPE].request()
-    return this.nodeType
+    this.type = await this.handlers[MsgType.NODE_TYPE].request()
+    return this.type
   }
 
   /**

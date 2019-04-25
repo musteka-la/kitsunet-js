@@ -7,16 +7,27 @@ import * as ethUtils from 'ethereumjs-util'
 import { nextTick } from 'async'
 import blockFromRpc = require('ethereumjs-block/from-rpc')
 import debug from 'debug'
+import { register } from 'opium-decorator-resolvers'
+
+import KitsunetBlockTracker = require('kitsunet-block-tracker')
+import PollingBlockTracker = require('eth-block-tracker')
+import EthQuery = require('eth-query')
 
 const log = debug('kitsunet:kitsunet-bridge-tracker')
 
+@register()
 export class KitsunetBridge extends BaseTracker {
-  rpcUrl: any
-  blockTracker: any
-  rpcBlockTracker: any
-  ethQuery: any
+  rpcUrl: string
+  blockTracker: KitsunetBlockTracker
+  rpcBlockTracker: PollingBlockTracker
+  ethQuery: EthQuery
 
-  constructor ({ rpcUrl, slices, blockTracker, rpcBlockTracker, ethQuery }) {
+  constructor (
+    rpcUrl: string,
+    blockTracker: KitsunetBlockTracker,
+    rpcBlockTracker: PollingBlockTracker,
+    ethQuery: EthQuery,
+    slices?: Set<Slice>) {
     super(slices)
     this.rpcUrl = rpcUrl
     this.blockTracker = blockTracker
