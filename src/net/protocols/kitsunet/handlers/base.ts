@@ -3,8 +3,15 @@
 import EE from 'events'
 import { Status } from '../proto'
 import debug from 'debug'
+import { KsnRpc } from '../ksn-rpc'
 
-export class BaseHandler extends EE {
+export abstract class BaseHandler extends EE {
+  name: string
+  id: string
+  rpcEngine: KsnRpc
+  peerInfo: any
+  log: debug.Debugger
+
   constructor (name, id, rpcEngine, peerInfo) {
     super()
     this.name = name
@@ -14,13 +21,11 @@ export class BaseHandler extends EE {
     this.log = debug(`kitsunet:kitsunet-proto:base-handler-${this.name}`)
   }
 
-  async handle (msg) {
-    throw new Error('not implemented!')
-  }
+  abstract handle<T> (msg) : Promise<T>
 
   async sendRequest (msg) {
     this.log('sending request', msg)
-    const res = await this.rpcEngine.sendRequest(this.peerInfo, msg)
+    const res: Status = await this.rpcEngine.sendRequest(this.peerInfo, msg)
 
     if (res && res.status !== Status.OK) {
       const err = res.error ? new Error(this.error) : new Error('unknown error!')
