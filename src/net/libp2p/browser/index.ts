@@ -1,11 +1,10 @@
 'use strict'
 
 import WS from 'libp2p-websockets'
-import TCP from 'libp2p-tcp'
+import WStar from 'libp2p-webrtc-star'
 import Bootstrap from 'libp2p-bootstrap'
-import MDNS from 'libp2p-mdns'
 import PeerInfo from 'peer-info'
-import { Libp2pNode } from './libp2p-node'
+import { Libp2pNode } from '../libp2p-node'
 
 export async function createNode (
   identity?: { privKey?: string },
@@ -13,14 +12,15 @@ export async function createNode (
   bootstrap?: string[]): Promise<Libp2pNode> {
 
   const peerInfo: PeerInfo = await Libp2pNode.createPeerInfo(identity, addrs)
+  const wstar = new WStar()
   const node = new Libp2pNode(peerInfo, {
     modules: {
       transport: [
         WS,
-        TCP
+        wstar
       ],
       peerDiscovery: [
-        MDNS,
+        wstar.discovery,
         Bootstrap
       ]
     },
@@ -33,6 +33,5 @@ export async function createNode (
       }
     }
   })
-
   return node
 }

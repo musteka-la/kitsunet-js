@@ -16,13 +16,13 @@ declare class Libp2p {
   dht: any;
   state: any;
   addListener(type: any, listener: any): any;
-  dial(peer: any, callback: any): void;
+  dial(peer: any, callback: any): void | Promise<any>;
   dialFSM(peer: any, protocol: any, callback: any): any;
   dialProtocol(peer: any, protocol: any, callback: any): any;
   emit(eventName: any, args: any): void;
   eventNames(): any;
   getMaxListeners(): any;
-  handle(protocol: any, handlerFunc: any, matchFunc: any): void;
+  handle(protocol: string, handlerFunc: Function, matchFunc?: Function): void;
   hangUp(peer: any, callback: any): void;
   isStarted(): any;
   listenerCount(type: any): any;
