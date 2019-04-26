@@ -18,7 +18,7 @@ export interface INetworkProvider<P> {
    *
    * @param readable - an iterable to ber read from asynchronously
    */
-  handle<T extends AsyncIterator<T & Buffer>> (readable: T): void
+  handle<T extends AsyncIterable<T & Buffer>> (readable: T): void
 
   /**
    * Create a two way stream with remote
@@ -26,7 +26,7 @@ export interface INetworkProvider<P> {
    * @param readable - an async iterable to stream from
    * @returns - an async iterator to pull from
    */
-  stream<T extends AsyncIterator<T & Buffer>, U> (readable: T, protocol: IProtocol<P>): AsyncIterator<U>
+  stream<T extends AsyncIterable<T & Buffer>, U> (readable: T, protocol: IProtocol<P>): AsyncIterator<U>
 }
 
 export interface IEncoder {
@@ -42,7 +42,7 @@ export interface IEncoder {
    *
    * @param msg - decode a buffer
    */
-  decode<T extends Buffer> (msg: T): AsyncIterable<T>
+  decode<T extends Buffer, U> (msg: T): AsyncIterable<U>
 }
 
 export abstract class Peer<T> {
@@ -57,8 +57,9 @@ export interface IProtocol<T> extends INetworkProvider<T>, Peer<T> {
 
   encoder?: IEncoder                    // the encoder
   networkProvider?: INetworkProvider<T> // the network provider
+  peer: Peer<T>
 
-  new(provider?: INetworkProvider<T>, encoder?: IEncoder)
+  new(peer: Peer<T>, provider?: INetworkProvider<T>, encoder?: IEncoder)
 }
 
 export abstract class Node<P> implements INetworkProvider<P>, Peer<P> {
