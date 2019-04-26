@@ -2,7 +2,7 @@
 
 import EE from 'events'
 import { NodeTypes } from './constants'
-import { KsnDialer, KsnRpc } from './net'
+import { KsnDialer, KsnProtocol } from './net'
 import { Discovery } from './slice/discovery/base'
 import { register } from 'opium-decorator-resolvers'
 import debug from 'debug'
@@ -26,7 +26,7 @@ export class KsnDriver extends EE {
   constructor (
     node: Node,
     ksnDialer: KsnDialer,
-    ksnRpc: KsnRpc,
+    ksnRpc: KsnProtocol,
     isBridge: boolean,
     discovery: Discovery,
     // blockchain,

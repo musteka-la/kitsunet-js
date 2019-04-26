@@ -3,12 +3,12 @@
 import { BaseHandler } from './base'
 import BN from 'bn.js'
 import Kitsunet = require('../proto')
-import { KsnRpc } from '../ksn-rpc'
+import { KsnProtocol } from '../ksn-protocol'
 
 const { MsgType, Status } = Kitsunet
 
 export class Identify extends BaseHandler {
-  constructor (rpcEngine: KsnRpc, peerInfo: any) {
+  constructor (rpcEngine: KsnProtocol, peerInfo: any) {
     super('identify', MsgType.IDENTIFY, rpcEngine, peerInfo)
   }
 

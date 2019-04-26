@@ -1,27 +1,16 @@
 'use strict'
 
 import { register } from 'opium-decorator-resolvers'
-import Multiplex from 'pull-mplex'
-import SPDY from 'libp2p-spdy'
-import SECIO from 'libp2p-secio'
-import Libp2p from 'libp2p'
-import DHT from 'libp2p-kad-dht'
-import defaultsDeep from '@nodeutils/defaults-deep'
-import promisify from 'promisify-this'
-import MulticastConditional from 'libp2p-multicast-conditional'
-import Multiaddr from 'multiaddr'
-import PeerId from 'peer-id'
-import PeerInfo from 'peer-info'
-import { Node, Protocol, NodeType, Sender, Peer } from '../interfaces'
-import toIterator from 'pull-stream-to-async-iterator'
-import createMulticast = require('libp2p-multicast-conditional/src/api')
-import pull from 'pull-stream'
 
-const promisifiedPeerInfo = promisify(PeerInfo, false)
-const promisifiedPeerId = promisify(PeerId, false)
+import Libp2p from 'libp2p'
+import PeerInfo from 'peer-info'
+import toIterator from 'pull-stream-to-async-iterator'
+import pull from 'pull-stream'
+import pullPushable from 'pull-pushable'
+import { Node, IProtocol, NodeType, Peer } from '../interfaces'
 
 @register()
-export class Libp2pNode extends Libp2p implements Node<PeerInfo>, Sender, Peer<PeerInfo> {
+export class Libp2pNode implements Node<PeerInfo> {
   get peer (): Peer<PeerInfo> {
     return this
   }
@@ -35,64 +24,38 @@ export class Libp2pNode extends Libp2p implements Node<PeerInfo>, Sender, Peer<P
   }
 
   get addrs (): Set<string> {
-    return new Set(this.peerInfo.multiaddr.map((a) => a.toString()))
+    return new Set(this.peerInfo.multiaddrs.map((a) => a.toString()))
   }
 
   get type (): NodeType {
     return NodeType.LIBP2P
   }
 
-  multicast: MulticastConditional
+  private node: Libp2p
+  private peerInfo: PeerInfo
   constructor (peerInfo: PeerInfo,
-               @register('libp2p-options') _options: any) {
-    super(defaultsDeep(_options, {
-      peerInfo,
-      modules: {
-        streamMuxer: [
-          Multiplex,
-          SPDY
-        ],
-        connEncryption: [
-          SECIO
-        ],
-        dht: DHT
-      },
-      config: {
-        relay: {
-          enabled: false
-        },
-        dht: {
-          kBucketSize: 20,
-          enabled: true
-        }
-      }
-    }))
-
-    this.stop = promisify(this.stop.bind(this))
-    this.start = promisify(this.start.bind(this))
-    this.dial = promisify(this.dial.bind(this))
-    this.hangUp = promisify(this.hangUp.bind(this))
-    this.dialProtocol = promisify(this.dialProtocol.bind(this))
-    this.multicast = promisify(createMulticast(this))
+               @register() node: Libp2p) {
+    this.peerInfo = peerInfo
+    this.node = node
   }
 
-  async mount (protocol: Protocol): Promise<boolean> {
+  async mount (protocol: IProtocol<PeerInfo>): Promise<boolean> {
     return new Promise((resolve) => {
-      protocol.setNetworkProvider(this)
-      this.handle(protocol.id, (_, conn: any) => {
+      protocol.networkProvider = this
+      this.node.handle(protocol.codec, (_, conn: any) => {
         protocol.handle(toIterator(conn))
       })
       resolve(true)
     })
   }
 
-  async unmount (protocol: Protocol): Promise<boolean> {
-    this.unhandle(protocol.id)
+  async unmount (protocol: IProtocol<PeerInfo>): Promise<boolean> {
+    this.node.unhandle(protocol.id)
     return true
   }
 
-  async send<T extends Buffer, U> (msg: T, protocol: Protocol): Promise<U> {
-    const conn = await this.dial(protocol.id, msg)
+  async send<T extends Buffer, U> (msg: T, protocol: IProtocol<PeerInfo>): Promise<U> {
+    const conn = await this.node.dial(protocol.info, protocol.codec)
     return new Promise((resolve, reject) => {
       pull(
         pull.values(msg),
@@ -104,43 +67,40 @@ export class Libp2pNode extends Libp2p implements Node<PeerInfo>, Sender, Peer<P
     })
   }
 
-  async start () {
-    super.start(async (err: Error) => {
-      if (err) {
-        throw err
-      }
+  handle<T extends AsyncIterable<T>> (readable: T): void {
+    throw new Error('Method not implemented!')
+  }
 
-      await this.multicast.start()
-      this.peerInfo.multiaddrs.forEach((ma: Multiaddr) => {
-        console.log('Swarm listening on', ma.toString())
-      })
+  /**
+   * Create a two way stream with remote
+   *
+   * @param readable - an async iterable to stream from
+   * @returns - an async iterator to pull from
+   */
+  async *stream<T extends AsyncIterable<T & Buffer>, U> (readable: T, protocol: IProtocol<PeerInfo>): AsyncIterator<U> {
+    const conn = await this.node.dial(protocol.info, protocol.codec)
+
+    const pushable = pullPushable()
+    for await (const msg of readable) {
+      pushable.push(msg)
+    }
+
+    pull(
+      pushable,
+      conn,
+      pull.drain(function* (msg: T) {
+        yield msg
+      }))
+  }
+
+  async start () {
+    await this.node.start()
+    this.addrs.forEach((ma) => {
+      console.log('Swarm listening on', ma.toString())
     })
   }
 
   async stop () {
-    super.stop(async (err) => {
-      if (err) throw err
-      await this.multicast.stop()
-    })
-  }
-
-  /**
-   *
-   * @param identity {{privKey: string}} - an object with a private key entry
-   * @param addrs {string[]} - an array of multiaddrs
-   */
-  static async createPeerInfo (identity?: { privKey?: string }, addrs?: string[]): Promise<PeerInfo> {
-    let id: PeerId
-    const privKey = identity && identity.privKey ? identity.privKey : null
-    if (!privKey) {
-      id = await promisifiedPeerId.create()
-    } else {
-      id = await promisifiedPeerId.createFromJSON(identity)
-    }
-
-    const peerInfo: PeerInfo = await promisifiedPeerInfo.create(id)
-    addrs = addrs || []
-    addrs.forEach((a) => peerInfo.multiaddrs.add(a))
-    return peerInfo
+    await this.node.stop()
   }
 }

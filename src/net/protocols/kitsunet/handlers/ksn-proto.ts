@@ -1,11 +1,11 @@
 'use strict'
 
-import { NodeTypes } from '../../../constants'
-import { SliceId } from '../../../slice'
-import * as Handlers from './handlers'
+import { NodeTypes } from '../../../../constants'
+import { SliceId } from '../../../../slice'
+import * as Handlers from '.'
 import debug from 'debug'
-import Kitsunet = require('./proto')
-import { KsnRpc } from './ksn-rpc'
+import Kitsunet = require('../proto')
+import { KsnProtocol } from '../ksn-protocol'
 import PeerInfo = require('peer-info')
 
 const { MsgType, Status } = Kitsunet
@@ -20,7 +20,7 @@ function errResponse (type) {
 // TODO: should implement base protocol
 export class KsnProto {
   peerInfo: PeerInfo
-  ksnRpc: KsnRpc
+  ksnRpc: KsnProtocol
   version: string | undefined
   userAgent: string | undefined
   sliceIds: Set<SliceId>
@@ -28,7 +28,7 @@ export class KsnProto {
   handlers: {}
   type: NodeTypes
 
-  constructor (peerInfo: PeerInfo, ksnRpc: KsnRpc) {
+  constructor (peerInfo: PeerInfo, ksnRpc: KsnProtocol) {
     this.peerInfo = peerInfo
     this.ksnRpc = ksnRpc
 
