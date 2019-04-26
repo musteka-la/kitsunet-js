@@ -6,7 +6,7 @@ import WStar from 'libp2p-webrtc-star'
 import Bootstrap from 'libp2p-bootstrap'
 import PeerInfo from 'peer-info'
 import PeerId from 'peer-id'
-import { Node } from '../'
+import { Node } from '../libp2p-node'
 
 const promisifiedPeerInfo = promisify(PeerInfo, false)
 const promisifiedPeerId = promisify(PeerId, false)

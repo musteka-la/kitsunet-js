@@ -8,7 +8,7 @@ declare class index {
   cache: any;
   subscriptions: any;
   fwrdHooks: any;
-  addFrwdHook(topic: any, hook: any): void;
+  addFrwdHook(topic: any, hook: any): never;
   addListener(type: any, listener: any): any;
   emit(type: any, args: any): any;
   eventNames(): any;
@@ -23,11 +23,11 @@ declare class index {
   publish(topics: any, messages: any, hops: any): void;
   rawListeners(type: any): any;
   removeAllListeners(type: any, ...args: any[]): any;
-  removeFrwdHook(topic: any, hook: any): void;
+  removeFrwdHook(topic: any, hook: any): never;
   removeListener(type: any, listener: any): any;
   setMaxListeners(n: any): any;
-  start(callback: any): any;
-  stop(callback: any): void;
+  start(callback?: any): never | Promise<never>;
+  stop(callback?: any): never | Promise<never>;
   subscribe(topics: any): void;
   unsubscribe(topics: any): void;
 }
