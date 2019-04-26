@@ -1,3 +1,5 @@
+import PeerInfo from 'peer-info'
+
 export = Libp2p;
 declare class Libp2p {
   static defaultMaxListeners: any;
@@ -5,6 +7,7 @@ declare class Libp2p {
   static listenerCount(emitter: any, type: any): any;
   static usingDomains: boolean;
   constructor(_options: any);
+  multicast: any;
   datastore: any;
   peerInfo: any;
   peerBook: any;
@@ -18,7 +21,7 @@ declare class Libp2p {
   addListener(type: any, listener: any): any;
   dial(peer: PeerInfo, callback: any): void | Promise<any>;
   dialFSM(peer: any, protocol: any, callback: any): any;
-  dialProtocol(peer: any, protocol: any, callback: any): any;
+  dialProtocol(peer: any, protocol: any, callback?: any): any | Promise<any>;
   emit(eventName: any, args: any): void;
   eventNames(): any;
   getMaxListeners(): any;

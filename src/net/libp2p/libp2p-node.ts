@@ -8,18 +8,16 @@ import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
 import pullPushable from 'pull-pushable'
 import { Node, IProtocol, NodeType, Peer } from '../interfaces'
+import { Libp2pPeer } from './libp2p-peer'
+import debug from 'debug'
 
 @register()
-export class Libp2pNode implements Node<PeerInfo> {
-  get peer (): Peer<PeerInfo> {
-    return this
-  }
-
-  get info (): PeerInfo {
+export class Libp2pNode implements Node<PeerInfo>, Peer<PeerInfo> {
+  get peer (): PeerInfo {
     return this.peerInfo
   }
 
-  get sId (): string {
+  get id (): string {
     return this.peerInfo.id.toB58String()
   }
 
@@ -31,22 +29,50 @@ export class Libp2pNode implements Node<PeerInfo> {
     return NodeType.LIBP2P
   }
 
-  private node: Libp2p
-  private peerInfo: PeerInfo
-  constructor (peerInfo: PeerInfo,
-               @register() node: Libp2p) {
+  peers: Map<string, Peer<PeerInfo>> = new Map()
+  protocols: Map<string, IProtocol<PeerInfo>> = new Map()
+  constructor (private peerInfo: PeerInfo,
+               @register() private node: Libp2p,
+               @register() private protocolRegistry: Set<IProtocol<PeerInfo>>) {
+
     this.peerInfo = peerInfo
     this.node = node
+    this.protocolRegistry = protocolRegistry
+    protocolRegistry.forEach((protocol: IProtocol<PeerInfo>) => {
+      const proto: IProtocol<PeerInfo> = protocol.createProtocol(this)
+      this.protocols.set(proto.id, proto)
+    })
+
+    node.on('peer:connected', (peer: PeerInfo) => {
+      let protos: Map<string, IProtocol<PeerInfo>> = new Map()
+      protocolRegistry.forEach((protocol: IProtocol<PeerInfo>) => {
+        protos.set(protocol.codec, protocol.createProtocol(this))
+      })
+
+      const libp2pPeer: Libp2pPeer = new Libp2pPeer(peer, protos)
+      this.peers.set(libp2pPeer.id, libp2pPeer)
+    })
   }
 
   async mount (protocol: IProtocol<PeerInfo>): Promise<boolean> {
-    return new Promise((resolve) => {
-      protocol.networkProvider = this
-      this.node.handle(protocol.codec, (_, conn: any) => {
-        protocol.handle(toIterator(conn))
-      })
-      resolve(true)
+    this.node.handle(protocol.codec, async (codec: string, conn: any) => {
+      return this.handleIncoming(codec, promisify(conn))
     })
+
+    return true
+  }
+
+  private async handleIncoming (id: string, conn: any) {
+    const peerInfo: PeerInfo = await conn.getPeerInfo()
+    const peer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
+    if (!peer) {
+      return debug(`unknown peer ${peerInfo.id.toB58String()}`)
+    }
+
+    const protocol: IProtocol<PeerInfo> | undefined = peer.protocols.get(id)
+    if (protocol) {
+      return protocol.handle(toIterator(conn))
+    }
   }
 
   async unmount (protocol: IProtocol<PeerInfo>): Promise<boolean> {
@@ -56,7 +82,7 @@ export class Libp2pNode implements Node<PeerInfo> {
 
   async send<T extends Buffer, U> (msg: T,
                                    protocol: IProtocol<PeerInfo>): Promise<U> {
-    const conn = await this.node.dial(protocol.info, protocol.codec)
+    const conn = await this.node.dialProtocol(protocol.info, protocol.codec)
     return new Promise((resolve, reject) => {
       pull(
         pull.values(msg),
@@ -80,8 +106,7 @@ export class Libp2pNode implements Node<PeerInfo> {
    */
   async *stream<T extends AsyncIterable<T & Buffer>, U> (readable: T,
                                                          protocol: IProtocol<PeerInfo>): AsyncIterator<U> {
-    const conn = await this.node.dial(protocol.info, protocol.codec)
-
+    const conn = await this.node.dial(protocol.peer, protocol.codec)
     const pushable = pullPushable()
     for await (const msg of readable) {
       pushable.push(msg)
@@ -98,7 +123,7 @@ export class Libp2pNode implements Node<PeerInfo> {
   async start () {
     await this.node.start()
     this.addrs.forEach((ma) => {
-      console.log('Swarm listening on', ma.toString())
+      console.log('libp2p listening on', ma.toString())
     })
   }
 

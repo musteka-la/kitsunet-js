@@ -11,7 +11,7 @@ export interface INetworkProvider<P> {
    * @param msg - the message to send
    * @param protocol - a protocol object to pass to the network provider
    */
-  send<T extends Buffer, U> (msg: T, protocol: IProtocol<P>): Promise<U>
+  send<T extends Buffer, U> (msg: T, peer: IProtocol<P>): Promise<U>
 
   /**
    * handle incoming messages
@@ -46,25 +46,30 @@ export interface IEncoder {
 }
 
 export abstract class Peer<T> {
-  info!: T              // a blob representing the raw peer
-  sId!: string          // the string representation of the peers id
-  addrs!: Set<string>   // an array of know peer addresses
+  peer: T                               // the raw peer
+  id!: string                           // the string representation of the peers id
+  addrs!: Set<string>                    // a set of peer addresses
+  protocols: Map<string, IProtocol<T>>   // a set of protocols that this peer supports
+
+  constructor (peer: T, protocols: Map<string, IProtocol<T>>) {
+    this.peer = peer
+    this.protocols = protocols
+  }
 }
 
-export interface IProtocol<T> extends INetworkProvider<T>, Peer<T> {
+export interface IProtocol<T> extends INetworkProvider<T> {
+  info (info: any, codec: string)
   id: string                            // id of the protocol
   codec: string                         // the codec for the protocol
+  encoder: IEncoder                     // the encoder
+  networkProvider: INetworkProvider<T>  // the network provider
 
-  encoder?: IEncoder                    // the encoder
-  networkProvider?: INetworkProvider<T> // the network provider
-  peer: Peer<T>
-
-  new(peer: Peer<T>, provider?: INetworkProvider<T>, encoder?: IEncoder)
+  createProtocol (provider?: INetworkProvider<T>, encoder?: IEncoder): IProtocol<T>
 }
 
 export abstract class Node<P> implements INetworkProvider<P>, Peer<P> {
-  info!: P
-  sId!: string
+  peer!: P
+  id!: string
   addrs!: Set<string>
 
   peer!: Peer<P>
