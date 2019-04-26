@@ -2,17 +2,17 @@
 
 import EE from 'events'
 import debug from 'debug'
-import { KsnRpc } from '../ksn-rpc'
+import { KsnProtocol } from '../ksn-protocol'
 import PeerInfo = require('peer-info')
 
 export abstract class BaseHandler extends EE {
   id: string
   peerInfo: any
   name: string
-  rpcEngine: KsnRpc
+  rpcEngine: KsnProtocol
   log: debug.Debugger
 
-  constructor (name: string, id: string, rpcEngine: KsnRpc, peerInfo: PeerInfo) {
+  constructor (name: string, id: string, rpcEngine: KsnProtocol, peerInfo: PeerInfo) {
     super()
     this.name = name
     this.id = id

@@ -1,5 +1,5 @@
 {
-  "extends": "tslint-config-standard",
+  "extends": ["tslint-config-standard", "tslint-jsdoc-rules"],
   "rules": {
     "align": [
       true,

@@ -1,4 +1,4 @@
 'use strict'
 
-export * from './ksn-rpc'
-export * from './ksn-proto'
+export * from './ksn-protocol'
+export * from './handlers/ksn-proto'
