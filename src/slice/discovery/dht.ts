@@ -1,19 +1,23 @@
 'use strict'
 
-const Discovery = require('./base')
-const promisify = require('promisify-this')
-const multihashing = promisify(require('multihashing-async'))
-const CID = require('cids')
+import { Discovery } from './base'
+import promisify from 'promisify-this'
+import multihashingAsync from 'multihashing-async'
+import CID from 'cids'
+import Libp2p from 'libp2p'
 
+const multihashing = promisify(multihashingAsync)
 const TIMEOUT = 1000 * 60 // one minute
 
-class DhtDiscovery extends Discovery {
+export class DhtDiscovery extends Discovery {
+  contentRouting: any
+
   /**
    * Discover nodes for slices using the kademlia DHT
    *
    * @param {Libp2p} node - the libp2p kademlia dht instance
    */
-  constructor (node) {
+  constructor (node: Libp2p) {
     super()
     this.contentRouting = promisify(node.contentRouting)
   }
@@ -30,15 +34,11 @@ class DhtDiscovery extends Discovery {
    * @returns {Array<PeerInfo>} peers - an array of peers tracking the slice
    */
   async findPeers (sliceId) {
-    let provs = await Promise.all(sliceId.map(async (s) => {
+    const providers = await Promise.all(sliceId.map(async (s) => {
       return this.contentRouting.findProviders(await this._makeKeyId(s), TIMEOUT)
     }))
 
-    provs = provs.flat()
-    provs = provs.filter(Boolean)
-    provs = provs.flat()
-
-    return provs
+    return providers.filter(Boolean)
   }
 
   /**
@@ -53,5 +53,3 @@ class DhtDiscovery extends Discovery {
     })
   }
 }
-
-module.exports = DhtDiscovery

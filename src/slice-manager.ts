@@ -124,7 +124,7 @@ export class SliceManager extends BaseTracker {
    *
    * @param {SliceId} sliceId - the slice to return
    * @return {Slice}
-  */
+   */
   async getSlice (sliceId: any) {
     try {
       const slice = await this.slicesStore.getById(sliceId)

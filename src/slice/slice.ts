@@ -1,9 +1,9 @@
 'use strict'
 
 import { SliceId } from './slice-id'
-import * as normalizeKeys from 'normalize-keys'
-import * as bourne from 'bourne'
-import * as cbor from 'borc'
+import normalizeKeys from 'normalize-keys'
+import bourne from 'bourne'
+import {decode, encode} from 'borc'
 
 export class Slice extends SliceId {
   parsed: any
@@ -23,8 +23,8 @@ export class Slice extends SliceId {
   static parse (data: any) {
     let parsed
     if (Buffer.isBuffer(data)) {
-      parsed = cbor.decode(data)
-      parsed = { ...parsed, ...cbor.decode(parsed.__sliceId__) }
+      parsed = decode(data)
+      parsed = { ...parsed, ...decode(parsed.__sliceId__) }
       delete parsed.__sliceId__
     } else if (typeof data === 'string') {
       parsed = normalizeKeys(bourne.parse(data), ['metadata'])
@@ -54,7 +54,7 @@ export class Slice extends SliceId {
   }
 
   serialize () {
-    return cbor.encode({
+    return encode({
       __sliceId__: super.serialize(),
       trieNodes: {
         head: this.head,

@@ -3,10 +3,11 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "typeRoots": [
-      "./node_modules/@types",
-      "./definitions"
-    ],
+    "alwaysStrict": true,
+    "baseUrl": "./",
+    "paths": {
+      "*": [ "definitions/*" ]
+    },
     "lib": [
       "dom",
       "es6",
@@ -23,6 +24,7 @@
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "noEmitOnError": false
   }
 }

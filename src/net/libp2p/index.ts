@@ -1,23 +1,26 @@
 'use strict'
 
-import * as Multiplex from 'pull-mplex'
-import * as SPDY from 'libp2p-spdy'
-import * as SECIO from 'libp2p-secio'
-import * as Libp2p from 'libp2p'
-import * as DHT from 'libp2p-kad-dht'
-import * as defaultsDeep from '@nodeutils/defaults-deep'
-import * as promisify from 'promisify-this'
+import Multiplex from 'pull-mplex'
+import SPDY from 'libp2p-spdy'
+import SECIO from 'libp2p-secio'
+import Libp2p from 'libp2p'
+import DHT from 'libp2p-kad-dht'
+import defaultsDeep from '@nodeutils/defaults-deep'
+import promisify from 'promisify-this'
 import createMulticast = require('libp2p-multicast-conditional/src/api')
-import parallel from 'async'
-import * as Discovery from 'libp2p-rendezvous'
+import { parallel } from 'async'
+// import { Discovery } from 'libp2p-rendezvous'
+import PeerInfo from 'peer-info'
 
-const RNDVZ_DISCOVERY_INTERVAL = 60 * 1000
+// const RNDVZ_DISCOVERY_INTERVAL = 60 * 1000
 
 export class Node extends Libp2p {
-  constructor (peerInfo, _options) {
-    const rendezvous = _options.rendezvous
-    delete _options.rendezvous
-    const defaults = {
+  rndvzDiscovery: any
+  multicast: any
+  peerId: string = ''
+
+  constructor (peerInfo: PeerInfo, _options: any) {
+    super(defaultsDeep(_options, {
       peerInfo,
       modules: {
         streamMuxer: [
@@ -38,21 +41,22 @@ export class Node extends Libp2p {
           enabled: true
         }
       }
-    }
+    }))
 
-    super(defaultsDeep(_options, defaults))
-    if (rendezvous) {
-      const rndvzDiscovery = new Discovery({
-        interval: rendezvous.interval || RNDVZ_DISCOVERY_INTERVAL
-      })
+    // const rendezvous = _options.rendezvous
+    // delete _options.rendezvous
 
-      rndvzDiscovery.init(this)
-      this.rndvzDiscovery = rndvzDiscovery
-      this.rndvzDiscovery.on('peer', (peerInfo) => this.emit('peer:discovery', peerInfo))
-    }
+    // if (rendezvous) {
+    //   const rndvzDiscovery = new Discovery({
+    //     interval: rendezvous.interval || RNDVZ_DISCOVERY_INTERVAL
+    //   })
 
-    this.multicast = createMulticast(this)
-    this.multicast = promisify(this.multicast)
+    //   rndvzDiscovery.init(this)
+    //   this.rndvzDiscovery = rndvzDiscovery
+    //   this.rndvzDiscovery.on('peer', (peerInfo) => this.emit('peer:discovery', peerInfo))
+    // }
+
+    this.multicast = promisify(createMulticast(this))
     this.start = promisify(this.start.bind(this))
     this.stop = promisify(this.stop.bind(this))
     this.dial = promisify(this.dial.bind(this))
@@ -65,7 +69,7 @@ export class Node extends Libp2p {
   }
 
   get b58Id () {
-    return this.node.id.toB58String()
+    return this.peerInfo.id.toB58String()
   }
 
   start (callback) {
@@ -75,7 +79,7 @@ export class Node extends Libp2p {
       }
 
       parallel([
-        (cb) => this._multicast.start(cb),
+        (cb) => this.multicast.start(cb),
         (cb) => {
           if (this.rndvzDiscovery) {
             return this.rndvzDiscovery.start(cb)
@@ -103,7 +107,7 @@ export class Node extends Libp2p {
       }
 
       parallel([
-        (cb) => this._multicast.stop(cb),
+        (cb) => this.multicast.stop(cb),
         (cb) => {
           if (this.rndvzDiscovery) {
             return this.rndvzDiscovery.stop(cb)

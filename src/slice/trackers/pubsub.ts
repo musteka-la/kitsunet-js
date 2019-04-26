@@ -166,13 +166,9 @@ export class KitsunetPubSub extends BaseTracker {
    */
   async publish (slice) {
     if (!this.isTracking(slice)) {
-      this.trackSlice([slice])
+      await this.track([slice])
     }
     this.multicast.publish(this.makeSliceTopic(slice), slice.serialize())
-  }
-
-  trackSlice (arg0: any[]) {
-    throw new Error('Method not implemented.')
   }
 
   getSlice (slice: SliceId): Promise<Slice> {
@@ -182,11 +178,11 @@ export class KitsunetPubSub extends BaseTracker {
   async start () {
     this.isStarted = true
     // track once libp2p is started
-    this.track(this.slices)
+    await this.track(this.slices)
   }
 
   async stop () {
-    this.untrack(this.slices)
+    await this.untrack(this.slices)
     this.isStarted = false
   }
 }

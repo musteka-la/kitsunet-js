@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "build": "tsc",
+    "watch": "tsc --watch",
     "test": "npm run build && mocha --require source-map-support/register dist/test/",
     "lint": "tslint --project tsconfig.json",
     "lint:fix": "tslint --project tsconfig.json --fix"
@@ -65,7 +66,7 @@
     "opium-decorator-resolvers": "github:dryajov/opium-decorator-resolvers",
     "opium-ioc": "^2.4.1",
     "pify": "^4.0.1",
-    "promisify-this": "^2.0.2",
+    "promisify-this": "^2.1.0",
     "protons": "^1.0.1",
     "pull-mplex": "^0.1.2",
     "pull-protocol-buffers": "^0.1.2",

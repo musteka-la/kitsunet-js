@@ -1,32 +1,32 @@
 'use strict'
 
-import * as promisify from 'promisify-this'
-
-import * as WS from 'libp2p-websockets'
-import * as TCP from 'libp2p-tcp'
-import * as MDNS from 'libp2p-mdns'
-import * as Bootstrap from 'libp2p-bootstrap'
-import * as _PeerInfo from 'peer-info'
-import * as _PeerId from 'peer-id'
+import promisify from 'promisify-this'
+import WS from 'libp2p-websockets'
+import TCP from 'libp2p-tcp'
+import Bootstrap from 'libp2p-bootstrap'
+import MDNS from 'libp2p-mdns'
+import PeerInfo from 'peer-info'
+import PeerId from 'peer-id'
 import { Node } from '../'
 
-const PeerInfo = promisify(_PeerInfo, false)
-const PeerId = promisify(_PeerId, false)
+const promisifiedPeerInfo = promisify(PeerInfo, false)
+const promisifiedPeerId = promisify(PeerId, false)
 
-async function createNode ({ identity, addrs, bootstrap }) {
-  let id = {}
+export async function createNode ({ identity, addrs, bootstrap }) {
+  let id: PeerId
   const privKey = identity && identity.privKey ? identity.privKey : null
   if (!privKey) {
-    id = await PeerId.create()
+    id = await promisifiedPeerId.create()
   } else {
-    id = await PeerId.createFromJSON(identity)
+    id = await promisifiedPeerId.createFromJSON(identity)
   }
 
-  const peerInfo = await PeerInfo.create(id)
+  const peerInfo: PeerInfo = await promisifiedPeerInfo.create(id)
   const peerIdStr = peerInfo.id.toB58String()
 
   addrs = addrs || []
   addrs.forEach((a) => peerInfo.multiaddrs.add(a))
+
   const node = new Node(peerInfo, {
     modules: {
       transport: [
@@ -51,5 +51,3 @@ async function createNode ({ identity, addrs, bootstrap }) {
 
   return node
 }
-
-module.exports = createNode
