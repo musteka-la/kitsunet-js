@@ -1,7 +1,7 @@
 'use strict'
 
-import { IProtocol } from '../../interfaces'
 import Block from 'ethereumjs-block'
+import { IProtocol } from '../../interfaces'
 import { NodeTypes } from '../../../constants'
 import { Slice } from '../../../slice'
 
