@@ -34,13 +34,10 @@ export class Libp2pNode implements Node<PeerInfo>, Peer<PeerInfo> {
   constructor (private peerInfo: PeerInfo,
                @register() private node: Libp2p,
                @register() private protocolRegistry: Set<IProtocol<PeerInfo>>) {
-
-    this.peerInfo = peerInfo
-    this.node = node
-    this.protocolRegistry = protocolRegistry
     protocolRegistry.forEach((protocol: IProtocol<PeerInfo>) => {
       const proto: IProtocol<PeerInfo> = protocol.createProtocol(this)
       this.protocols.set(proto.id, proto)
+      this.mount(protocol)
     })
 
     node.on('peer:connected', (peer: PeerInfo) => {
@@ -54,12 +51,14 @@ export class Libp2pNode implements Node<PeerInfo>, Peer<PeerInfo> {
     })
   }
 
-  async mount (protocol: IProtocol<PeerInfo>): Promise<boolean> {
+  mount (protocol: IProtocol<PeerInfo>): void {
     this.node.handle(protocol.codec, async (codec: string, conn: any) => {
       return this.handleIncoming(codec, promisify(conn))
     })
+  }
 
-    return true
+  unmount (protocol: IProtocol<PeerInfo>): void {
+    this.node.unhandle(protocol.id)
   }
 
   private async handleIncoming (id: string, conn: any) {
@@ -75,23 +74,22 @@ export class Libp2pNode implements Node<PeerInfo>, Peer<PeerInfo> {
     }
   }
 
-  async unmount (protocol: IProtocol<PeerInfo>): Promise<boolean> {
-    this.node.unhandle(protocol.id)
-    return true
-  }
-
   async send<T extends Buffer, U> (msg: T,
-                                   protocol: IProtocol<PeerInfo>): Promise<U> {
-    const conn = await this.node.dialProtocol(protocol.info, protocol.codec)
-    return new Promise((resolve, reject) => {
-      pull(
-        pull.values(msg),
-        conn,
-        pull.collect((err: Error, values: U) => {
-          if (err) return reject(err)
-          resolve(values)
-        }))
-    })
+                                   protocol: IProtocol<PeerInfo>,
+                                   peer?: PeerInfo): Promise<U | undefined> {
+    if (peer) {
+      const conn = await this.node.dialProtocol(peer, protocol.codec)
+      return new Promise((resolve, reject) => {
+        pull(
+          pull.values(msg),
+          conn,
+          pull.collect((err: Error, values: U) => {
+            if (err) return reject(err)
+            resolve(values)
+          }))
+      })
+    }
+    return
   }
 
   handle<T extends AsyncIterable<T>> (readable: T): void {
@@ -105,19 +103,23 @@ export class Libp2pNode implements Node<PeerInfo>, Peer<PeerInfo> {
    * @returns - an async iterator to pull from
    */
   async *stream<T extends AsyncIterable<T & Buffer>, U> (readable: T,
-                                                         protocol: IProtocol<PeerInfo>): AsyncIterator<U> {
-    const conn = await this.node.dial(protocol.peer, protocol.codec)
-    const pushable = pullPushable()
-    for await (const msg of readable) {
-      pushable.push(msg)
-    }
+                                                         protocol: IProtocol<PeerInfo>,
+                                                         peer?: PeerInfo): AsyncIterator<U> {
+    if (peer) {
+      const conn = await this.node.dial(peer, protocol.codec)
+      const pushable = pullPushable()
+      for await (const msg of readable) {
+        pushable.push(msg)
+      }
 
-    pull(
-      pushable,
-      conn,
-      pull.drain(function* (msg: T) {
-        yield msg
-      }))
+      pull(
+        pushable,
+        conn,
+        pull.drain(function* (msg: T) {
+          yield msg
+        }))
+
+    }
   }
 
   async start () {
