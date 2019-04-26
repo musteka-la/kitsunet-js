@@ -1,6 +1,6 @@
 'use strict'
 
-import { Protocol } from '../../interfaces'
+import { IProtocol } from '../../interfaces'
 import Block from 'ethereumjs-block'
 import { NodeTypes } from '../../../constants'
 import { Slice } from '../../../slice'
@@ -15,7 +15,7 @@ export interface IdentifyMsg {
   nodeType: NodeTypes
 }
 
-export interface KsnProto extends Protocol {
+export interface KsnProto<T> extends IProtocol<T> {
   /**
    * initiate the identify flow
    */
