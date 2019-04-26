@@ -9,11 +9,57 @@ import PeerInfo from 'peer-info'
 import PeerId from 'peer-id'
 import Libp2p from 'libp2p'
 import Bootstrap from 'libp2p-bootstrap'
+import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
 
-const PromisifiedPeerInfo = promisify(PeerInfo, false)
-const PromisifiedPeerId = promisify(PeerId, false)
+const PPeerInfo = promisify(PeerInfo, false)
+const PPeerId = promisify(PeerId, false)
 
 export class LibP2PFactory {
+  /**
+   * Create libp2p node
+   *
+   * @param identity {{privKey: string}} - an object with a private key entry
+   * @param addrs {string[]} - an array of multiaddrs
+   * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
+   */
+  @register()
+  async createLibP2PNode (identity?: { privKey?: string },
+                          addrs?: string[],
+                          bootstrap?: string[]): Promise<Libp2p> {
+    const peerInfo: PeerInfo = await LibP2PFactory.createPeerInfo(identity, addrs)
+    const options = this.getLibP2PConfig(peerInfo, addrs, bootstrap)
+    const node: Libp2p = new Libp2p(options)
+
+    node.start = promisify(node.start.bind(node))
+    node.start = promisify(node.stop.bind(node))
+    node.dial = promisify(node.dial.bind(node))
+    node.dialProtocol = promisify(node.dialProtocol.bind(node))
+    node.multicast = promisify(createMulticastConditional(node))
+
+    return node
+  }
+
+  /**
+   * Helper to create a PeerInfo
+   *
+   * @param identity {{privKey: string}} - an object with a private key entry
+   * @param addrs {string[]} - an array of multiaddrs
+   */
+  static async createPeerInfo (identity?: { privKey?: string }, addrs?: string[]): Promise<PeerInfo> {
+    let id: PeerId
+    const privKey = identity && identity.privKey ? identity.privKey : null
+    if (!privKey) {
+      id = await PPeerId.create()
+    } else {
+      id = await PPeerId.createFromJSON(identity)
+    }
+
+    const peerInfo: PeerInfo = await PPeerInfo.create(id)
+    addrs = addrs || []
+    addrs.forEach((a) => peerInfo.multiaddrs.add(a))
+    return peerInfo
+  }
+
   /**
    * Return a libp2p config
    *
@@ -43,43 +89,5 @@ export class LibP2PFactory {
         }
       }
     }
-  }
-
-  /**
-   * Create libp2p node
-   *
-   * @param identity {{privKey: string}} - an object with a private key entry
-   * @param addrs {string[]} - an array of multiaddrs
-   * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
-   */
-  @register()
-  async createLibP2PNode (identity?: { privKey?: string },
-                          addrs?: string[],
-                          bootstrap?: string[]): Promise<Libp2p> {
-    const peerInfo: PeerInfo = await LibP2PFactory.createPeerInfo(identity, addrs)
-
-    const options = this.getLibP2PConfig(peerInfo, addrs, bootstrap)
-    return new Libp2p(options)
-  }
-
-  /**
-   * Helper to create a PeerInfo
-   *
-   * @param identity {{privKey: string}} - an object with a private key entry
-   * @param addrs {string[]} - an array of multiaddrs
-   */
-  static async createPeerInfo (identity?: { privKey?: string }, addrs?: string[]): Promise<PeerInfo> {
-    let id: PeerId
-    const privKey = identity && identity.privKey ? identity.privKey : null
-    if (!privKey) {
-      id = await PromisifiedPeerId.create()
-    } else {
-      id = await PromisifiedPeerId.createFromJSON(identity)
-    }
-
-    const peerInfo: PeerInfo = await PromisifiedPeerInfo.create(id)
-    addrs = addrs || []
-    addrs.forEach((a) => peerInfo.multiaddrs.add(a))
-    return peerInfo
   }
 }
