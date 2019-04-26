@@ -2,7 +2,7 @@
   "name": "kitsunet",
   "version": "0.0.1",
   "description": "Kitsunet mesh node",
-  "main": "src/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
@@ -14,7 +14,7 @@
     "kitsunet": "bin/cli.js"
   },
   "browser": {
-    "./src/net/libp2p/runtime/index.js": "./src/net/libp2p/runtime/browser.js"
+    "./dist/src/net/libp2p/index.js": "./dist/src/net/libp2p/browser/index.ts"
   },
   "author": "Dmitriy Ryajov <dryajov@gmail.com>",
   "license": "MIT",
