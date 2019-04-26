@@ -11,7 +11,7 @@ export interface INetworkProvider<P> {
    * @param msg - the message to send
    * @param protocol - a protocol object to pass to the network provider
    */
-  send<T extends Buffer, U> (msg: T, peer: IProtocol<P>): Promise<U>
+  send<T extends Buffer, U> (msg: T, protocol: IProtocol<P>, peer: P): Promise<U | undefined>
 
   /**
    * handle incoming messages
@@ -26,7 +26,7 @@ export interface INetworkProvider<P> {
    * @param readable - an async iterable to stream from
    * @returns - an async iterator to pull from
    */
-  stream<T extends AsyncIterable<T & Buffer>, U> (readable: T, protocol: IProtocol<P>): AsyncIterator<U>
+  stream<T extends AsyncIterable<T & Buffer>, U> (readable: T, protocol: IProtocol<P>, peer: P): AsyncIterator<U>
 }
 
 export interface IEncoder {
@@ -46,8 +46,8 @@ export interface IEncoder {
 }
 
 export abstract class Peer<T> {
-  peer: T                               // the raw peer
-  id!: string                           // the string representation of the peers id
+  peer: T                                // the raw peer
+  id!: string                            // the string representation of the peers id
   addrs!: Set<string>                    // a set of peer addresses
   protocols: Map<string, IProtocol<T>>   // a set of protocols that this peer supports
 
@@ -58,7 +58,6 @@ export abstract class Peer<T> {
 }
 
 export interface IProtocol<T> extends INetworkProvider<T> {
-  info (info: any, codec: string)
   id: string                            // id of the protocol
   codec: string                         // the codec for the protocol
   encoder: IEncoder                     // the encoder
@@ -68,12 +67,12 @@ export interface IProtocol<T> extends INetworkProvider<T> {
 }
 
 export abstract class Node<P> implements INetworkProvider<P>, Peer<P> {
-  peer!: P
   id!: string
   addrs!: Set<string>
 
-  peer!: Peer<P>
+  peer!: P
   type!: NodeType
+  protocols!: Map<string, IProtocol<P>>
 
   /**
    * send a message to a remote
@@ -99,8 +98,8 @@ export abstract class Node<P> implements INetworkProvider<P>, Peer<P> {
    */
   abstract stream<T extends AsyncIterable<T & Buffer>, U> (readable: T, protocol: IProtocol<P>): AsyncIterator<U>
 
-  abstract mount (protocol: IProtocol<P>): Promise<boolean>
-  abstract unmount (protocol: IProtocol<P>): Promise<boolean>
+  abstract mount (protocol: IProtocol<P>): void
+  abstract unmount (protocol: IProtocol<P>): void
 
   abstract start (): Promise<void>
   abstract stop (): Promise<void>
