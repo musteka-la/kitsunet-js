@@ -1,21 +1,14 @@
 'use strict'
 
 import EE from 'events'
-import pull from 'pull-stream'
-import pbb from 'pull-protocol-buffers'
-import { KsnProto } from './handlers/ksn-proto'
-import nextTick from 'async/nextTick'
 import { IProtocol, INetworkProvider, IEncoder, Peer } from '../../interfaces'
-import PeerInfo from 'peer-info'
 import debug from 'debug'
 import kitsunet from './proto'
 
-const { Status } = KitsunetProto
 const log = debug('kitsunet:kitsunet-proto')
-
 const _VERSION = '1.0.0'
 
-export class KsnProtocol<P> extends EE implements IProtocol<P> {
+export class KsnProtocol<P> extends EE {
   get id (): string {
     return 'ksn'
   }

@@ -54,7 +54,8 @@ export class Libp2pNode implements Node<PeerInfo> {
     return true
   }
 
-  async send<T extends Buffer, U> (msg: T, protocol: IProtocol<PeerInfo>): Promise<U> {
+  async send<T extends Buffer, U> (msg: T,
+                                   protocol: IProtocol<PeerInfo>): Promise<U> {
     const conn = await this.node.dial(protocol.info, protocol.codec)
     return new Promise((resolve, reject) => {
       pull(
@@ -77,7 +78,8 @@ export class Libp2pNode implements Node<PeerInfo> {
    * @param readable - an async iterable to stream from
    * @returns - an async iterator to pull from
    */
-  async *stream<T extends AsyncIterable<T & Buffer>, U> (readable: T, protocol: IProtocol<PeerInfo>): AsyncIterator<U> {
+  async *stream<T extends AsyncIterable<T & Buffer>, U> (readable: T,
+                                                         protocol: IProtocol<PeerInfo>): AsyncIterator<U> {
     const conn = await this.node.dial(protocol.info, protocol.codec)
 
     const pushable = pullPushable()

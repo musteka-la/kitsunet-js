@@ -4,14 +4,14 @@ import { register } from 'opium-decorator-resolvers'
 
 import WS from 'libp2p-websockets'
 import TCP from 'libp2p-tcp'
-import Bootstrap from 'libp2p-bootstrap'
 import MDNS from 'libp2p-mdns'
 import PeerInfo from 'peer-info'
 import PeerId from 'peer-id'
 import Libp2p from 'libp2p'
+import Bootstrap from 'libp2p-bootstrap'
 
-const promisifiedPeerInfo = promisify(PeerInfo, false)
-const promisifiedPeerId = promisify(PeerId, false)
+const PromisifiedPeerInfo = promisify(PeerInfo, false)
+const PromisifiedPeerId = promisify(PeerId, false)
 
 export class LibP2PFactory {
   /**
@@ -52,7 +52,7 @@ export class LibP2PFactory {
    * @param addrs {string[]} - an array of multiaddrs
    * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
    */
-  @register('libp2p-node')
+  @register()
   async createLibP2PNode (identity?: { privKey?: string },
                           addrs?: string[],
                           bootstrap?: string[]): Promise<Libp2p> {
@@ -72,12 +72,12 @@ export class LibP2PFactory {
     let id: PeerId
     const privKey = identity && identity.privKey ? identity.privKey : null
     if (!privKey) {
-      id = await promisifiedPeerId.create()
+      id = await PromisifiedPeerId.create()
     } else {
-      id = await promisifiedPeerId.createFromJSON(identity)
+      id = await PromisifiedPeerId.createFromJSON(identity)
     }
 
-    const peerInfo: PeerInfo = await promisifiedPeerInfo.create(id)
+    const peerInfo: PeerInfo = await PromisifiedPeerInfo.create(id)
     addrs = addrs || []
     addrs.forEach((a) => peerInfo.multiaddrs.add(a))
     return peerInfo

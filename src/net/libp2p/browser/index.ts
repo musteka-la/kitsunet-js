@@ -7,7 +7,6 @@ import PeerInfo from 'peer-info'
 import { LibP2PFactory } from '../libp2p-factory'
 
 export class LibP2PBrowserFactory extends LibP2PFactory {
-
   /**
    * Return a libp2p config
    *
