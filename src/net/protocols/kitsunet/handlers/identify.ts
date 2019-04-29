@@ -1,14 +1,14 @@
 'use strict'
 
-import { BaseHandler } from './base'
+import { BaseHandler } from '../base'
 import BN from 'bn.js'
 import Kitsunet = require('../proto')
-import { KsnProtocol } from '../ksn-protocol'
+import { KsnProtocol } from '../../ksn-protocol'
 
 const { MsgType, Status } = Kitsunet
 
-export class Identify extends BaseHandler {
-  constructor (rpcEngine: KsnProtocol, peerInfo: any) {
+export class Identify<P> extends BaseHandler<P> {
+  constructor(rpcEngine: KsnProtocol<P>, peerInfo: any) {
     super('identify', MsgType.IDENTIFY, rpcEngine, peerInfo)
   }
 

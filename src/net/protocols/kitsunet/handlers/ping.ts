@@ -1,11 +1,11 @@
 'use strict'
 
-import { BaseHandler } from './base'
+import { BaseHandler } from '../base'
 import Kitsunet = require('../proto')
 
 const { MsgType, Status } = Kitsunet
 
-export class Ping extends BaseHandler {
+export class Ping<P> extends BaseHandler<P> {
   constructor (rpcEngine, peerInfo) {
     super('ping', MsgType.PING, rpcEngine, peerInfo)
   }

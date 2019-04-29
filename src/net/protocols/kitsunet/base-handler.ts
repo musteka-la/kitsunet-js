@@ -2,22 +2,17 @@
 
 import EE from 'events'
 import debug from 'debug'
-import { KsnProtocol } from '../ksn-protocol'
-import PeerInfo = require('peer-info')
+import { IPeerDescriptor } from '../../interfaces'
+import { KsnProtocol } from './ksn-protocol'
+import { KsnResponse, Status } from './interfaces'
 
-export abstract class BaseHandler extends EE {
-  id: string
-  peerInfo: any
-  name: string
-  rpcEngine: KsnProtocol
+export abstract class BaseHandler<P> extends EE {
   log: debug.Debugger
-
-  constructor (name: string, id: string, rpcEngine: KsnProtocol, peerInfo: PeerInfo) {
+  constructor (public name: string,
+               public id: string,
+               public networkProvider: KsnProtocol<P>,
+               public peer: IPeerDescriptor<P>) {
     super()
-    this.name = name
-    this.id = id
-    this.rpcEngine = rpcEngine
-    this.peerInfo = peerInfo
     this.log = debug(`kitsunet:kitsunet-proto:base-handler-${this.name}`)
   }
 
@@ -35,9 +30,9 @@ export abstract class BaseHandler extends EE {
    */
   abstract request<T> (msg?: T): Promise<T>
 
-  protected async sendRequest (msg) {
+  protected async send<T> (msg: T): Promise<KsnResponse> {
     this.log('sending request', msg)
-    const res: any = await this.rpcEngine.sendRequest(this.peerInfo, msg)
+    const res: KsnResponse = await this.networkProvider.send(msg)
 
     if (res && res.status !== Status.OK) {
       const err = res.error ? new Error(res.error) : new Error('unknown error!')

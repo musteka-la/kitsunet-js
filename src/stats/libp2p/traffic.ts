@@ -2,15 +2,23 @@
 
 import assert from 'assert'
 import Stat from 'libp2p-switch/src/stats/stat'
+import Libp2p from 'libp2p'
 
 import debug from 'debug'
+import { register } from 'opium-decorator-resolvers'
 const log = debug('kitsunet:telemetry:stats')
 
+export type PeerStats = { global: { transports: any, protocols: any, mystery: any }, peers: any }
+
+@register()
 export class Libp2pTrafficStats {
-  constructor ({ node }) {
+  _node: Libp2p
+  _peerStats: PeerStats
+
+  constructor (node: Libp2p) {
     assert(node, 'node is required')
     this._node = node
-    this._peerStats = {}
+    this._peerStats = {} as any
     // we bind these for easy event listener usage
     this._recordStats = this._recordStats.bind(this)
     this._addPeer = this._addPeer.bind(this)
@@ -54,14 +62,12 @@ export class Libp2pTrafficStats {
   }
 }
 
-module.exports = Libp2pTrafficStats
-
 const statDirectionToEvent = {
   in: 'dataReceived',
   out: 'dataSent'
 }
 
-function libp2pStatsToJson (libp2pPeerStats) {
+function libp2pStatsToJson (libp2pPeerStats: PeerStats) {
   const allStats = { global: { transports: {}, protocols: {}, mystery: null }, peers: {} }
   // each peer
   Object.entries(libp2pPeerStats).forEach(([peerId, peerStatsContainer]) => {
@@ -69,7 +75,7 @@ function libp2pStatsToJson (libp2pPeerStats) {
     // mystery
     const mysteryStats = statObjToJson(peerStatsContainer.mystery)
     addStatsToGlobal(allStats.global, 'mystery', mysteryStats)
-    peerStats.mystery = mysteryStats
+    peerStats.mystery = mysteryStats as any
     // each transport
     Object.keys(peerStatsContainer.transports).forEach((transportName) => {
       const transportStats = statObjToJson(peerStatsContainer.transports[transportName])
@@ -122,8 +128,8 @@ function createEmptyStatsJson () {
 function statObjToJson (statsObj) {
   return {
     snapshot: {
-      dataReceived: Number.parseInt(statsObj.snapshot.dataReceived.toString()),
-      dataSent: Number.parseInt(statsObj.snapshot.dataSent.toString())
+      dataReceived: Number.parseInt(statsObj.snapshot.dataReceived.toString(), 10),
+      dataSent: Number.parseInt(statsObj.snapshot.dataSent.toString(), 10)
     },
     movingAverages: {
       dataReceived: {
@@ -158,11 +164,11 @@ function updateStatsForPeer (libp2pPeerStats, peerId, transport, protocol, direc
   // sanity check
   if (!peerId) {
     return log('libp2pPeerStats message without peerId',
-      peerId,
-      transport,
-      protocol,
-      direction,
-      bufferLength)
+               peerId,
+               transport,
+               protocol,
+               direction,
+               bufferLength)
   }
 
   // setup peer stats
@@ -170,7 +176,7 @@ function updateStatsForPeer (libp2pPeerStats, peerId, transport, protocol, direc
   if (!peerStats) return
   // update timestamp
   peerStats.timestamp = Date.now()
-  // record transport + protocol data (they come in seperately)
+  // record transport + protocol data (they come in separately)
   if (transport) {
     const transportStats = peerStats.transports[transport] || (peerStats.transports[transport] = createStat())
     transportStats.push(statDirectionToEvent[direction], bufferLength)

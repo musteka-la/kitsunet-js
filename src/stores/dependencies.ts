@@ -1,11 +1,17 @@
 'use strict'
 
-import KitsunetStore = require('./slice-store')
+import { SliceStore } from './slice-store'
+import { MemoryDatastore } from 'interface-datastore'
+import { register } from 'opium-decorator-resolvers'
 
-const MemoryStore = require('interface-datastore').MemoryDatastore
+export class StoresFactory {
+  @register()
+  createStore (): MemoryDatastore {
+    return new MemoryDatastore()
+  }
 
-export function (container): Container {
-  container.registerFactory('store', () => new MemoryStore())
-  container.registerFactory('slices-store', (dataStore) => new KitsunetStore(dataStore), ['store'])
-  return container
+  @register()
+  createSliceStore (dataStore: MemoryDatastore): SliceStore {
+    return new SliceStore(dataStore)
+  }
 }

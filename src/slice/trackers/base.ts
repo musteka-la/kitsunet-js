@@ -19,7 +19,7 @@ export abstract class BaseTracker extends EE {
    *
    * @param {Set<SliceId>} slices - the slices to stop tracking
    */
-  abstract untrack (slices: Set<Slice>): Promise<void>
+  abstract untrack (slices: Set<SliceId>): Promise<void>
 
   /**
    * This will discover, connect and start tracking
@@ -27,7 +27,7 @@ export abstract class BaseTracker extends EE {
    *
    * @param {Set<SliceId>} slices - a slice or an Set of slices to track
    */
-  abstract track (slices: Set<Slice>): Promise<void>
+  abstract track (slices: Set<SliceId>): Promise<void>
 
   /**
    * Check wether the slice is already being tracked
@@ -35,7 +35,7 @@ export abstract class BaseTracker extends EE {
    * @param {SliceId} slice - the slice id
    * @returns {Boolean}
    */
-  abstract isTracking (slice: Slice): Promise<boolean>
+  abstract isTracking (slice: SliceId): Promise<boolean>
 
   /**
    * Publish the slice

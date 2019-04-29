@@ -13,20 +13,20 @@ import { Telemetry } from 'kitsunet-telemetry'
 const DEFUALT_DEPTH: number = 10
 
 @register()
-export class Kitsunet extends EE {
+export class Kitsunet<T> extends EE {
   sliceManager: SliceManager
-  ksnDriver: KsnDriver
+  ksnDriver: KsnDriver<T>
   kitsunetStats: KitsunetStatsTracker
   libp2pStats: Libp2pStats
   telemetry: Telemetry
   depth: number
 
   constructor (sliceManager: SliceManager,
-    ksnDriver: KsnDriver,
-    telemetry: Telemetry,
-    libp2pStats: Libp2pStats,
-    kitsunetStats: KitsunetStatsTracker,
-    depth: number = DEFUALT_DEPTH) {
+               ksnDriver: KsnDriver<T>,
+               telemetry: Telemetry,
+               libp2pStats: Libp2pStats,
+               kitsunetStats: KitsunetStatsTracker,
+               depth: number = DEFUALT_DEPTH) {
     super()
     this.sliceManager = sliceManager
     this.ksnDriver = ksnDriver
@@ -68,7 +68,7 @@ export class Kitsunet extends EE {
   async getSlice (slice, storage) {
     if (typeof slice === 'string') {
       const [path, depth, root] = slice.split('-')
-      slice = new SliceId(path, depth, root, storage)
+      slice = new SliceId(path, Number(depth), root, storage)
     }
 
     return this.sliceManager.getSlice(slice)

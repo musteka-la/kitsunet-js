@@ -1,89 +1,125 @@
 'use strict'
 
-import EE from 'events'
-import { IProtocol, INetworkProvider, IEncoder, Peer } from '../../interfaces'
+import { NodeTypes } from '../../../constants'
+import * as Handlers from './handlers'
 import debug from 'debug'
-import kitsunet from './proto'
+import Kitsunet = require('./proto')
+import { BaseProtocol } from '../base-protocol'
+import { INetwork, IPeerDescriptor } from '../../interfaces'
+import { BaseHandler } from './base-handler'
+import { register } from 'opium-decorator-resolvers'
+import { KsnEncoder } from './ksn-encoder'
 
+const { MsgType, Status } = Kitsunet
 const log = debug('kitsunet:kitsunet-proto')
-const _VERSION = '1.0.0'
 
-export class KsnProtocol<P> extends EE {
+function errResponse (type: number | string) {
+  const err = `unknown message type ${type}`
+  log(err)
+  return { status: Status.ERROR, error: err }
+}
+
+const VERSION = '1.0.0'
+
+@register()
+export class KsnProtocol<P> extends BaseProtocol<P> {
+  sliceIds: Set<any>
+  type: NodeTypes
+  handlers: { [key: string]: BaseHandler<P> }
+  version: string = VERSION
+  userAgent: string = 'ksn'
+  latestBlock: number | null = null
+
   get id (): string {
     return 'ksn'
   }
 
   get codec (): string {
-    return `/kitsunet/client/${_VERSION}`
+    return `/kitsunet/rpc/${VERSION}`
   }
 
-  networkProvider?: INetworkProvider<P>
-  encoder?: IEncoder
-  peer: Peer<P>
+  constructor (public peer: IPeerDescriptor<P>,
+               public networkProvider: INetwork<P>) {
+    super(peer, networkProvider, new KsnEncoder())
+    this.sliceIds = new Set()
+    this.type = NodeTypes.NODE
 
-  constructor (peer: Peer<P>,
-               provider?: INetworkProvider<P>,
-               encoder?: IEncoder) {
-    super()
-    this.peer = peer
-    this.networkProvider = provider
-    this.encoder = encoder
+    this.handlers = {}
+    Object.keys(Handlers).forEach((handler) => {
+      const h = Reflect.construct(Handlers[handler], [this, this.peer])
+      this.handlers[h.id] = h
+    })
   }
 
-  async handle<T> (readable: AsyncIterable<T & Buffer>): Promise<void> {
-    if (!this.encoder) {
-      throw new Error('encoder not set!')
-    }
-
-    for await (const msg of readable) {
-      for await (const decoded of this.encoder.decode(msg)) {
-        // process incoming message
+  async *receive<T> (readable: AsyncIterable<T>): AsyncIterable<T> {
+    for await (const msg of super.receive(readable)) {
+      log('got request', msg)
+      if (msg.type !== MsgType.UNKNOWN) {
+        yield this.handlers[msg.type].handle(msg)
       }
+
+      return errResponse(msg.type)
     }
   }
 
-  async send<T extends Buffer, U> (msg: T,
-                                   protocol: IProtocol<P>): Promise<U> {
-    if (!this.networkProvider) {
-      throw new Error('networkProvider not set!')
-    }
-
-    if (!this.encoder) {
-      throw new Error('encoder not set!')
-    }
-
-    let response: string = ''
-    for await (const chunk of this.encoder.encode(msg)) {
-      for await (const recvd of this.encoder.
-        decode<Buffer, string>(await this.networkProvider
-          .send<Buffer, Buffer>(chunk, protocol))) {
-        response += recvd
-      }
-    }
-
-    return response as unknown as U
-  }
-
-  stream<T extends AsyncIterable<T & Buffer>, U> (readable: T,
-                                                  protocol: IProtocol<P>): AsyncIterator<U> {
-    throw new Error('Method not implemented.')
+  async send<T, U> (msg: T): Promise<U> {
+    return super.send(msg, this)
   }
 
   /**
-   * Encode a buffer
-   *
-   * @param msg - a buffer to encode
+   * initiate the identify flow
    */
-  async* encode<T, U extends Buffer> (msg: T): AsyncIterable<U> {
-    return Promise.resolve(kitsunet.encode(msg))
+  // async identiy () {
+  //   const res = await this.handlers[MsgType.IDENTIFY].request()
+  //   this.version = res.version
+  //   this.userAgent = res.userAgent
+
+  //   this.sliceIds = res.sliceIds
+  //     ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
+  //     : new Set()
+
+  //   this.latestBlock = res.latestBlock
+  //   this.nodeType = res.nodeType
+
+  //   return res
+  // }
+
+  /**
+   * Get all slice ids for the peer
+  */
+//  async getSliceds () {
+//     this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
+//     return this.sliceIds
+//   }
+
+  /**
+   * Get slices for the provided ids or all the
+   * slices the peer is holding
+   *
+   * @param {Array<SliceId>} slices - optional
+   *        async getSlicesyId(slices) {
+    return this.handlers[MsgType.SLICES].request(slices)
   }
 
   /**
-   * A buffer to decode
-   *
-   * @param msg - decode a buffer
-   */
-  async* decode<T extends Buffer, U> (msg: T): AsyncIterable<U> {
-    return Promise.resolve(kitsunet.decode(msg))
+   * Get all headers
+
+    async heders() {
+    return this.handlers[MsgType.HEADERS].request()
   }
+
+  /**
+   * Get Node type - bridge, edge, node
+      /
+    async noeType() {
+    this.type = await this.handlers[MsgType.NODE_TYPE].request()
+    return this.type
+  }
+
+  /**
+   * Ping peer
+     */
+  // async ping () {
+  //   return this.handlers[MsgType.PING].request()
+  // }
 }

@@ -1,12 +1,17 @@
 'use strict'
 
-import Libp2pTrafficStats from './traffic'
-import Libp2pDhtStats from './dht'
+import { Libp2pTrafficStats } from './traffic'
+import { Libp2pDhtStats } from './dht'
+import { register } from 'opium-decorator-resolvers'
+import Libp2p from 'libp2p'
 
+@register()
 export class Libp2pStats {
-  constructor ({ node }) {
-    this.traffic = new Libp2pTrafficStats({ node })
-    this.dht = new Libp2pDhtStats({ node })
+  traffic: Libp2pTrafficStats
+  dht: Libp2pDhtStats
+  constructor (node: Libp2p) {
+    this.traffic = new Libp2pTrafficStats(node)
+    this.dht = new Libp2pDhtStats(node)
   }
 
   start () {

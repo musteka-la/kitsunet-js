@@ -11,7 +11,7 @@ const PEER_PING_TIMEOUT = 40 * sec
 
 const timeout = (t: number) => new Promise((resolve) => setTimeout(resolve, t))
 
-export async function pingWithTimeout (peer, pingTimeout) {
+export async function pingWithTimeout (peer, pingTimeout): Promise<number | void> {
   // mark client as not responded yet
   let heardPing = false
 
@@ -36,7 +36,7 @@ export async function pingWithTimeout (peer, pingTimeout) {
   ])
 }
 
-export async function pingPeer (peer, status) {
+export async function pingPeer (peer, status?: { status: string, ping: number | string | void }) {
   const b58Id = peer.idB58
   const time = await pingWithTimeout(peer, PEER_PING_TIMEOUT)
   status = status || { status: '', ping: '' }
@@ -46,5 +46,5 @@ export async function pingPeer (peer, status) {
 
   setTimeout(() => {
     pingPeer(peer)
-  }, PEER_PING_INTERVAL)
+  },         PEER_PING_INTERVAL)
 }

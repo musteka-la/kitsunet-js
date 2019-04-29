@@ -1,7 +1,12 @@
 'use strict'
 
-class Libp2pDhtStats {
-  constructor ({ node }) {
+import { register } from 'opium-decorator-resolvers'
+import Libp2p from 'libp2p'
+
+@register()
+export class Libp2pDhtStats {
+  _node: Libp2p
+  constructor (node: Libp2p) {
     this._node = node
   }
 

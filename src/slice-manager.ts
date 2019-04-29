@@ -1,8 +1,9 @@
 'use strict'
 
 import assert from 'assert'
-import { SliceId } from './slice/slice-id'
-import { BaseTracker, KitsunetPubSub } from './slice/trackers'
+import { SliceId, Slice } from './slice'
+import { BaseTracker, KitsunetPubSub, KitsunetBridge } from './slice/trackers'
+import BlockTracker from 'kitsunet-block-tracker'
 import { retry } from 'async'
 import { register } from 'opium-decorator-resolvers'
 import { SliceStore } from './stores/slice-store'
@@ -14,7 +15,7 @@ const log = debug('kitsches:kitsunet-slice-manager')
 @register()
 export class SliceManager extends BaseTracker {
 
-  blockTracker: KitsunetBridge
+  blockTracker: BlockTracker
   bridgeTracker: KitsunetBridge
   pubsubTracker: KitsunetPubSub
   slicesStore: SliceStore
@@ -22,11 +23,11 @@ export class SliceManager extends BaseTracker {
   isBridge: boolean
 
   constructor (bridgeTracker: KitsunetBridge,
-              pubsubTracker: KitsunetPubSub,
-              slicesStore: SliceStore,
-              blockTracker: any,
-              ksnDriver: KsnDriver) {
-    super({})
+               pubsubTracker: KitsunetPubSub,
+               slicesStore: SliceStore,
+               blockTracker: BlockTracker,
+               ksnDriver: KsnDriver) {
+    super()
 
     assert(blockTracker, 'blockTracker should be supplied')
     assert(slicesStore, 'slicesStore should be supplied')
@@ -46,12 +47,12 @@ export class SliceManager extends BaseTracker {
   _setUp () {
     if (this.isBridge) {
       this.bridgeTracker.on('slice', (slice: any) => {
-        this.pubsubTracker.publish(slice)
+        return this.pubsubTracker.publish(slice)
       })
     }
 
-    this.pubsubTracker.on('slice', (slice: any) => {
-      this.slicesStore.put(slice)
+    this.pubsubTracker.on('slice', async (slice: any) => {
+      await this.slicesStore.put(slice)
       this.emit('slice', slice)
     })
   }
@@ -63,10 +64,10 @@ export class SliceManager extends BaseTracker {
    */
   async untrack (slices: any) {
     if (this.isBridge) {
-      this.bridgeTracker.untrack(slices)
+      await this.bridgeTracker.untrack(slices)
     }
 
-    this.pubsubTracker.untrack(slices)
+    return this.pubsubTracker.untrack(slices)
   }
 
   /**
@@ -75,14 +76,14 @@ export class SliceManager extends BaseTracker {
    *
    * @param {Set<SliceId>|SliceId} slices - a slice or an Set of slices to track
    */
-  async track (slices: any[]) {
+  async track (slices: Set<SliceId>) {
     if (this.isBridge) {
-      this.bridgeTracker.track(slices)
+      await this.bridgeTracker.track(slices)
     }
-    this.pubsubTracker.track(slices)
+    await this.pubsubTracker.track(slices)
 
     // if we're tracking a slice, make it discoverable
-    this.ksnDriver.announce(slices)
+    return this.ksnDriver.announce(slices)
   }
 
   /**
@@ -91,7 +92,7 @@ export class SliceManager extends BaseTracker {
    * @param {SliceId} slice - the slice id
    * @returns {Boolean}
    */
-  async isTracking (slice: any) {
+  async isTracking (slice: SliceId) {
     let tracking = this.isBridge ? await this.bridgeTracker.isTracking(slice) : true
     if (tracking) return this.pubsubTracker.isTracking(slice)
     return false
@@ -102,9 +103,9 @@ export class SliceManager extends BaseTracker {
    *
    * @param {Slice} slice - the slice to be published
    */
-  async publish (slice: any) {
+  async publish (slice: Slice) {
     // bridge doesn't implement publishSlice
-    this.pubsubTracker.publish(slice)
+    return this.pubsubTracker.publish(slice)
   }
 
   /**
@@ -125,14 +126,14 @@ export class SliceManager extends BaseTracker {
    * @param {SliceId} sliceId - the slice to return
    * @return {Slice}
    */
-  async getSlice (sliceId: any) {
+  async getSlice (sliceId: SliceId) {
     try {
       const slice = await this.slicesStore.getById(sliceId)
       return slice // won't catch if just returned
     } catch (e) {
       log(e)
       if (this.isBridge) {
-        this.track([sliceId])
+        await this.track(new Set([sliceId]))
         return this.bridgeTracker.getSlice(sliceId)
       }
 
@@ -156,23 +157,23 @@ export class SliceManager extends BaseTracker {
   /**
    * Get the slice for a block
    *
-   * @param {Number} number
+   * @param {number|string} tag
    * @param {SliceId} slice
    */
-  async getSliceForBlock (number: any, slice: { path: any; depth: any; }) {
+  async getSliceForBlock (tag: number | string, slice: { path: any; depth: any; }) {
     let _slice = new SliceId(slice.path, slice.depth)
-    const block = await this.ksnDriver.getBlockByNumber(number)
+    const block = await this.ksnDriver.getBlockByNumber(tag)
     if (block) {
       _slice.root = block.header.stateRoot.toString('hex')
       return this.getSlice(_slice)
     }
   }
 
-  async _resolveSlice (slice: any) {
+  async _resolveSlice (slice: SliceId) {
     // track the slice if not tracking already
     if (!await this.isTracking(slice)) {
       // track slice, we might already be subscribed to it
-      this.track([slice])
+      await this.track(new Set([slice]))
     }
 
     // if in bridge mode, just get it from the bridge
@@ -186,15 +187,15 @@ export class SliceManager extends BaseTracker {
         times: 10,
         interval: 3000
       },
-        async () => {
-          const _slice = await this.ksnDriver.resolveSlices([slice])
-          if (_slice) return _slice
-          throw new Error(`no slice retrieved, retrying ${++times}!`)
-        },
-        (err, res) => {
-          if (err) return reject(err)
-          resolve(res)
-        })
+            async () => {
+              const _slice = await this.ksnDriver.resolveSlices([slice])
+              if (_slice) return _slice
+              throw new Error(`no slice retrieved, retrying ${++times}!`)
+            },
+            (err, res) => {
+              if (err) return reject(err)
+              resolve(res)
+            })
     })
   }
 

@@ -30,7 +30,7 @@ message Kitsunet {
   message Identify {
     optional string   version      = 1; // e.g. kitsunet-js/0.0.1
     optional string   userAgent    = 2; // e.g. kitsunet-js/0.0.1
-    optional NodeType nodeType     = 3; // the node type - brige, edge, normal
+    optional NodeType nodeType     = 3; // the node type - bridge, edge, normal
     optional bytes    latestBlock  = 4; // block number
     repeated bytes    sliceIds     = 5; // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
   }
