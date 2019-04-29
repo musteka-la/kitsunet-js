@@ -1,49 +1,43 @@
 'use strict'
 
 import { Kitsunet } from './kitsunet'
+import { register, inject } from 'opium-decorator-resolvers'
+import ethjsUtils from 'ethjs-util'
+import ethUtils from 'ethereumjs-util'
+import { SliceId } from './slice'
+import { debug } from 'debug'
 
-const dependencies = require('./dependencies')
-const ethUtils = require('ethereumjs-util')
-
-const { SliceId } = require('./slice')
-
-const debug = require('debug')
 const log = debug('kitsunet:kitsunet-factory')
 
 export class KitsunetFactory {
-  static createKitsunet (options): Kitsunet {
-    const container = new Opium('kitsunet')
-    const deps = await dependencies(container, options)
-
-    const kitsunetDep = deps.getDep('kitsunet')
-    const kitsunet = await kitsunetDep.inject()
-
+  @inject()
+  static createKitsunet (kitsunet: Kitsunet,
+                         @register('options') options: any): Kitsunet<T> {
     let paths = options.slicePath || []
     let ethAddrs = options.ethAddrs || []
     if (ethAddrs.length) {
       paths = paths.concat(ethAddrs.map((a) => {
         if (ethUtils.isValidAddress(a)) {
-          return ethUtils.keccak256(ethUtils.stripHexPrefix(a)).toString('hex').slice(0, 4)
+          return ethUtils.keccak256(ethjsUtils.stripHexPrefix(a)).toString('hex').slice(0, 4)
         }
       }))
     }
 
-    let slices = new Set(paths.map((p) => {
+    let slices = paths.map((p) => {
       return new SliceId(p, options.sliceDepth)
-    }))
+    })
 
     if (options.sliceFile && options.sliceFile.length > 0) {
-      const sclicesFile = require(options.sliceFile)
-      slices = slices.concat(sclicesFile.slices.map((p) => {
+      const slicesFile = require(options.sliceFile)
+      slices = slices.concat(slicesFile.slices.map((p) => {
         return new SliceId(p, options.sliceDepth)
       }))
     }
 
     kitsunet.on('kitsunet:start', () => {
       log('kitsunet started')
-      kitsunet.sliceManager.track(slices)
+      return kitsunet.sliceManager.track(new Set(...slices))
     })
     return kitsunet
   }
-
 }

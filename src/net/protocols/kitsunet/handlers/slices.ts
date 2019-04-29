@@ -1,12 +1,12 @@
 'use strict'
 
-import { BaseHandler }  from './base'
+import { BaseHandler }  from '../base'
 import { Slice } from '../../../../slice'
 import Kitsunet = require('../proto')
 
 const { MsgType, Status } = Kitsunet
 
-export class Slices extends BaseHandler {
+export class Slices<P> extends BaseHandler<P> {
   constructor (rpcEngine, peerInfo) {
     super('slices', MsgType.SLICES, rpcEngine, peerInfo)
   }

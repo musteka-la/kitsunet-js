@@ -1,30 +1,35 @@
 'use strict'
 
-import { Slice } from '../slice'
-import { Key } from 'interface-datastore'
+import { Slice, SliceId } from '../slice'
+import { Key, Datastore } from 'interface-datastore'
 import promisify from 'promisify-this'
+import { register } from 'opium-decorator-resolvers'
 
 const SLICE_PREFIX = '/slices'
 
+@register()
 export class SliceStore {
+  _store: Datastore
+
   /**
    * The store where to retrieve data from
    *
    * @param {Store} store - underlying store where slice data is stored
    */
-  constructor (store) {
+  constructor (store: Datastore) {
     this._store = promisify(store)
   }
 
-  async getSlices () {
+  async getSlices (): Promise<Slice[] | undefined> {
     const key = `${SLICE_PREFIX}`
     const slices = await this._store.query({ prefix: key })
     if (slices) {
       return slices.map((s) => new Slice(s))
     }
+    return
   }
 
-  static _mkKey (...entries) {
+  static _mkKey (...entries: string[]): string {
     entries.unshift(`/${SLICE_PREFIX}`)
     return entries.join('/')
   }
@@ -34,12 +39,13 @@ export class SliceStore {
    *
    * @param {SliceId} sliceId - the slices to look for
    */
-  async getByPath (sliceId) {
+  async getByPath (sliceId: SliceId): Promise<Slice[] | undefined> {
     const key = SliceStore._mkKey(sliceId.path)
     const slices = await this._store.query({ prefix: key })
     if (slices) {
       return slices.map((s) => new Slice(s))
     }
+    return
   }
 
   /**
@@ -47,10 +53,12 @@ export class SliceStore {
    *
    * @param {SliceId} sliceId - the slice to lookup
    */
-  async getById (sliceId) {
-    const key = SliceStore._mkKey(sliceId.path, sliceId.depth, sliceId.root)
+  async getById (sliceId: SliceId): Promise<Slice | undefined> {
+    const key: string = SliceStore._mkKey(sliceId.path, String(sliceId.depth), sliceId.root)
     const raw = await this._store.get(new Key(key))
-    return new Slice(raw)
+    if (raw) {
+      return new Slice(raw)
+    }
   }
 
   /**

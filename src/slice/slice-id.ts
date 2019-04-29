@@ -8,7 +8,7 @@ export class SliceId {
   root: string
   isStorage: boolean
 
-  constructor (path: string = '0x0000', depth = 10, root = null, isStorage = false) {
+  constructor (path: string = '0x0000', depth = 10, root?: string, isStorage: boolean = false) {
     [
       this.path,
       this.depth,
@@ -17,7 +17,7 @@ export class SliceId {
     ] = SliceId.parse(path, depth, root, isStorage)
   }
 
-  static parse (path: string, depth: number, root: null, isStorage: boolean): any {
+  static parse (path: string, depth: number | string, root?: string, isStorage: boolean = false): any {
     if (Buffer.isBuffer(path)) {
       ({ path, depth, root, isStorage } = cbor.decode(path))
     } else if (path.includes('-')) {

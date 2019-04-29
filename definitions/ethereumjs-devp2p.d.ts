@@ -1,3 +1,35 @@
+export class Peer {
+  static PREFIXES: {
+    HELLO: number,
+    DISCONNECT: number,
+    PING: number,
+    PONG: number,
+  }
+
+  static DISCONNECT_REASONS: {
+    DISCONNECT_REQUESTED: number,
+    NETWORK_ERROR: number,
+    PROTOCOL_ERROR: number,
+    USELESS_PEER: number,
+    TOO_MANY_PEERS: number,
+    ALREADY_CONNECTED: number,
+    INCOMPATIBLE_VERSION: number,
+    INVALID_IDENTITY: number,
+    CLIENT_QUITTING: number,
+    UNEXPECTED_IDENTITY: number,
+    SAME_IDENTITY: number,
+    TIMEOUT: number,
+    SUBPROTOCOL_ERROR: number
+  };
+  constructor(options?: any);
+  getId(): any;
+  getHelloMessage(): any;
+  getProtocols(): any;
+  getMsgPrefix(code): any;
+  getDisconnectPrefix(code: any): any;
+  disconnect(reason: any): any;
+}
+
 export class DPT {
   static defaultMaxListeners: any;
   static init(): void;

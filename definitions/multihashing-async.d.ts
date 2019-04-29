@@ -1,5 +1,6 @@
 export = index;
-declare function index(buf: any, func: any, length: any, callback: any): void;
+declare type Callback<T> = <T>(err?: Error, res?: T) => void;
+declare function index<T>(buf: any, func: any, length?: any, callback?: Callback<T>): void | Promise<T>;
 declare namespace index {
   class Buffer {
     static BYTES_PER_ELEMENT: number;
@@ -99,7 +100,7 @@ declare namespace index {
     writeUIntLE(value: any, offset: any, byteLength: any): any;
   }
   function createHash(func: any): any;
-  function digest(buf: any, func: any, length: any, callback: any): any;
+  function digest<T>(buf: any, func: any, length: any, callback?: Callback<T>): void | Promise<T>;
   namespace functions { }
   namespace multihash {
     const codes: {

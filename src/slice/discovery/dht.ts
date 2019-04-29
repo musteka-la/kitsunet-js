@@ -6,6 +6,8 @@ import multihashingAsync from 'multihashing-async'
 import CID from 'cids'
 import Libp2p from 'libp2p'
 
+const empty = Buffer.from([0])
+
 const multihashing = promisify(multihashingAsync)
 const TIMEOUT = 1000 * 60 // one minute
 
@@ -23,7 +25,7 @@ export class DhtDiscovery extends Discovery {
   }
 
   async _makeKeyId (sliceId) {
-    const key = await multihashing(sliceId.serialize(), 'sha2-256')
+    const key: Buffer = (await multihashing(sliceId.serialize(), 'sha2-256')) || empty
     return new CID(key)
   }
 

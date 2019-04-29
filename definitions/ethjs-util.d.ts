@@ -1,0 +1,13 @@
+export function arrayContainsArray(superset: any, subset: any, some: any): any;
+export function fromAscii(stringValue: any): any;
+export function fromUtf8(stringValue: any): any;
+export function getBinarySize(str: any): any;
+export function getKeys(params: any, key: any, allowEmpty: any): any;
+export function intToBuffer(i: any): any;
+export function intToHex(i: any): any;
+export function isHexPrefixed(str: any): any;
+export function isHexString(value: any, length: any): any;
+export function padToEven(value: any): any;
+export function stripHexPrefix(str: any): any;
+export function toAscii(hex: any): any;
+export function toUtf8(hex: any): any;

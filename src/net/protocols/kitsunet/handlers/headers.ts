@@ -1,14 +1,15 @@
 'use strict'
 
-import { BaseHandler } from './base'
+import { BaseHandler } from '../base-handler'
 import { KsnProtocol } from '../ksn-protocol'
-import Kitsunet = require('../proto')
+import { IPeerDescriptor } from '../../../interfaces'
 
 const { MsgType, Status } = Kitsunet
 
-export class Header extends BaseHandler {
-  constructor (rpcEngine: KsnProtocol, peerInfo: any) {
-    super('headers', MsgType.HEADERS, rpcEngine, peerInfo)
+export class Header<P> extends BaseHandler<P> {
+  constructor (networkProvider: KsnProtocol<P>,
+               peer: IPeerDescriptor<P>) {
+    super('headers', MsgType.HEADERS, networkProvider, peer)
   }
 
   async response (): Promise<any> {

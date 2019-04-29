@@ -7,19 +7,62 @@ import { Slice } from '../../../slice'
 
 type BlockHeader = typeof Block.Header
 
-export interface IdentifyMsg {
-  version: string
-  userAgent: string
-  sliceIds: Set<string>
+export enum MsgType {
+  UNKNOWN_MSG = 0,
+  IDENTIFY = 1,
+  SLICES = 2,
+  SLICE_ID = 3,
+  HEADERS = 4,
+  LATEST_BLOCK = 5,
+  NODE_TYPE = 6,
+  PING = 7
+}
+
+export enum NodeType {
+  UNKNOWN_TYPE = 0,
+  NORMAL = 1,
+  EDGE = 2,
+  BRIDGE = 3
+}
+
+export enum Status {
+  UNKNOWN_ERROR = 0,
+  OK = 1,
+  ERROR = 2
+}
+
+export interface KsnMsg {
+  type: MsgType // the message type
+  payload: Data  // the data of the request/response
+}
+
+export interface KsnResponse extends KsnMsg {
+  status?: Status  // only used for responses - OK for success ERROR for errors
+  error?: string  // only used for responses - if status == ERROR, this might contain an error string
+}
+
+export interface Identify {
+  version: string // e.g. kitsunet-js/0.0.1
+  userAgent: string // e.g. kitsunet-js/0.0.1
+  nodeType: NodeType // the node type - bridge, edge, normal
+  latestBlock: number // block number
+  sliceIds: string // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
+}
+
+export interface Data {
+  identify: Identify
+  slices: any[]
+  headers: BlockHeader[]
+  type: NodeType
+  sliceIds: string[]
   latestBlock: Block
-  nodeType: NodeTypes
 }
 
 export interface KsnProto<T> extends IProtocol<T> {
   /**
    * initiate the identify flow
    */
-  identify (): Promise<IdentifyMsg>
+  identify (): Promise<Identify>
 
   /**
    * Get all slice ids for the peer

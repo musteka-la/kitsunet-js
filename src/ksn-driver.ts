@@ -26,7 +26,7 @@ export class KsnDriver extends EE {
   constructor (
     node: Node,
     ksnDialer: KsnDialer,
-    ksnRpc: KsnProtocol,
+    ksnRpc: KsnProtocol<T>,
     isBridge: boolean,
     discovery: Discovery,
     // blockchain,
