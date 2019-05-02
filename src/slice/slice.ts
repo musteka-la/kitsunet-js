@@ -3,7 +3,7 @@
 import { SliceId } from './slice-id'
 import normalizeKeys from 'normalize-keys'
 import bourne from 'bourne'
-import {decode, encode} from 'borc'
+import { decode, encode } from 'borc'
 
 export class Slice extends SliceId {
   parsed: any

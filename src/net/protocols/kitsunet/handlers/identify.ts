@@ -4,15 +4,17 @@ import { BaseHandler } from '../base'
 import BN from 'bn.js'
 import Kitsunet = require('../proto')
 import { KsnProtocol } from '../../ksn-protocol'
+import { IPeerDescriptor } from '../interfaces'
 
 const { MsgType, Status } = Kitsunet
 
 export class Identify<P> extends BaseHandler<P> {
-  constructor(rpcEngine: KsnProtocol<P>, peerInfo: any) {
+  constructor (networkProvider: KsnProtocol<P>,
+               peer: IPeerDescriptor<P>) {
     super('identify', MsgType.IDENTIFY, rpcEngine, peerInfo)
   }
 
-  async response (): Promise<any> {
+  async handle (): Promise<any> {
     try {
       const block = await this.rpcEngine.getLatestBlock()
       return {

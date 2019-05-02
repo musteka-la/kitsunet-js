@@ -1,16 +1,15 @@
 'use strict'
 
-import { NodeTypes } from '../../../constants'
 import * as Handlers from './handlers'
 import debug from 'debug'
-import Kitsunet = require('./proto')
 import { BaseProtocol } from '../base-protocol'
 import { INetwork, IPeerDescriptor } from '../../interfaces'
 import { BaseHandler } from './base-handler'
 import { register } from 'opium-decorator-resolvers'
 import { KsnEncoder } from './ksn-encoder'
+import { Message, MsgType, Status, IKsnProtocol, Identify, NodeType, BlockHeader } from './interfaces'
+import { SliceId, Slice } from '../../../slice'
 
-const { MsgType, Status } = Kitsunet
 const log = debug('kitsunet:kitsunet-proto')
 
 function errResponse (type: number | string) {
@@ -22,9 +21,9 @@ function errResponse (type: number | string) {
 const VERSION = '1.0.0'
 
 @register()
-export class KsnProtocol<P> extends BaseProtocol<P> {
+export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
-  type: NodeTypes
+  type: NodeType
   handlers: { [key: string]: BaseHandler<P> }
   version: string = VERSION
   userAgent: string = 'ksn'
@@ -42,7 +41,7 @@ export class KsnProtocol<P> extends BaseProtocol<P> {
                public networkProvider: INetwork<P>) {
     super(peer, networkProvider, new KsnEncoder())
     this.sliceIds = new Set()
-    this.type = NodeTypes.NODE
+    this.type = NodeType.NODE
 
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
@@ -51,75 +50,76 @@ export class KsnProtocol<P> extends BaseProtocol<P> {
     })
   }
 
-  async *receive<T> (readable: AsyncIterable<T>): AsyncIterable<T> {
-    for await (const msg of super.receive(readable)) {
-      log('got request', msg)
-      if (msg.type !== MsgType.UNKNOWN) {
-        yield this.handlers[msg.type].handle(msg)
+  async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
+    for await (const msg of super.receive<Buffer, Message>(readable)) {
+      if (msg.type !== MsgType.UNKNOWN_MSG) {
+        yield this.handlers[msg.type].handle<Message, U>(msg)
       }
 
-      return errResponse(msg.type)
+      errResponse(msg.type)
     }
   }
 
-  async send<T, U> (msg: T): Promise<U> {
+  async send<Message, Buffer> (msg: Message): Promise<Buffer> {
     return super.send(msg, this)
   }
 
   /**
    * initiate the identify flow
    */
-  // async identiy () {
-  //   const res = await this.handlers[MsgType.IDENTIFY].request()
-  //   this.version = res.version
-  //   this.userAgent = res.userAgent
+  async identify (): Promise<Identify> {
+    const res = await this.handlers[MsgType.IDENTIFY].request<void, Identify>()
+    this.version = res.version
+    this.userAgent = res.userAgent
 
-  //   this.sliceIds = res.sliceIds
-  //     ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
-  //     : new Set()
+    this.sliceIds = res.sliceIds
+      ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
+      : new Set()
 
-  //   this.latestBlock = res.latestBlock
-  //   this.nodeType = res.nodeType
+    this.latestBlock = res.latestBlock
+    this.type = res.nodeType
 
-  //   return res
-  // }
+    return res
+  }
 
   /**
    * Get all slice ids for the peer
   */
-//  async getSliceds () {
-//     this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
-//     return this.sliceIds
-//   }
+  async getSliceIds () {
+    this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
+    return this.sliceIds
+  }
 
   /**
    * Get slices for the provided ids or all the
    * slices the peer is holding
    *
    * @param {Array<SliceId>} slices - optional
-   *        async getSlicesyId(slices) {
+   */
+
+  getSlicesById (slices: string[]): Promise<Slice[]> {
     return this.handlers[MsgType.SLICES].request(slices)
   }
 
   /**
    * Get all headers
-
-    async heders() {
+   */
+  async headers (): Promise<BlockHeader> {
     return this.handlers[MsgType.HEADERS].request()
   }
 
   /**
    * Get Node type - bridge, edge, node
-      /
-    async noeType() {
+   */
+  async nodeType () {
     this.type = await this.handlers[MsgType.NODE_TYPE].request()
     return this.type
   }
 
   /**
    * Ping peer
-     */
-  // async ping () {
-  //   return this.handlers[MsgType.PING].request()
-  // }
+   */
+  async ping (): Promise<boolean> {
+    return this.handlers[MsgType.PING].request()
+  }
 }

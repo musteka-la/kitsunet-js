@@ -10,7 +10,7 @@ export class Ping<P> extends BaseHandler<P> {
     super('ping', MsgType.PING, rpcEngine, peerInfo)
   }
 
-  async response (): Promise<any> {
+  async handle (): Promise<any> {
     return {
       type: MsgType.PING,
       status: Status.OK

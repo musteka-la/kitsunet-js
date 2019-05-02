@@ -12,20 +12,20 @@ export class Header<P> extends BaseHandler<P> {
     super('headers', MsgType.HEADERS, networkProvider, peer)
   }
 
-  async response (): Promise<any> {
+  async handle (): Promise<any> {
     return {
       type: MsgType.HEADERS,
       status: Status.OK,
       payload: {
-        slices: await this.rpcEngine.getHeaders()
+        slices: await this.networkProvider.headers()
       }
     }
   }
 
-  async request () {
-    const res = await this.sendRequest({
+  async request<T, BlockHeader> (): Promise<BlockHeader[]> {
+    const res = await this.send({
       type: MsgType.HEADERS
     })
-    return res.payload.headers
+    return res.payload.headers as unknown as BlockHeader[]
   }
 }
