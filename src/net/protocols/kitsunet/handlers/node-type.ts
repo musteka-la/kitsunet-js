@@ -7,11 +7,11 @@ import { KsnProtocol } from '../../ksn-protocol'
 const { MsgType, Status } = Kitsunet
 
 export class NodeType<P> extends BaseHandler<P> {
-  constructor(rpcEngine: KsnProtocol<P>, peerInfo: any) {
+  constructor (rpcEngine: KsnProtocol<P>, peerInfo: any) {
     super('node-type', MsgType.NODE_TYPE, rpcEngine, peerInfo)
   }
 
-  async response (): Promise<any> {
+  async handle (): Promise<any> {
     return {
       type: MsgType.NODE_TYPE,
       status: Status.OK,

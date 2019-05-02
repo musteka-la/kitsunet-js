@@ -11,7 +11,7 @@ export class Slices<P> extends BaseHandler<P> {
     super('slices', MsgType.SLICES, rpcEngine, peerInfo)
   }
 
-  async response (msg): Promise<any> {
+  async handle (msg): Promise<any> {
     const slices = await this.rpcEngine.getSlices(msg.payload.slices)
     return {
       type: MsgType.SLICES,

@@ -10,7 +10,7 @@ export class SliceId<P> extends BaseHandler<P> {
     super('slice-id', MsgType.SLICE_ID, rpcEngine, peerInfo)
   }
 
-  async response (): Promise<any> {
+  async handle (): Promise<any> {
     return {
       type: MsgType.SLICE_ID,
       status: Status.OK,

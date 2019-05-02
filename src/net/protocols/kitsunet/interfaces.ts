@@ -1,52 +1,47 @@
 'use strict'
 
 import Block from 'ethereumjs-block'
-import { IProtocol } from '../../interfaces'
-import { NodeTypes } from '../../../constants'
+import { NodeType } from '../../../constants'
 import { Slice } from '../../../slice'
 
-type BlockHeader = typeof Block.Header
+export type BlockHeader = typeof Block.Header
+export { NodeType } from '../../../constants'
 
 export enum MsgType {
-  UNKNOWN_MSG = 0,
-  IDENTIFY = 1,
-  SLICES = 2,
-  SLICE_ID = 3,
-  HEADERS = 4,
-  LATEST_BLOCK = 5,
-  NODE_TYPE = 6,
-  PING = 7
-}
-
-export enum NodeType {
-  UNKNOWN_TYPE = 0,
-  NORMAL = 1,
-  EDGE = 2,
-  BRIDGE = 3
+  UNKNOWN_MSG   = 0,
+  IDENTIFY      = 1,
+  SLICES        = 2,
+  SLICE_ID      = 3,
+  HEADERS       = 4,
+  LATEST_BLOCK  = 5,
+  NODE_TYPE     = 6,
+  PING          = 7
 }
 
 export enum Status {
   UNKNOWN_ERROR = 0,
-  OK = 1,
-  ERROR = 2
+  OK            = 1,
+  ERROR         = 2
 }
 
 export interface KsnMsg {
-  type: MsgType // the message type
-  payload: Data  // the data of the request/response
+  type: MsgType   // the message type
+  payload: Data      // the data of the request/response
 }
 
 export interface KsnResponse extends KsnMsg {
-  status?: Status  // only used for responses - OK for success ERROR for errors
-  error?: string  // only used for responses - if status == ERROR, this might contain an error string
+  status?: Status    // only used for responses - OK for success ERROR for errors
+  error?: string    // only used for responses - if status == ERROR, this might contain an error string
 }
 
+export type Message = KsnMsg | KsnResponse
+
 export interface Identify {
-  version: string // e.g. kitsunet-js/0.0.1
-  userAgent: string // e.g. kitsunet-js/0.0.1
-  nodeType: NodeType // the node type - bridge, edge, normal
-  latestBlock: number // block number
-  sliceIds: string // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
+  version: string    // e.g. kitsunet-js/0.0.1
+  userAgent: string    // e.g. kitsunet-js/0.0.1
+  nodeType: NodeType  // the node type - bridge, edge, normal
+  latestBlock: number    // block number
+  sliceIds: string[]  // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
 }
 
 export interface Data {
@@ -58,7 +53,7 @@ export interface Data {
   latestBlock: Block
 }
 
-export interface KsnProto<T> extends IProtocol<T> {
+export interface IKsnProtocol {
   /**
    * initiate the identify flow
    */
@@ -75,17 +70,17 @@ export interface KsnProto<T> extends IProtocol<T> {
    *
    * @param {Array<SliceId>} slices - optional
    */
-  getSlicesById (slices): Promise<Set<Slice>>
+  getSlicesById (slices: string[]): Promise<Slice[]>
 
   /**
    * Get all headers
    */
-  headers (): Promise<BlockHeader>
+  headers (): Promise<BlockHeader[]>
 
   /**
    * Get Node type - bridge, edge, node
    */
-  nodeType (): Promise<NodeTypes>
+  nodeType (): Promise<NodeType>
 
   /**
    * Ping peer

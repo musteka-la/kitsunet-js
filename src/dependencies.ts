@@ -28,23 +28,23 @@ module.exports = async (container, options) => {
 
   // register dht discovery
   container.registerFactory('kitsunet-discovery',
-    (node) => new DhtDiscovery(node),
-    ['node'])
+                            (node) => new DhtDiscovery(node),
+                            ['node'])
 
   // register kitsunet dialer
   container.registerFactory('kitsunet-dialer',
-    (node) => new KsnDialer({ node, interval: options.dialInterval }),
-    ['node'])
+                            (node) => new KsnDialer({ node, interval: options.dialInterval }),
+                            ['node'])
 
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',
-    (node, sliceManager, ksnDialer, ksnDriver) => new KsnRpc({
+                            (node, sliceManager, ksnDialer, ksnDriver) => new KsnRpc({
       node,
       sliceManager,
       ksnDialer,
       ksnDriver
     }),
-    [
+                            [
       'node',
       'slice-manager',
       'kitsunet-dialer',
@@ -66,7 +66,7 @@ module.exports = async (container, options) => {
 
   // register KsnDriver options
   container.registerFactory('kitsunet-driver',
-    (node, ksnDialer, options, discovery, blockTracker, telemetry, stats) => {
+                            (node, ksnDialer, options, discovery, blockTracker, telemetry, stats) => {
       return new KsnDriver({
         node,
         ksnDialer,
@@ -77,7 +77,7 @@ module.exports = async (container, options) => {
         telemetry,
         stats
       })
-    }, [
+    },                      [
       'node',
       'kitsunet-dialer',
       'options',
@@ -90,7 +90,7 @@ module.exports = async (container, options) => {
 
   // register SliceManager options
   container.registerFactory('slice-manager',
-    (bridgeTracker, pubsubTracker, slicesStore, blockTracker, ksnDriver) => {
+                            (bridgeTracker, pubsubTracker, slicesStore, blockTracker, ksnDriver) => {
       return new SliceManager({
         bridgeTracker,
         pubsubTracker,
@@ -98,7 +98,7 @@ module.exports = async (container, options) => {
         blockTracker,
         ksnDriver
       })
-    }, [
+    },                      [
       'bridge-tracker',
       'pubsub-tracker',
       'slices-store',
@@ -108,7 +108,7 @@ module.exports = async (container, options) => {
 
   // register kitsunet
   container.registerFactory('kitsunet',
-    (sliceManager, ksnDriver, ksnRpc, telemetry, libp2pStats, kitsunetStats) => {
+                            (sliceManager, ksnDriver, ksnRpc, telemetry, libp2pStats, kitsunetStats) => {
       ksnDriver.ksnRpc = ksnRpc // circular dep
       telemetry.setStateHandler(() => {
         return {
@@ -118,7 +118,7 @@ module.exports = async (container, options) => {
       })
       return new Kitsunet(sliceManager, ksnDriver, telemetry, libp2pStats, kitsunetStats)
     },
-    [
+                            [
       'slice-manager',
       'kitsunet-driver',
       'kitsunet-rpc',

@@ -19,7 +19,7 @@ export class KsnEthQuery extends EthQuery {
       this.sendAsync({
         method: methodName,
         params: args
-      }, cb)
+      },             cb)
     }
   }
 }

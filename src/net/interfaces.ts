@@ -12,14 +12,14 @@ export interface INetwork<P> {
    * @param protocol - a protocol object to pass to the network provider
    * @param peer - (optional) raw peer
    */
-  send<T, U> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | void>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | void>
 
   /**
    * handle incoming messages
    *
    * @param readable - an iterable to ber read from asynchronously
    */
-  receive<T> (readable: AsyncIterable<T>): AsyncIterable<T>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U>
 }
 
 export interface IEncoder {

@@ -4,8 +4,8 @@
   "description": "Kitsunet mesh node",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
+    "build": "tsc --pretty",
+    "watch": "tsc --watch --pretty",
     "test": "npm run build && mocha --require source-map-support/register dist/test/",
     "lint": "tslint --project tsconfig.json",
     "lint:fix": "tslint --project tsconfig.json --fix"

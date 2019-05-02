@@ -6,11 +6,17 @@ import Libp2p from 'libp2p'
 import PeerInfo from 'peer-info'
 import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
-import { IProtocol, NodeType, IProtocolConstructor, INetwork } from '../interfaces'
 import { Node } from '../node'
 import { NetworkPeer } from '../peer'
 import { Libp2pPeer } from './libp2p-peer'
 import debug from 'debug'
+
+import {
+  IProtocol,
+  NodeType,
+  IProtocolConstructor,
+  INetwork
+} from '../interfaces'
 
 @register()
 export class Libp2pNode extends Node<PeerInfo> {
@@ -87,7 +93,7 @@ export class Libp2pNode extends Node<PeerInfo> {
     return
   }
 
-  receive<T> (readable: AsyncIterable<T>): AsyncIterable<T> {
+  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U> {
     throw new Error('not implemented!')
   }
 
