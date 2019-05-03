@@ -7,8 +7,17 @@ import { INetwork, IPeerDescriptor } from '../../interfaces'
 import { BaseHandler } from './base-handler'
 import { register } from 'opium-decorator-resolvers'
 import { KsnEncoder } from './ksn-encoder'
-import { Message, MsgType, Status, IKsnProtocol, Identify, NodeType, BlockHeader } from './interfaces'
 import { SliceId, Slice } from '../../../slice'
+
+import {
+  Message,
+  MsgType,
+  Status,
+  IKsnProtocol,
+  Identify,
+  NodeType,
+  BlockHeader
+} from './interfaces'
 
 const log = debug('kitsunet:kitsunet-proto')
 
@@ -84,7 +93,7 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
 
   /**
    * Get all slice ids for the peer
-  */
+   */
   async getSliceIds () {
     this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
     return this.sliceIds
@@ -104,7 +113,7 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   /**
    * Get all headers
    */
-  async headers (): Promise<BlockHeader> {
+  async headers (): Promise<BlockHeader[]> {
     return this.handlers[MsgType.HEADERS].request()
   }
 
