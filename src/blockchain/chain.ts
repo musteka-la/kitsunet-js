@@ -3,8 +3,15 @@
 import { EventEmitter as EE } from 'events'
 import BN from 'bn.js'
 import Blockchain from 'ethereumjs-blockchain'
+import { IBlockchain } from './interfaces'
+import promisify, { PromisifyAll } from 'promisify-this'
+import Block from 'ethereumjs-block'
 
-export class Chain extends EE {
+type Header = typeof Block.Header
+
+export class Chain extends EE implements IBlockchain {
+  private blockchain: PromisifyAll<Blockchain>
+
   /**
    * Create a blockchain
    *
@@ -12,8 +19,9 @@ export class Chain extends EE {
    * @param {Blockchain} Options.blockchain
    * @param {BaseSync} Options.sync
    */
-  constructor (private blockchain: Blockchain) {
+  constructor (blockchain: Blockchain) {
     super()
+    this.blockchain = promisify(blockchain)
   }
 
   /**
@@ -21,9 +29,9 @@ export class Chain extends EE {
    *
    * @returns {Number}
    */
-  async getBlocksTD () {
-    const block = this.getLatestBlock()
-    return this.blockchain.getTD(block.header.hash, block.header.number)
+  async getBlocksTD (): Promise<BN> {
+    const block: Block = await this.getLatestBlock()
+    return this.blockchain.getTd(block.header.hash, block.header.number) as unknown as BN
   }
 
   /**
@@ -31,23 +39,23 @@ export class Chain extends EE {
    *
    * @returns {Number}
    */
-  async getHeadersTD () {
-    const header = this.getLatestHeader()
-    return this.blockchain.getTD(header.hash, header.number)
+  async getHeadersTD (): Promise<BN> {
+    const header: any = await this.getLatestHeader()
+    return this.blockchain.getTd(header.hash, header.number) as unknown as BN
   }
 
   /**
    * Get the current blocks height
    */
-  async getBlocksHeight () {
-    return new BN((await this.blockchain.getLatestBlock()).number)
+  async getBlocksHeight (): Promise<BN> {
+    return new BN((await this.blockchain.getLatestBlock() as Block).header.number)
   }
 
   /**
    * Get the current header height
    */
-  async getHeadersHeight () {
-    return new BN((await this.blockchain.getLatestHeader()).number)
+  async getHeadersHeight (): Promise<BN> {
+    return new BN((await this.blockchain.getLatestHeader() as any).number)
   }
 
   /**
@@ -55,8 +63,8 @@ export class Chain extends EE {
    *
    * @returns {Array<Header>}
    */
-  async getLatestHeader (): Promise<any> {
-    return this.blockchain.getLatestHeader()
+  async getLatestHeader<Header> (): Promise<Header> {
+    return this.blockchain.getLatestHeader() as Promise<Header>
   }
 
   /**
@@ -64,8 +72,8 @@ export class Chain extends EE {
    *
    * @returns {Array<Block>}
    */
-  async getLatestBlock (): Promise<any> {
-    return this.blockchain.getLatestBlock()
+  async getLatestBlock<Block> (): Promise<Block> {
+    return this.blockchain.getLatestBlock() as Promise<Block>
   }
 
   /**
@@ -75,8 +83,8 @@ export class Chain extends EE {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Block>} - an array of blocks
    */
-  async getBlocks (from: number, max: number): Promise<Array<any>> {
-    return this.blockchain.getBlocks(from, max)
+  async getBlocks<Block> (blockId: Buffer | number, maxBlocks: number, skip: number, reverse: boolean): Promise <Block[]> {
+    return this.blockchain.getBlocks(blockId, maxBlocks, skip, reverse) as Promise<Block[]>
   }
 
   /**
@@ -86,8 +94,8 @@ export class Chain extends EE {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Header>} - an array of blocks
    */
-  async getHeaders (from: number, max: number): Promise<Array<any>> {
-    return this.blockchain.getHeaders(from, max)
+  async getHeaders<Header> (blockId: Buffer | number, maxBlocks: number, skip: number, reverse: boolean): Promise<Header[] > {
+    throw new Error('not implemented!')
   }
 
   /**
@@ -95,8 +103,8 @@ export class Chain extends EE {
    *
    * @param {Block} block
    */
-  putBlocks (block: any): void {
-    this.blockchain.pubBlocks(block)
+  async putBlocks<Block> (block: Block[]): Promise<any> {
+    return this.blockchain.putBlocks(block)
   }
 
   /**
@@ -104,7 +112,7 @@ export class Chain extends EE {
    *
    * @param {Header} header
    */
-  putHeader (header: any): void {
-    this.blockchain.pubHeaders(header)
+  async putHeader<T> (header: T[]): Promise<any> {
+    return this.blockchain.putHeaders(header)
   }
 }
