@@ -47,7 +47,10 @@ export interface IBlockchain {
    * @param {Number} max - how many blocks to return
    * @returns {T[]} - an array of blocks
    */
-  getBlocks<T> (blockId: Buffer | number, maxBlocks: number, skip: number, reverse: boolean): Promise <T[]>
+  getBlocks<T> (blockId: Buffer | number,
+                maxBlocks: number,
+                skip: number,
+                reverse: boolean): Promise <T[]>
 
   /**
    * Get an array of blocks
@@ -56,7 +59,10 @@ export interface IBlockchain {
    * @param {Number} max - how many blocks to return
    * @returns {T} - an array of blocks
    */
-  getHeaders<T> (blockId: Buffer | number, maxBlocks: number, skip: number, reverse: boolean): Promise <T[]>
+  getHeaders<T> (blockId: Buffer | number,
+                 maxBlocks: number,
+                 skip: number,
+                 reverse: boolean): Promise <T[]>
 
   /**
    * Put blocks to the blockchain

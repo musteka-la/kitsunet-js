@@ -5,7 +5,6 @@ import { NodeType } from '../../../constants'
 import { Slice } from '../../../slice'
 
 export type BlockHeader = typeof Block.Header
-export { NodeType } from '../../../constants'
 
 export enum MsgType {
   UNKNOWN_MSG   = 0,
@@ -26,22 +25,22 @@ export enum Status {
 
 export interface KsnMsg {
   type: MsgType   // the message type
-  payload: Data      // the data of the request/response
+  payload: Data   // the data of the request/response
 }
 
 export interface KsnResponse extends KsnMsg {
-  status?: Status    // only used for responses - OK for success ERROR for errors
+  status?: Status   // only used for responses - OK for success ERROR for errors
   error?: string    // only used for responses - if status == ERROR, this might contain an error string
 }
 
 export type Message = KsnMsg | KsnResponse
 
 export interface Identify {
-  version: string    // e.g. kitsunet-js/0.0.1
-  userAgent: string    // e.g. kitsunet-js/0.0.1
-  nodeType: NodeType  // the node type - bridge, edge, normal
-  latestBlock: number    // block number
-  sliceIds: string[]  // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
+  version: string       // e.g. kitsunet-js/0.0.1
+  userAgent: string     // e.g. kitsunet-js/0.0.1
+  nodeType: NodeType    // the node type - bridge, edge, normal
+  latestBlock: number   // block number
+  sliceIds: string[]     // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
 }
 
 export interface Data {

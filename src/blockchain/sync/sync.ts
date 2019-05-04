@@ -1,7 +1,7 @@
 'use strict'
 
 import { EventEmitter as EE } from 'events'
-import { Chain } from '../chain'
+import { Chain } from '../eth-chain'
 
 // NOTE: For now this is heavily inspired by the ethereumjs-client
 

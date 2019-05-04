@@ -12,6 +12,14 @@
       "members",
       "elements"
     ],
-    "space-before-function-paren": true
+    "space-before-function-paren": true,
+    "no-multi-spaces": [
+      true,
+      {
+        "exceptions": {
+          "PropertyAssignment": false
+        }
+      }
+    ]
   }
 }

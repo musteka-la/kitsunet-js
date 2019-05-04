@@ -54,4 +54,5 @@ export interface IProtocol<T> extends INetwork<T> {
   peer: IPeerDescriptor<T>              // protocols peer
   encoder?: IEncoder                    // the encoder
   networkProvider: INetwork<T>          // the network provider
+  versions: string[]                    // array of versions that the protocol speaks
 }

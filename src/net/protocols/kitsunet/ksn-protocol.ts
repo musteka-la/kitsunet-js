@@ -34,7 +34,7 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
   handlers: { [key: string]: BaseHandler<P> }
-  version: string = VERSION
+  versions: string[] = [VERSION]
   userAgent: string = 'ksn'
   latestBlock: number | null = null
 
@@ -77,8 +77,8 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
    * initiate the identify flow
    */
   async identify (): Promise<Identify> {
-    const res = await this.handlers[MsgType.IDENTIFY].request<void, Identify>()
-    this.version = res.version
+    const res = await this.handlers[MsgType.IDENTIFY].request()
+    this.versions = res.version
     this.userAgent = res.userAgent
 
     this.sliceIds = res.sliceIds
