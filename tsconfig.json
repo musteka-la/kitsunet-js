@@ -8,12 +8,6 @@
     "paths": {
       "*": [ "definitions/*" ]
     },
-    "lib": [
-      "dom",
-      "es2018",
-      "dom.iterable",
-      "scripthost"
-    ],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

@@ -1,3 +1,4 @@
 'use strict'
 
-export * from './chain'
+export * from './eth-chain'
+export * from './interfaces'

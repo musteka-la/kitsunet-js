@@ -5,8 +5,9 @@ import debug from 'debug'
 import { KsnProtocol } from './ksn-protocol'
 import { IPeerDescriptor } from '../../interfaces'
 import { KsnResponse, KsnMsg, Status } from './interfaces'
+import { IHandler } from '../interfaces'
 
-export abstract class BaseHandler<P> extends EE {
+export abstract class BaseHandler<P> extends EE implements IHandler<P> {
   log: debug.Debugger
   constructor (public name: string,
                public id: string,
@@ -21,16 +22,14 @@ export abstract class BaseHandler<P> extends EE {
    *
    * @param msg - the message to be sent
    */
-  abstract handle<T extends KsnMsg, U> (msg?: T): Promise<U>
-  abstract handle<T extends KsnMsg, U> (msg?: T): Promise<U[]>
+  abstract async handle<T, U> (msg?: T): Promise<U | U[]>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
-  abstract request<T, U> (msg?: T): Promise<U>
-  abstract request<T, U> (msg?: T): Promise<U[]>
+  abstract async request<T, U> (msg?: T): Promise<U | U[]>
 
   protected async send<T> (msg: T): Promise<KsnResponse> {
     this.log('sending request', msg)

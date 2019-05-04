@@ -2,7 +2,7 @@
 
 import { Sync } from './sync'
 import BN from 'bn.js'
-import { Chain } from '../chain'
+import { Chain } from '../eth-chain'
 import { Downloader } from '../downloader'
 
 class RpcSync extends Sync {

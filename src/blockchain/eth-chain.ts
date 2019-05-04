@@ -6,9 +6,11 @@ import Blockchain from 'ethereumjs-blockchain'
 import { IBlockchain } from './interfaces'
 import promisify, { PromisifyAll } from 'promisify-this'
 import Block from 'ethereumjs-block'
+import { register } from 'opium-decorator-resolvers'
 
 type Header = typeof Block.Header
 
+@register()
 export class Chain extends EE implements IBlockchain {
   private blockchain: PromisifyAll<Blockchain>
 
@@ -83,7 +85,10 @@ export class Chain extends EE implements IBlockchain {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Block>} - an array of blocks
    */
-  async getBlocks<Block> (blockId: Buffer | number, maxBlocks: number, skip: number, reverse: boolean): Promise <Block[]> {
+  async getBlocks<Block> (blockId: Buffer | number,
+                          maxBlocks: number,
+                          skip: number,
+                          reverse: boolean): Promise <Block[]> {
     return this.blockchain.getBlocks(blockId, maxBlocks, skip, reverse) as Promise<Block[]>
   }
 
@@ -94,7 +99,10 @@ export class Chain extends EE implements IBlockchain {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Header>} - an array of blocks
    */
-  async getHeaders<Header> (blockId: Buffer | number, maxBlocks: number, skip: number, reverse: boolean): Promise<Header[] > {
+  async getHeaders<Header> (blockId: Buffer | number,
+                            maxBlocks: number,
+                            skip: number,
+                            reverse: boolean): Promise<Header[] > {
     throw new Error('not implemented!')
   }
 

@@ -8,6 +8,7 @@ import { register } from 'opium-decorator-resolvers'
 export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
   abstract get id (): string
   abstract get codec (): string
+  abstract get versions (): string[]
 
   peer: IPeerDescriptor<P>
   networkProvider: INetwork<P>
@@ -45,9 +46,12 @@ export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
 
     let response: string = ''
     for await (const chunk of this.encoder.encode(msg)) {
-      for await (const recvd of this.encoder.decode(
-        await this.networkProvider.send(chunk, protocol, this.peer.peer || undefined)
-        || Buffer.from([0]))) {
+      // protocol might choose to reply in a request/response manner
+      // we might return something from send
+      const sent = await this
+      .networkProvider
+      .send(chunk, protocol, this.peer.peer || undefined) || Buffer.from([0])
+      for await (const recvd of this.encoder.decode(sent)) {
         response += recvd
       }
     }
