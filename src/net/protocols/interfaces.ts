@@ -4,7 +4,7 @@ import { IProtocol, IPeerDescriptor } from '../interfaces'
 
 export interface IHandler<P> {
   name: string,
-  id: string,
+  id: string | number,
   networkProvider: IProtocol<P>,
   peer: IPeerDescriptor<P>
 

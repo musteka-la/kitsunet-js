@@ -4,6 +4,7 @@ import Block from 'ethereumjs-block'
 import { NodeType } from '../../../constants'
 import { Slice } from '../../../slice'
 
+export { NodeType }
 export type BlockHeader = typeof Block.Header
 
 export enum MsgType {

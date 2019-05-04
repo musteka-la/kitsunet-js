@@ -67,7 +67,7 @@
     "opium-decorator-resolvers": "github:dryajov/opium-decorator-resolvers",
     "opium-ioc": "^2.4.1",
     "pify": "^4.0.1",
-    "promisify-this": "^2.1.0",
+    "promisify-this": "^2.2.0",
     "protons": "^1.0.1",
     "pull-mplex": "^0.1.2",
     "pull-protocol-buffers": "^0.1.2",
