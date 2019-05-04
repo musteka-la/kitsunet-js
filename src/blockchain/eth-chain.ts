@@ -1,7 +1,7 @@
 'use strict'
 
-import { EventEmitter as EE } from 'events'
 import BN from 'bn.js'
+import { EventEmitter as EE } from 'events'
 import Blockchain from 'ethereumjs-blockchain'
 import { IBlockchain } from './interfaces'
 import promisify, { PromisifyAll } from 'promisify-this'

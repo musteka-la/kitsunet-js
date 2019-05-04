@@ -1,6 +1,5 @@
-export = index;
-declare class index {
-  static Header(data: any, opts: any): void;
+export = Block;
+declare class Block {
   constructor(data: any, opts: any);
   transactions: any;
   uncleHeaders: any;
@@ -17,4 +16,11 @@ declare class index {
   validateTransactionsTrie(): any;
   validateUncles(blockChain: any, cb: any): any;
   validateUnclesHash(): any;
+}
+
+declare namespace Block {
+  class Header {
+    public raw: any
+    constructor(data: any, opts?: any);
+  }
 }

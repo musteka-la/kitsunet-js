@@ -65,6 +65,11 @@ export interface IBlockchain {
                  reverse: boolean): Promise <T[]>
 
   /**
+   * Get the chains best block
+   */
+  getBestBlock<T> (): Promise<T>
+
+  /**
    * Put blocks to the blockchain
    *
    * @param {T} block
@@ -77,4 +82,14 @@ export interface IBlockchain {
    * @param {T} header
    */
   putHeader<T> (header: T[]): Promise<any>
+
+  /**
+   * Get the network id
+   */
+  getNetworkId (): number
+
+  /**
+   * Get the chain genesis
+   */
+  genesis (): Buffer[]
 }

@@ -2,14 +2,14 @@
 
 import { Slice, SliceId } from '../slice'
 import { Key, Datastore } from 'interface-datastore'
-import promisify from 'promisify-this'
+import promisify, { PromisifyAll } from 'promisify-this'
 import { register } from 'opium-decorator-resolvers'
 
 const SLICE_PREFIX = '/slices'
 
 @register()
 export class SliceStore {
-  _store: Datastore
+  _store: PromisifyAll<Datastore>
 
   /**
    * The store where to retrieve data from
