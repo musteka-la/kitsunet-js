@@ -5,21 +5,17 @@ import { BaseProtocol } from '../base-protocol'
 import { IEthProtocol, BlockBody, Status, ProtocolCodes } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
 import { IBlockchain } from '../../../blockchain'
-import { register } from 'opium-decorator-resolvers'
 import { BaseHandler } from './base-handler'
 import Block from 'ethereumjs-block'
-import { BN } from 'ethereumjs-util'
 
-@register()
-export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol, Status {
+export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
-  networkId: number = 0
-  td: BN = new BN(0)
-  bestHash: BN = new BN(0)
-  genesisHash: BN = new BN(0)
-  number: number = 0
-
   handlers: { [key: number]: BaseHandler<P> }
+
+  get status (): Status {
+    return {} as any // TODO: return valid status
+  }
+
   constructor (public blockChain: IBlockchain,
                peer: IPeerDescriptor<P>,
                networkProvider: INetwork<P>,
@@ -49,7 +45,8 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol, Sta
   async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
     for await (const msg of super.receive<Buffer, U[]>(readable)) {
       const code: ProtocolCodes = msg.shift() as unknown as number
-      if (code) {
+      // tslint:disable-next-line: strict-type-predicates
+      if (typeof code !== 'undefined') {
         yield this.handlers[code].handle(msg)
       }
     }
@@ -75,6 +72,6 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol, Sta
   }
 
   handshake (): Promise<Status> {
-    throw new Error('Method not implemented.')
+    return this.handlers[ProtocolCodes.Status].request(this.status)
   }
 }

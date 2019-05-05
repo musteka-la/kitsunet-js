@@ -17,7 +17,7 @@ export interface INetwork<P> {
   /**
    * handle incoming messages
    *
-   * @param readable - an iterable to ber read from asynchronously
+   * @param readable - an AsyncIterable to ber read from asynchronously
    */
   receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]>
 }

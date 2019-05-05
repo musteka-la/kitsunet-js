@@ -22,12 +22,14 @@ export abstract class BaseHandler<P> extends EE implements IHandler<P> {
    * @param msg - the message to be sent
    */
   abstract async handle<T, U = T> (msg?: T | T[]): Promise<U>
+  abstract async handle<T, U = T> (msg?: T | T[]): Promise<U[]>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
+  abstract async request<T, U = T> (msg?: T | T[]): Promise<U>
   abstract async request<T, U = T> (msg?: T | T[]): Promise<U[]>
 
   protected async send (msg: any[]): Promise<any> {

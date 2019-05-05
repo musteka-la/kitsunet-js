@@ -2,9 +2,7 @@
 
 import EE from 'events'
 import { IProtocol, INetwork, IEncoder, IPeerDescriptor } from '../interfaces'
-import { register } from 'opium-decorator-resolvers'
 
-@register()
 export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
   abstract get id (): string
   abstract get codec (): string
