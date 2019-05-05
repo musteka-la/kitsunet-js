@@ -47,6 +47,7 @@ export interface BlockHeadersMsg extends BaseMessage {
 }
 
 export interface IEthProtocol {
+  status: Status
   handshake (): Promise<Status>
   sendNewHashes (hashes: string[] | Buffer[]): Promise<void>
   getBlockHeaders (block: number, max: number, skip?: number, reverse?: boolean): AsyncIterable<Block[]>

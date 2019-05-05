@@ -17,7 +17,7 @@ export abstract class Node<P> implements INetwork<P> {
   /**
    * handle incoming messages
    *
-   * @param readable - an iterable to read from
+   * @param readable - an AsyncIterable to read from
    */
   abstract receive<T> (readable: AsyncIterable<T>): AsyncIterable<T>
 
