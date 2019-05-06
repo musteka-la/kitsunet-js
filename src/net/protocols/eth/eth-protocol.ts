@@ -16,6 +16,14 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
     return {} as any // TODO: return valid status
   }
 
+  /**
+   * Construct an Ethereum protocol
+   *
+   * @param blockChain - the blockchain to use for this peer
+   * @param peer - the peer descriptor for this peer
+   * @param networkProvider - the network provider
+   * @param encoder - an encoder to use with the peer
+   */
   constructor (public blockChain: IBlockchain,
                peer: IPeerDescriptor<P>,
                networkProvider: INetwork<P>,

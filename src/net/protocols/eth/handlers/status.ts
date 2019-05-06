@@ -14,29 +14,25 @@ export class Status<P> extends BaseHandler<P> {
     super('Status', ProtocolCodes.Status, networkProvider, peer)
   }
 
-  async handle<T> (msg?: T[] & [number, number, Buffer, Buffer, Buffer, number]): Promise<any> {
-    if (msg) {
-      return {
-        protocolVersion: msg[0],
-        networkId: msg[1],
-        td: new BN(msg[2]),
-        bestHash: new BN(msg[3]),
-        genesisHash: new BN(msg[4]),
-        number: msg[5]
-      }
+  async handle<T> (status: T[] & [number, number, Buffer, Buffer, Buffer, number]): Promise<any> {
+    return {
+      protocolVersion: status[0],
+      networkId: status[1],
+      td: new BN(status[2]),
+      bestHash: new BN(status[3]),
+      genesisHash: new BN(status[4]),
+      number: status[5]
     }
   }
 
-  async request<T> (msg?: T & StatusMsg): Promise<any> {
-    if (msg) {
-      return this.send([
-        msg.protocolVersion,
-        msg.networkId,
-        msg.td.toArrayLike(Buffer),
-        msg.bestHash.toArrayLike(Buffer),
-        msg.genesisHash.toArrayLike(Buffer),
-        msg.number
-      ])
-    }
+  async request<T> (status: T & StatusMsg): Promise<any> {
+    return this.send([
+      status.protocolVersion,
+      status.networkId,
+      status.td.toArrayLike(Buffer),
+      status.bestHash.toArrayLike(Buffer),
+      status.genesisHash.toArrayLike(Buffer),
+      status.number
+    ])
   }
 }

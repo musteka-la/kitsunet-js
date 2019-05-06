@@ -13,12 +13,12 @@ export interface IHandler<P> {
    *
    * @param msg - the message to be sent
    */
-  handle<T, U> (msg?: T | T[]): Promise<U | U[]>
+  handle<T, U> (msg: T | T[]): Promise<U | U[]>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
-  request<T, U> (msg?: T | T[]): Promise<U | U[]>
+  request<T, U> (msg: T | T[]): Promise<U | U[]>
 }
