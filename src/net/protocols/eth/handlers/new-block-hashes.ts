@@ -12,12 +12,14 @@ export class NewBlockHashes<P> extends BaseHandler<P> {
     super('NewBlockHashes', ProtocolCodes.NewBlockHashes, networkProvider, peer)
   }
 
-  async handle<T> (hashes: T[]): Promise<any> {
+  async handle<T, U> (hashes: T[]): Promise<U[][]> {
     // emit it on the provider
-    this.networkProvider.emit('block-hashes', hashes.map(hn => [hn[0], new BN(hn[1])]))
+    const announced = hashes.map(hn => [hn[0], new BN(hn[1])])
+    this.networkProvider.emit('new-block-hashes', announced)
+    return announced
   }
 
-  async request<T> (hashes: T[]): Promise<any> {
+  async request<T, U> (hashes: T[]): Promise<U> {
     return this.send(hashes.map(hn => [hn[0], hn[1].toArrayLike(Buffer)]))
   }
 }

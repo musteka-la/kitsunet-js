@@ -34,13 +34,13 @@ export interface Status extends BaseMessage {
   protocolVersion: number
   networkId: number
   td: BN
-  bestHash: BN
-  genesisHash: BN
-  number: number
+  bestHash: Buffer
+  genesisHash: Buffer
+  number: BN
 }
 
 export interface BlockHeadersMsg extends BaseMessage {
-  block: Block
+  block: Buffer | BN
   max: number
   skip: number
   reverse: boolean

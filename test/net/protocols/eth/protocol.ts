@@ -1,6 +1,7 @@
 'use strict'
 
 import 'mocha'
+import { EventEmitter as EE } from 'events'
 import { expect } from 'chai'
 import BN from 'bn.js'
 import { EthProtocol, ProtocolCodes } from '../../../../src/net/protocols/eth'
@@ -46,11 +47,11 @@ describe('Eth protocol', () => {
     beforeEach(() => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
-                                    {} as INetwork<any>,
+                                    new EE() as unknown as INetwork<any>,
                                     passthroughEncoder)
     })
 
-    it('should handle status request', async () => {
+    it('should handle Status request', async () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
           yield [ProtocolCodes.Status, 0, 0, Buffer.from([0]), Buffer.from([0]), Buffer.from([0]), 0]
@@ -139,6 +140,24 @@ describe('Eth protocol', () => {
         })
       }
     })
+
+    it('should handle NewBlockHashes request', async () => {
+      const source: AsyncIterable<any> = {
+        [Symbol.asyncIterator]: async function* () {
+          yield [
+            ProtocolCodes.NewBlockHashes, [block.header.hash(), block.header.number]
+          ]
+        }
+      }
+
+      ethProtocol.on('new-block-hashes', (newBlocks) => {
+        expect(newBlocks[0]).to.eql([block.header.hash(), new BN(block.header.number)])
+      })
+
+      for await (const msg of ethProtocol.receive(source)) {
+        expect(msg[0]).to.eql([block.header.hash(), new BN(block.header.number)])
+      }
+    })
   })
 
   describe('handles - request', () => {
@@ -161,6 +180,29 @@ describe('Eth protocol', () => {
                                     passthroughEncoder)
     })
 
+    it('should send Status request', async () => {
+      sendHandler = (msg) => {
+        const [msgId, protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
+        expect(msgId).to.eql(ProtocolCodes.Status)
+        expect(protocolVersion).to.eql(0)
+        expect(networkId).to.eql(0)
+        expect(td).to.eql(new BN(0).toArrayLike(Buffer))
+        expect(bestHash).to.eql(Buffer.from([0]))
+        expect(genesisHash).to.eql(Buffer.from([0]))
+        expect(_number).to.eql(new BN(0).toArrayLike(Buffer))
+      }
+
+      const status: Status<any> = new Status(ethProtocol, {} as IPeerDescriptor<any>)
+      await status.request({
+        protocolVersion: 0,
+        networkId: 0,
+        td: new BN(0),
+        bestHash: Buffer.from([0]),
+        genesisHash: Buffer.from([0]),
+        number: new BN(0)
+      })
+    })
+
     it('should send GetBlockHeaders request using block number', async () => {
       sendHandler = (msg) => {
         const [msgId, _block, max, skip, reverse] = msg
@@ -173,6 +215,48 @@ describe('Eth protocol', () => {
 
       const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol,{} as IPeerDescriptor<any>)
       await getBlockHeaders.request([new BN(block.header.number), 20, 0, 0])
+    })
+
+    it('should send GetBlockHeaders request using block hash', async () => {
+      sendHandler = (msg) => {
+        const [msgId, _block, max, skip, reverse] = msg
+        expect(msgId).to.eql(ProtocolCodes.GetBlockHeaders)
+        expect(_block).to.eql(block.header.hash())
+        expect(max).to.eql(Buffer.from([20]))
+        expect(skip).to.eql(Buffer.from([0]))
+        expect(reverse).to.eql(Buffer.from([0]))
+      }
+
+      const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol,{} as IPeerDescriptor<any>)
+      await getBlockHeaders.request([block.header.hash(), 20, 0, 0])
+    })
+
+    it('should send BlockHeaders', async () => {
+      sendHandler = (msg) => {
+        expect(msg[0]).to.eq(ProtocolCodes.BlockHeaders)
+        expect(msg[1]).to.eql(fromRpc(jsonBlock.block).header.raw)
+      }
+
+      const blockHeaders: BlockHeaders<any> = new BlockHeaders(ethProtocol,{} as IPeerDescriptor<any>)
+      await blockHeaders.request([fromRpc(jsonBlock.block).header])
+    })
+
+    it('should send NewBlockHashes', async () => {
+      sendHandler = (msg) => {
+        expect(msg[0]).to.eq(ProtocolCodes.NewBlockHashes)
+        expect(msg[1]).to.eql([
+          fromRpc(jsonBlock.block).header.hash(),
+          fromRpc(jsonBlock.block).header.number
+        ])
+      }
+
+      const newBlockHashes: NewBlockHashes<any> = new NewBlockHashes(ethProtocol, {} as IPeerDescriptor<any>)
+      await newBlockHashes.request([
+        [
+          fromRpc(jsonBlock.block).header.hash(),
+          new BN(fromRpc(jsonBlock.block).header.number)
+        ]
+      ])
     })
   })
 })

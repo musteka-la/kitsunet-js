@@ -25,14 +25,14 @@ export class Status<P> extends BaseHandler<P> {
     }
   }
 
-  async request<T> (status: T & StatusMsg): Promise<any> {
+  async request<T> (status: T & StatusMsg): Promise<T[]> {
     return this.send([
       status.protocolVersion,
       status.networkId,
       status.td.toArrayLike(Buffer),
-      status.bestHash.toArrayLike(Buffer),
-      status.genesisHash.toArrayLike(Buffer),
-      status.number
+      status.bestHash,
+      status.genesisHash,
+      status.number.toArrayLike(Buffer)
     ])
   }
 }
