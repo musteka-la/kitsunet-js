@@ -1,6 +1,8 @@
 export = Block;
 declare class Block {
-  constructor(data: any, opts: any);
+  He: any;
+  constructor(data: any, opts?: any);
+  raw: any;
   transactions: any;
   uncleHeaders: any;
   txTrie: any;

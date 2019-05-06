@@ -19,6 +19,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "downlevelIteration": true,
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "resolveJsonModule": true
   }
 }
