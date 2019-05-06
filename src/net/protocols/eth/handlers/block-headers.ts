@@ -26,7 +26,8 @@ export class GetBlockHeaders<P> extends BaseHandler<P> {
     }
   }
 
-  async request<T> (msg?: T[] & [Block | number, number, number, boolean]): Promise<any> {
+  // async request<T> (msg?: T[] & [Block | number, number, number, boolean]): Promise<any> {
+  async request<T> (msg?: T[] & any): Promise<any> {
     const [block, max, skip, reverse] = msg
     return this.send([BN.isBN(block) ? block.toArrayLike(Buffer) : block, max, skip, reverse])
   }
