@@ -28,14 +28,14 @@ export interface IEncoder {
    *
    * @param msg - a buffer to encode
    */
-  encode<T, U> (msg: T): AsyncIterable<U>
+  encode<T, U = T> (msg: T): AsyncIterable<U>
 
   /**
    * A buffer to decode
    *
    * @param msg - decode a buffer
    */
-  decode<T, U> (msg: T): AsyncIterable<U>
+  decode<T, U = T> (msg: T): AsyncIterable<U>
 }
 
 export interface IPeerDescriptor<T> {
