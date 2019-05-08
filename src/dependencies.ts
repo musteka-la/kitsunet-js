@@ -39,11 +39,11 @@ module.exports = async (container, options) => {
   // register kitsunet rpc
   container.registerFactory('kitsunet-rpc',
                             (node, sliceManager, ksnDialer, ksnDriver) => new KsnRpc({
-      node,
-      sliceManager,
-      ksnDialer,
-      ksnDriver
-    }),
+                              node,
+                              sliceManager,
+                              ksnDialer,
+                              ksnDriver
+                            }),
                             [
       'node',
       'slice-manager',
@@ -67,57 +67,57 @@ module.exports = async (container, options) => {
   // register KsnDriver options
   container.registerFactory('kitsunet-driver',
                             (node, ksnDialer, options, discovery, blockTracker, telemetry, stats) => {
-      return new KsnDriver({
-        node,
-        ksnDialer,
-        isBridge: options.bridge,
-        discovery,
+                              return new KsnDriver({
+                                node,
+                                ksnDialer,
+                                isBridge: options.bridge,
+                                discovery,
         // blockchain, // TODO: needs a checkpointed blockchain (in the works)
-        blockTracker,
-        telemetry,
-        stats
-      })
-    },                      [
-      'node',
-      'kitsunet-dialer',
-      'options',
-      'kitsunet-discovery',
+                                blockTracker,
+                                telemetry,
+                                stats
+                              })
+                            },                      [
+                              'node',
+                              'kitsunet-dialer',
+                              'options',
+                              'kitsunet-discovery',
       // 'blockchain',
-      'block-tracker',
-      'telemetry',
-      'libp2p-stats'
-    ])
+                              'block-tracker',
+                              'telemetry',
+                              'libp2p-stats'
+                            ])
 
   // register SliceManager options
   container.registerFactory('slice-manager',
                             (bridgeTracker, pubsubTracker, slicesStore, blockTracker, ksnDriver) => {
-      return new SliceManager({
-        bridgeTracker,
-        pubsubTracker,
-        slicesStore,
-        blockTracker,
-        ksnDriver
-      })
-    },                      [
-      'bridge-tracker',
-      'pubsub-tracker',
-      'slices-store',
-      'block-tracker',
-      'kitsunet-driver'
-    ])
+                              return new SliceManager({
+                                bridgeTracker,
+                                pubsubTracker,
+                                slicesStore,
+                                blockTracker,
+                                ksnDriver
+                              })
+                            },                      [
+                              'bridge-tracker',
+                              'pubsub-tracker',
+                              'slices-store',
+                              'block-tracker',
+                              'kitsunet-driver'
+                            ])
 
   // register kitsunet
   container.registerFactory('kitsunet',
                             (sliceManager, ksnDriver, ksnRpc, telemetry, libp2pStats, kitsunetStats) => {
-      ksnDriver.ksnRpc = ksnRpc // circular dep
-      telemetry.setStateHandler(() => {
-        return {
+                              ksnDriver.ksnRpc = ksnRpc // circular dep
+                              telemetry.setStateHandler(() => {
+                                return {
           libp2p: libp2pStats.getState(),
           kitsunet: kitsunetStats.getState()
         }
-      })
-      return new Kitsunet(sliceManager, ksnDriver, telemetry, libp2pStats, kitsunetStats)
-    },
+                              })
+                              return new Kitsunet(sliceManager, ksnDriver, telemetry, libp2pStats, kitsunetStats)
+                            },
                             [
       'slice-manager',
       'kitsunet-driver',

@@ -6,14 +6,14 @@ import * as utils from 'ethereumjs-util'
 import { BaseHandler } from '../base-handler'
 import { IPeerDescriptor } from '../../../interfaces'
 import { EthProtocol } from '../eth-protocol'
-import { ProtocolCodes, BlockHeadersMsg } from '../interfaces'
+import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
 type BlockHeader = Block.Header
 
 export class GetBlockHeaders<P> extends BaseHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
-    super('GetBlockHeaders', ProtocolCodes.GetBlockHeaders, networkProvider, peer)
+    super('GetBlockHeaders', ETH_MESSAGE_CODES.GET_BLOCK_HEADERS, networkProvider, peer)
   }
 
   async handle<T, BlockHeadersMsg> (headers: T[] & [Buffer, Buffer, Buffer, Buffer]): Promise<BlockHeadersMsg> {
@@ -40,7 +40,7 @@ export class GetBlockHeaders<P> extends BaseHandler<P> {
 export class BlockHeaders<P> extends BaseHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
-    super('BlockHeaders', ProtocolCodes.BlockHeaders, networkProvider, peer)
+    super('BlockHeaders', ETH_MESSAGE_CODES.BLOCK_HEADERS, networkProvider, peer)
   }
 
   async handle<T, U> (headers: T[]): Promise <Block.Header[]> {

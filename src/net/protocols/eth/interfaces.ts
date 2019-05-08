@@ -3,21 +3,7 @@
 import Block from 'ethereumjs-block'
 import Tx from 'ethereumjs-tx'
 import BN from 'bn.js'
-
-export enum ProtocolCodes {
-  Status = 0x00,
-  NewBlockHashes = 0x01,
-  Transactions = 0x002,
-  GetBlockHeaders = 0x003,
-  BlockHeaders = 0x004,
-  GetBlockBodies = 0x005,
-  BlockBodies = 0x006,
-  NewBlock = 0x007,
-  GetNodeData = 0x008,
-  NodeData = 0x0e,
-  GetReceipts = 0x0f,
-  Receipts = 0x10
-}
+import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
 // Placeholder interface, should be exposed by ethereumjs
 export interface BlockBody {
@@ -27,7 +13,7 @@ export interface BlockBody {
 }
 
 export interface BaseMessage {
-  code?: ProtocolCodes
+  code?: ETH_MESSAGE_CODES
 }
 
 export interface Status extends BaseMessage {

@@ -1,231 +1,199 @@
-// 'use strict'
+'use strict'
 
-// import { Node } from '../interfaces'
+import { Node } from '../node'
+import { Devp2pPeer } from './devp2p-peer'
 
-// const { randomBytes } = require('crypto')
-// const devp2p = require('ethereumjs-devp2p')
-// const RlpxPeer = require('../peer/rlpxpeer')
-// const { parse } = require('../../util')
+import { randomBytes } from 'crypto'
+import { Peer as RlpxPeer, DPT, RLPx, PeerInfo } from 'ethereumjs-devp2p'
+import { NetworkType, IProtocolConstructor, IProtocol, IPeerDescriptor } from '../interfaces'
+import { register } from 'opium-decorator-resolvers'
+import { NetworkPeer } from '../peer'
+import mafmt from 'mafmt'
 
-// const defaultOptions = {
-//   port: 30303,
-//   key: randomBytes(32),
-//   clientFilter: ['go1.5', 'go1.6', 'go1.7', 'quorum', 'pirl', 'ubiq', 'gmc', 'gwhale', 'prichain'],
-//   bootnodes: []
-// }
+export interface RLPxNodeOptions {
+  key: Buffer
+  port: number
+  bootnodes: string[]
+  clientFilter: string[]
+}
 
-// const ignoredErrors = new RegExp([
-//   'EPIPE',
-//   'ECONNRESET',
-//   'ETIMEDOUT',
-//   'NetworkId mismatch',
-//   'Timeout error: ping',
-//   'Genesis block mismatch',
-//   'Handshake timed out',
-//   'Invalid address buffer',
-//   'Invalid MAC',
-//   'Invalid timestamp buffer',
-//   'Hash verification failed'
-// ].join('|'))
+export const defaultOptions: RLPxNodeOptions = {
+  port: 30303,
+  key: randomBytes(32),
+  clientFilter: ['go1.5', 'go1.6', 'go1.7', 'quorum', 'pirl', 'ubiq', 'gmc', 'gwhale', 'prichain'],
+  bootnodes: []
+}
 
-// export class RlpxNode implements Node<> {
-//   /**
-//    * Create new DevP2P/RLPx server
-//    * @param {Object}   options constructor parameters
-//    * @param {Object[]} [options.bootnodes] list of bootnodes to use for discovery (can be
-//    * a comma separated string or list)
-//    * @param {number}   [options.maxPeers=25] maximum peers allowed
-//    * @param {number}   [options.port=null] local port to listen on
-//    * @param {Buffer}   [options.key] private key to use for server
-//    * @param {string[]} [options.clientFilter] list of supported clients
-//    * @param {number}   [options.refreshInterval=30000] how often (in ms) to discover new peers
-//    * @param {Logger}   [options.logger] Logger instance
-//    */
-//   constructor (options) {
-//     super(options)
-//     options = { ...defaultOptions, ...options }
+const ignoredErrors = new RegExp([
+  'EPIPE',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'NetworkId mismatch',
+  'Timeout error: ping',
+  'Genesis block mismatch',
+  'Handshake timed out',
+  'Invalid address buffer',
+  'Invalid MAC',
+  'Invalid timestamp buffer',
+  'Hash verification failed'
+].join('|'))
 
-//     this.port = options.port
-//     this.key = options.key
-//     this.clientFilter = options.clientFilter
-//     this.bootnodes = options.bootnodes
-//     this.init()
-//   }
+@register()
+export class RlpxNode extends Node<Devp2pPeer> {
+  port: any
+  key: any
+  clientFilter: any
+  bootnodes: any
+  started: any
+  refreshInterval: any
+  maxPeers: any
+  logger: any
 
-//   /**
-//    * Server name
-//    * @type {string}
-//    */
-//   get name () {
-//     return 'rlpx'
-//   }
+  get type (): NetworkType {
+    return NetworkType.DEVP2P
+  }
+  constructor (@register() public dpt: DPT,
+               @register() public rlpx: RLPx,
+               @register() public peer: NetworkPeer<Devp2pPeer>,
+               @register() private protocolRegistry: IProtocolConstructor<Devp2pPeer>[]) {
+    super()
+  }
 
-//   init () {
-//     this.dpt = null
-//     this.rlpx = null
-//     this.peers = new Map()
-//     if (typeof this.bootnodes === 'string') {
-//       this.bootnodes = parse.bootnodes(this.bootnodes)
-//     }
-//     if (typeof this.key === 'string') {
-//       this.key = Buffer.from(this.key, 'hex')
-//     }
-//   }
+  async send<T, U> (msg: T,
+                    protocol?: IProtocol<Devp2pPeer>): Promise<U | U[] | void> {
+    throw new Error('Method not implemented.')
+  }
 
-//   /**
-//    * Start Devp2p/RLPx server. Returns a promise that resolves once server has been started.
-//    * @return {Promise}
-//    */
-//   async start () {
-//     if (this.started) {
-//       return false
-//     }
+  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+    throw new Error('Method not implemented.')
+  }
 
-//     await super.start()
-//     this.initDpt()
-//     this.initRlpx()
+  mount (protocol: IProtocol<Devp2pPeer>): void {
+    throw new Error('Method not implemented.')
+  }
 
-//     this.bootnodes.map(node => {
-//       const bootnode = {
-//         address: node.ip,
-//         udpPort: node.port,
-//         tcpPort: node.port
-//       }
-//       return this.dpt.bootstrap(bootnode).catch(e => this.error(e))
-//     })
+  unmount (protocol: IProtocol<Devp2pPeer>): void {
+    throw new Error('Method not implemented.')
+  }
 
-//     this.started = true
-//   }
+  /**
+   * Start Devp2p/RLPx server. Returns a promise that resolves once server has been started.
+   * @return {Promise}
+   */
+  async start (): Promise <void> {
+    if (this .started) {
+      return
+    }
 
-//   /**
-//    * Stop Devp2p/RLPx server. Returns a promise that resolves once server has been stopped.
-//    * @return {Promise}
-//    */
-//   async stop () {
-//     if (!this.started) {
-//       return false
-//     }
-//     this.rlpx.destroy()
-//     this.dpt.destroy()
-//     await super.stop()
-//   }
+    const { udpPort, addr } = this.peer.peer.peer
+    this.dpt.bind(udpPort, addr)
+    this.bootnodes.map(async (node) => {
+      const bootnode: PeerInfo = {
+        address: node.ip,
+        udpPort: node.port,
+        tcpPort: node.port
+      }
+      await this.dpt.bootstrap(bootnode)
+      return
+    })
+    this.dpt.on('error', this.error)
 
-//   /**
-//    * Ban peer for a specified time
-//    * @param  {string} peerId id of peer
-//    * @param  {number} [maxAge] how long to ban peer
-//    * @return {Promise}
-//    */
-//   ban (peerId, maxAge = 60000) {
-//     if (!this.started) {
-//       return false
-//     }
-//     this.dpt.banPeer(peerId, maxAge)
-//   }
+    await this.initRlpx()
 
-//   /**
-//    * Handles errors from server and peers
-//    * @private
-//    * @param  {Error} error
-//    * @param  {Peer} peer
-//    * @emits  error
-//    */
-//   error (error, peer) {
-//     if (ignoredErrors.test(error.message)) {
-//       return
-//     }
-//     if (peer) {
-//       peer.emit('error', error)
-//     } else {
-//       this.emit('error', error)
-//     }
-//   }
+    this.started = true
+  }
 
-//   /**
-//    * Initializes DPT for peer discovery
-//    * @private
-//    */
-//   initDpt () {
-//     this.dpt = new devp2p.DPT(this.key, {
-//       refreshInterval: this.refreshInterval,
-//       endpoint: {
-//         address: '0.0.0.0',
-//         udpPort: null,
-//         tcpPort: null
-//       }
-//     })
+  /**
+   * Stop Devp2p/RLPx server. Returns a promise that resolves once server has been stopped.
+   * @return {Promise}
+   */
+  async stop () {
+    if (!this .started) {
+      return
+    }
+    this.rlpx.destroy()
+    this.dpt.destroy()
+  }
 
-//     this.dpt.on('error', e => this.error(e))
+  /**
+   * Handles errors from server and peers
+   * @private
+   * @param  {Error} error
+   * @param  {Peer} peer
+   * @emits  error
+   */
+  error (error: Error, peer: RlpxPeer) {
+    if (ignoredErrors.test(error.message)) {
+      return
+    }
+    if (peer) {
+      peer.emit('error', error)
+    } else {
+      throw error
+    }
+  }
 
-//     if (this.port) {
-//       this.dpt.bind(this.port, '0.0.0.0')
-//     }
-//   }
+  /**
+   * Initializes RLPx instance for peer management
+   * @private
+   */
+  async initRlpx () {
+    this.rlpx.on('peer:added', async (rlpxPeer) => {
+      if (this.peer.id === rlpxPeer.getId().toString('hex')) {
+        this.peer.peer.peer.peer = rlpxPeer
+        this.started = true
+      }
 
-//   /**
-//    * Initializes RLPx instance for peer management
-//    * @private
-//    */
-//   initRlpx () {
-//     this.rlpx = new devp2p.RLPx(this.key, {
-//       dpt: this.dpt,
-//       maxPeers: this.maxPeers,
-//       capabilities: RlpxPeer.capabilities(this.protocols),
-//       remoteClientIdFilter: this.clientFilter,
-//       listenPort: this.port
-//     })
+      const peer = new RlpxPeer({
+        id: rlpxPeer.getId().toString('hex'),
+        host: rlpxPeer._socket.remoteAddress,
+        port: rlpxPeer._socket.remotePort,
+        protocols: Array.from(this.protocols),
+        inbound: !!rlpxPeer._socket.server
+      })
 
-//     this.rlpx.on('peer:added', async (rlpxPeer) => {
-//       const peer = new RlpxPeer({
-//         id: rlpxPeer.getId().toString('hex'),
-//         host: rlpxPeer._socket.remoteAddress,
-//         port: rlpxPeer._socket.remotePort,
-//         protocols: Array.from(this.protocols),
-//         inbound: !!rlpxPeer._socket.server
-//       })
-//       try {
-//         await peer.accept(rlpxPeer, this)
-//         this.peers.set(peer.id, peer)
-//         this.logger.debug(`Peer connected: ${peer}`)
-//         this.emit('connected', peer)
-//       } catch (error) {
-//         this.error(error)
-//       }
-//     })
+      try {
+        await peer.accept(rlpxPeer, this)
+        this.peers.set(peer.id, peer)
+        this.logger.debug(`Peer connected: ${peer}`)
+        this.emit('connected', peer)
+      } catch (error) {
+        this.error(error)
+      }
+    })
 
-//     this.rlpx.on('peer:removed', (rlpxPeer, reason) => {
-//       const id = rlpxPeer.getId().toString('hex')
-//       const peer = this.peers.get(id)
-//       if (peer) {
-//         this.peers.delete(peer.id)
-//         this.logger.debug(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${peer}`)
-//         this.emit('disconnected', peer)
-//       }
-//     })
+    this.rlpx.on('peer:removed', (rlpxPeer, reason) => {
+      const id = rlpxPeer.getId().toString('hex')
+      const peer = this.peers.get(id)
+      if (peer) {
+        this.peers.delete(peer.id)
+        this.logger.debug(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${peer}`)
+        this.emit('disconnected', peer)
+      }
+    })
 
-//     this.rlpx.on('peer:error', (rlpxPeer, error) => {
-//       const peerId = rlpxPeer && rlpxPeer.getId()
-//       if (!peerId) {
-//         return this.error(error)
-//       }
-//       const id = peerId.toString('hex')
-//       const peer = this.peers.get(id)
-//       this.error(error, peer)
-//     })
+    this.rlpx.on('peer:error', (rlpxPeer, error) => {
+      const peerId = rlpxPeer && rlpxPeer.getId()
+      if (!peerId) {
+        return this.error(error)
+      }
+      const id = peerId.toString('hex')
+      const peer = this.peers.get(id)
+      this.error(error, peer)
+    })
 
-//     this.rlpx.on('error', e => this.error(e))
+    this.rlpx.on('error', e => this.error(e))
 
-//     this.rlpx.on('listening', () => {
-//       this.emit('listening', {
-//         transport: this.name,
-//         url: `enode://${this.rlpx._id.toString('hex')}@[::]:${this.port}`
-//       })
-//     })
+    this.rlpx.on('listening', () => {
+      this.emit('listening', {
+        transport: this.name,
+        url: `enode://${this.rlpx._id.toString('hex')}@[::]:${this.port}`
+      })
+    })
 
-//     if (this.port) {
-//       this.rlpx.listen(this.port, '0.0.0.0')
-//     }
-//   }
-// }
-
-// module.exports = RlpxNode
+    const { tcpPort, addr } = this.peer.peer.peer
+    if (this.port) {
+      this.rlpx.listen(tcpPort, addr)
+    }
+  }
+}

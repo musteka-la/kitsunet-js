@@ -4,12 +4,12 @@ import BN from 'bn.js'
 import { BaseHandler } from '../base-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
-import { ProtocolCodes } from '../interfaces'
+import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
 export class NewBlockHashes<P> extends BaseHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
-    super('NewBlockHashes', ProtocolCodes.NewBlockHashes, networkProvider, peer)
+    super('NewBlockHashes', ETH_MESSAGE_CODES.NEW_BLOCK_HASHES, networkProvider, peer)
   }
 
   async handle<T, U> (hashes: T[]): Promise<U[][]> {

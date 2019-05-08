@@ -60,6 +60,7 @@
     "libp2p-tcp": "~0.13.0",
     "libp2p-webrtc-star": "~0.15.5",
     "lodash.get": "^4.4.2",
+    "mafmt": "^6.0.7",
     "multihashing": "^0.3.3",
     "multihashing-async": "^0.5.2",
     "multiplex": "^6.7.0",

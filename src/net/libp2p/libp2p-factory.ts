@@ -11,8 +11,8 @@ import Libp2p from 'libp2p'
 import Bootstrap from 'libp2p-bootstrap'
 import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
 
-const PPeerInfo = promisify(PeerInfo, false)
-const PPeerId = promisify(PeerId, false)
+const PPeerInfo: any = promisify(PeerInfo, false)
+const PPeerId: any = promisify(PeerId, false)
 
 export class LibP2PFactory {
   /**

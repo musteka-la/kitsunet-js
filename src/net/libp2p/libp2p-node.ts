@@ -13,19 +13,19 @@ import debug from 'debug'
 
 import {
   IProtocol,
-  NodeType,
+  NetworkType,
   IProtocolConstructor,
   INetwork
 } from '../interfaces'
 
 @register()
 export class Libp2pNode extends Node<PeerInfo> {
-  get type (): NodeType {
-    return NodeType.LIBP2P
+  started: boolean = false
+
+  get type (): NetworkType {
+    return NetworkType.LIBP2P
   }
 
-  peers: Map <string, NetworkPeer<PeerInfo>> = new Map()
-  protocols: Map <string, IProtocol <PeerInfo>> = new Map()
   constructor (@register() public node: Libp2p,
                @register() public peer: NetworkPeer<PeerInfo>,
                @register() protocolRegistry: IProtocolConstructor<PeerInfo>[]) {
@@ -48,6 +48,11 @@ export class Libp2pNode extends Node<PeerInfo> {
       })
 
       this.peers.set(libp2pPeer.id, new NetworkPeer(libp2pPeer, protos))
+    })
+
+    node.on('peer:disconnected', (peerInfo: PeerInfo) => {
+      // remove disconnected peer
+      this.peers.delete(peerInfo.id.toB58String())
     })
   }
 
@@ -74,37 +79,37 @@ export class Libp2pNode extends Node<PeerInfo> {
     }
   }
 
-  async send<T, U> (msg: T,
-                    protocol: IProtocol <PeerInfo> ,
-                    peer ?: NetworkPeer<PeerInfo>): Promise < U | void > {
-    if (peer) {
-      const conn = await this.node.dialProtocol(peer, protocol.codec)
-      return new Promise((resolve, reject) => {
-        pull(
-          pull.values(msg),
-          conn,
-          pull.collect((err: Error, values: U) => {
-            if (err) return reject(err)
-            resolve(values)
-          }))
-      })
+  async send<T, U = T> (msg: T,
+                        protocol?: IProtocol<PeerInfo>,
+                        peer?: PeerInfo): Promise<void | U | U[]> {
+    if (!peer || !protocol) {
+      throw new Error('both peer and protocol are required!')
     }
 
-    return
+    const conn = await this.node.dialProtocol(peer, protocol.codec)
+    return new Promise((resolve, reject) => {
+      pull(
+        pull.values(msg),
+        conn,
+        pull.collect((err: Error, values: U) => {
+          if (err) return reject(err)
+          resolve(values)
+        }))
+    })
   }
 
-  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U> {
+  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable <U> {
     throw new Error('not implemented!')
   }
 
   async start () {
     await this.node.start()
-    this.peer.addrs.forEach((ma) => {
-      console.log('libp2p listening on', ma.toString())
-    })
+    this.peer.addrs.forEach((ma) => { console.log('libp2p listening on', ma.toString()) })
+    this.started = true
   }
 
   async stop () {
     await this.node.stop()
+    this.started = false
   }
 }

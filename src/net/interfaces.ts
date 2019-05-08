@@ -1,6 +1,6 @@
 'use strict'
 
-export enum NodeType {
+export enum NetworkType {
   LIBP2P, DEVP2P
 }
 
@@ -12,6 +12,9 @@ export interface INetwork<P> {
    * @param protocol - a protocol object to pass to the network provider
    * @param peer - (optional) raw peer
    */
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U[]>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<void>
   send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | U[] | void>
 
   /**
@@ -19,6 +22,8 @@ export interface INetwork<P> {
    *
    * @param readable - an AsyncIterable to ber read from asynchronously
    */
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U[]>
   receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]>
 }
 
@@ -39,7 +44,7 @@ export interface IEncoder {
 }
 
 export interface IPeerDescriptor<T> {
-  peer: T               // the raw peer (if any)
+  peer: T               // the raw peer
   id: string            // the string representation of the peers id
   addrs: Set<string>    // a set of peer addresses
 }
