@@ -2,11 +2,12 @@
 
 import * as Handlers from './handlers'
 import { BaseProtocol } from '../base-protocol'
-import { IEthProtocol, BlockBody, Status, ProtocolCodes } from './interfaces'
+import { IEthProtocol, BlockBody, Status } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
 import { IBlockchain } from '../../../blockchain'
 import { BaseHandler } from './base-handler'
 import Block from 'ethereumjs-block'
+import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
 export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
@@ -50,17 +51,17 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
     return ['62', '63']
   }
 
-  async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
+  async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U | U[]> {
     for await (const msg of super.receive<Buffer, U[]>(readable)) {
-      const code: ProtocolCodes = msg.shift() as unknown as number
+      const code: ETH_MESSAGE_CODES = msg.shift() as unknown as ETH_MESSAGE_CODES
       // tslint:disable-next-line: strict-type-predicates
       if (typeof code !== 'undefined') {
-        yield this.handlers[code].handle(msg)
+        yield this.handlers[code].handle(msg) as any // TODO: investigate type failure
       }
     }
   }
 
-  async send<Message, Buffer> (msg: Message): Promise<Buffer> {
+  async send<Message, Buffer> (msg: Message): Promise<Buffer | Buffer[] | void> {
     return super.send(msg, this)
   }
 
@@ -68,7 +69,7 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
                           max: number,
                           skip?: number,
                           reverse?: boolean): AsyncIterable<Block[]> {
-    return this.handlers[ProtocolCodes.GetBlockHeaders].request([block, max, skip, reverse])
+    return this.handlers[ETH_MESSAGE_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
   }
 
   async *getBlockBodies (hashes: string[] | Buffer[]): AsyncIterable<BlockBody[]> {
@@ -80,6 +81,6 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   }
 
   handshake (): Promise<Status> {
-    return this.handlers[ProtocolCodes.Status].request(this.status)
+    return this.handlers[ETH_MESSAGE_CODES.STATUS].request(this.status)
   }
 }

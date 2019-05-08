@@ -21,9 +21,9 @@ export abstract class BaseHandler<P> extends EE implements IHandler<P> {
    *
    * @param msg - the message to be sent
    */
-  abstract async handle<T, U = T> (msg: T | T[]): Promise<U>
-  abstract async handle<T, U = T> (msg: T | T[]): Promise<U[]>
-  abstract async handle<T, U = T> (msg: T | T[]): Promise<U | U[]>
+  abstract async handle<T, U = T> (msg: T): Promise<U>
+  abstract async handle<T, U = T> (msg: T[]): Promise<U[]>
+  abstract async handle<T, U = T> (msg: T | T[]): Promise<U[] | U | void>
 
   /**
    * Send a request
@@ -36,7 +36,8 @@ export abstract class BaseHandler<P> extends EE implements IHandler<P> {
 
   protected async send<T> (msg: any[]): Promise<T>
   protected async send<T> (msg: any[]): Promise<T[]>
-  protected async send<T> (msg: any[]): Promise<T | T[]> {
+  protected async send<T> (msg: any[]): Promise<void>
+  protected async send<T> (msg: any[]): Promise<T | T[] | void> {
     msg.unshift(this.id)
     return this.networkProvider.send(msg)
   }
