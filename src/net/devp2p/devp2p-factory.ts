@@ -1,7 +1,27 @@
 'use strict'
 
-import { DPT, RLPx, PeerInfo, Capabilities } from 'ethereumjs-devp2p'
+import {
+  DPT,
+  RLPx,
+  PeerInfo,
+  Capabilities
+} from 'ethereumjs-devp2p'
+import { randomBytes } from 'crypto'
 import { register } from 'opium-decorator-resolvers'
+
+export interface RLPxNodeOptions {
+  key: Buffer
+  port: number
+  bootnodes: string[]
+  clientFilter: string[]
+}
+
+export const defaultOptions: RLPxNodeOptions = {
+  port: 30303,
+  key: randomBytes(32),
+  clientFilter: ['go1.5', 'go1.6', 'go1.7', 'quorum', 'pirl', 'ubiq', 'gmc', 'gwhale', 'prichain'],
+  bootnodes: []
+}
 
 export class DevP2PFactory {
   @register()

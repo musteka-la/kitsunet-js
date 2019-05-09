@@ -102,8 +102,8 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   async send<T, U = T> (msg: T,
-                        protocol?: IProtocol<Libp2pPeer> | undefined,
-                        peer?: Libp2pPeer | undefined): Promise<void | U | U[]> {
+                        protocol?: IProtocol<Libp2pPeer>,
+                        peer?: Libp2pPeer): Promise<void | U | U[]> {
     if (!peer || !protocol) {
       throw new Error('both peer and protocol are required!')
     }
