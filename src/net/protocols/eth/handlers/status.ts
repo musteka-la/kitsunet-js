@@ -3,13 +3,13 @@
 'use strict'
 
 import BN from 'bn.js'
-import { BaseHandler } from '../base-handler'
+import { EthHandler } from '../eth-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { Status as StatusMsg } from '../interfaces'
 import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
-export class Status<P> extends BaseHandler<P> {
+export class Status<P> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('Status', ETH_MESSAGE_CODES.STATUS, networkProvider, peer)

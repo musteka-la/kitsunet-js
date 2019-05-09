@@ -4,7 +4,7 @@ import * as Handlers from './handlers'
 import debug from 'debug'
 import { BaseProtocol } from '../base-protocol'
 import { INetwork, IPeerDescriptor } from '../../interfaces'
-import { BaseHandler } from './base-handler'
+import { KitsunetHandler } from './kitsunet-handler'
 import { register } from 'opium-decorator-resolvers'
 import { KsnEncoder } from './ksn-encoder'
 import { SliceId, Slice } from '../../../slice'
@@ -33,7 +33,7 @@ const VERSION = '1.0.0'
 export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
-  handlers: { [key: string]: BaseHandler<P> }
+  handlers: { [key: string]: KitsunetHandler<P> }
   versions: string[] = [VERSION]
   userAgent: string = 'ksn'
   latestBlock: number | null = null

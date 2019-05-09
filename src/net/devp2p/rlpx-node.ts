@@ -99,7 +99,6 @@ export class RlpxNode extends Node<Devp2pPeer> {
     this.dpt.on('error', this.error)
 
     await this.initRlpx()
-
     this.started = true
   }
 
