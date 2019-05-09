@@ -2,13 +2,28 @@
 
 import { Node } from '../node'
 import { Devp2pPeer } from './devp2p-peer'
-
 import { randomBytes } from 'crypto'
-import { Peer as RlpxPeer, DPT, RLPx, PeerInfo } from 'ethereumjs-devp2p'
-import { NetworkType, IProtocolConstructor, IProtocol, IPeerDescriptor } from '../interfaces'
 import { register } from 'opium-decorator-resolvers'
 import { NetworkPeer } from '../peer'
-import mafmt from 'mafmt'
+
+import {
+  Peer,
+  DPT,
+  RLPx,
+  PeerInfo,
+  ProtocolDescriptor
+} from 'ethereumjs-devp2p'
+
+import {
+  NetworkType,
+  IProtocolConstructor,
+  IProtocol,
+  INetwork,
+  IProtocolDescriptor,
+  ICapability,
+  IPeerDescriptor
+} from '../interfaces'
+import proto = require('../protocols/kitsunet/proto')
 
 export interface RLPxNodeOptions {
   key: Buffer
@@ -40,6 +55,16 @@ const ignoredErrors = new RegExp([
 
 @register()
 export class RlpxNode extends Node<Devp2pPeer> {
+  peer?: Devp2pPeer
+
+  // the protocols that this node supports
+  caps: ICapability[] = [
+    {
+      id: 'eth',
+      versions: ['62', '63']
+    }
+  ]
+
   port: any
   key: any
   clientFilter: any
@@ -52,28 +77,12 @@ export class RlpxNode extends Node<Devp2pPeer> {
   get type (): NetworkType {
     return NetworkType.DEVP2P
   }
+
   constructor (@register() public dpt: DPT,
                @register() public rlpx: RLPx,
-               @register() public peer: NetworkPeer<Devp2pPeer>,
-               @register() private protocolRegistry: IProtocolConstructor<Devp2pPeer>[]) {
+               @register() public peerInfo: PeerInfo,
+               @register() private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]) {
     super()
-  }
-
-  async send<T, U> (msg: T,
-                    protocol?: IProtocol<Devp2pPeer>): Promise<U | U[] | void> {
-    throw new Error('Method not implemented.')
-  }
-
-  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
-    throw new Error('Method not implemented.')
-  }
-
-  mount (protocol: IProtocol<Devp2pPeer>): void {
-    throw new Error('Method not implemented.')
-  }
-
-  unmount (protocol: IProtocol<Devp2pPeer>): void {
-    throw new Error('Method not implemented.')
   }
 
   /**
@@ -81,12 +90,12 @@ export class RlpxNode extends Node<Devp2pPeer> {
    * @return {Promise}
    */
   async start (): Promise <void> {
-    if (this .started) {
+    if (this.started) {
       return
     }
 
-    const { udpPort, addr } = this.peer.peer.peer
-    this.dpt.bind(udpPort, addr)
+    const { udpPort, address } = this.peerInfo
+    this.dpt.bind(udpPort, address)
     this.bootnodes.map(async (node) => {
       const bootnode: PeerInfo = {
         address: node.ip,
@@ -98,7 +107,7 @@ export class RlpxNode extends Node<Devp2pPeer> {
     })
     this.dpt.on('error', this.error)
 
-    await this.initRlpx()
+    await this.init()
     this.started = true
   }
 
@@ -121,7 +130,7 @@ export class RlpxNode extends Node<Devp2pPeer> {
    * @param  {Peer} peer
    * @emits  error
    */
-  error (error: Error, peer: RlpxPeer) {
+  error (error: Error, peer?: Peer) {
     if (ignoredErrors.test(error.message)) {
       return
     }
@@ -136,38 +145,32 @@ export class RlpxNode extends Node<Devp2pPeer> {
    * Initializes RLPx instance for peer management
    * @private
    */
-  async initRlpx () {
-    this.rlpx.on('peer:added', async (rlpxPeer) => {
-      if (this.peer.id === rlpxPeer.getId().toString('hex')) {
-        this.peer.peer.peer.peer = rlpxPeer
-        this.started = true
-      }
+  private async init () {
+    this.rlpx.on('peer:added', async (rlpxPeer: Peer) => {
+      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer)
 
-      const peer = new RlpxPeer({
-        id: rlpxPeer.getId().toString('hex'),
-        host: rlpxPeer._socket.remoteAddress,
-        port: rlpxPeer._socket.remotePort,
-        protocols: Array.from(this.protocols),
-        inbound: !!rlpxPeer._socket.server
+      const peerProtos: string[] = rlpxPeer
+      .getProtocols()
+      .map(p => p.constructor.name.toLowerCase())
+
+      this.protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Devp2pPeer>) => {
+        // TODO: we might have to use a map of id to proto name here or something similar
+        if (peerProtos.includes(proto.id)) {
+          const Protocol: IProtocolConstructor<Devp2pPeer> = protoDescriptor.constructor
+          const proto = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>)
+          devp2pPeer.protocols.set(proto.id, proto)
+        }
       })
 
-      try {
-        await peer.accept(rlpxPeer, this)
-        this.peers.set(peer.id, peer)
-        this.logger.debug(`Peer connected: ${peer}`)
-        this.emit('connected', peer)
-      } catch (error) {
-        this.error(error)
-      }
+      this.peers.set(devp2pPeer.id, devp2pPeer)
     })
 
     this.rlpx.on('peer:removed', (rlpxPeer, reason) => {
       const id = rlpxPeer.getId().toString('hex')
       const peer = this.peers.get(id)
       if (peer) {
-        this.peers.delete(peer.id)
+        this.peers.delete(rlpxPeer.getId().toString('hex'))
         this.logger.debug(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${peer}`)
-        this.emit('disconnected', peer)
       }
     })
 
@@ -178,21 +181,37 @@ export class RlpxNode extends Node<Devp2pPeer> {
       }
       const id = peerId.toString('hex')
       const peer = this.peers.get(id)
-      this.error(error, peer)
+      if (peer) {
+        this.error(error, peer.peer)
+      }
     })
 
     this.rlpx.on('error', e => this.error(e))
-
     this.rlpx.on('listening', () => {
       this.emit('listening', {
-        transport: this.name,
+        transport: 'devp2p',
         url: `enode://${this.rlpx._id.toString('hex')}@[::]:${this.port}`
       })
     })
 
-    const { tcpPort, addr } = this.peer.peer.peer
+    const { tcpPort, address } = this.peerInfo
     if (this.port) {
-      this.rlpx.listen(tcpPort, addr)
+      this.rlpx.listen(tcpPort, address)
     }
+  }
+
+  send<T, U = T> (msg: T,
+                  protocol?: IProtocol<Devp2pPeer> | undefined,
+                  peer?: Devp2pPeer | undefined): Promise<void | U | U[]> {
+    throw new Error('Method not implemented.')
+  }
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+    throw new Error('Method not implemented.')
+  }
+  mount (protocol: IProtocol<Devp2pPeer>): void {
+    throw new Error('Method not implemented.')
+  }
+  unmount (protocol: IProtocol<Devp2pPeer>): void {
+    throw new Error('Method not implemented.')
   }
 }

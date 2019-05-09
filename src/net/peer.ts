@@ -1,20 +1,11 @@
 'use strict'
 
 import { IPeerDescriptor, IProtocol } from './interfaces'
+import { EventEmitter as EE } from 'events'
 
-export class NetworkPeer<T> implements IPeerDescriptor<IPeerDescriptor<T>> {
-  get id (): string {
-    return this.id
-  }
-
-  get addrs (): Set<string> {
-    return this.peer.addrs
-  }
-
-  peer: IPeerDescriptor<T>
-  protocols: Map<string, IProtocol<T>>   // a set of protocols that this peer supports
-  constructor (peer: IPeerDescriptor<T>, protocols: Map<string, IProtocol<T>>) {
-    this.peer = peer
-    this.protocols = protocols
-  }
+export abstract class NetworkPeer<T, U> extends EE implements IPeerDescriptor<T> {
+  abstract peer: T
+  abstract id: string
+  abstract addrs: Set<string>
+  protocols: Map<string, IProtocol<U>> = new Map() // a set of protocols that this peer supports
 }

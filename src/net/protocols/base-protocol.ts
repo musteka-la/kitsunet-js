@@ -5,7 +5,6 @@ import { IProtocol, INetwork, IEncoder, IPeerDescriptor } from '../interfaces'
 
 export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
   abstract get id (): string
-  abstract get codec (): string
   abstract get versions (): string[]
 
   peer: IPeerDescriptor<P>

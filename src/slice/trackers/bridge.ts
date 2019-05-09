@@ -2,7 +2,7 @@
 
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
-import promisify from 'promisify-this'
+import { promisify } from 'promisify-this'
 import * as ethUtils from 'ethereumjs-util'
 import { nextTick } from 'async'
 import blockFromRpc = require('ethereumjs-block/from-rpc')

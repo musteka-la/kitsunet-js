@@ -1,6 +1,6 @@
 'use strict'
 
-import promisify from 'promisify-this'
+import { promisify } from 'promisify-this'
 import { register } from 'opium-decorator-resolvers'
 import WS from 'libp2p-websockets'
 import TCP from 'libp2p-tcp'

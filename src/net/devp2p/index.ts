@@ -1,4 +1,4 @@
 'use strict'
 
 export * from './devp2p-peer'
-export * from './rlpx-node'
+export * from './devp2p-node'

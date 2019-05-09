@@ -1,15 +1,43 @@
 'use strict'
 
-import { IProtocol, INetwork, NetworkType } from './interfaces'
+import { EventEmitter as EE } from 'events'
 import { NetworkPeer } from './peer'
 
-export abstract class Node<P> implements INetwork<P> {
+import {
+  IProtocol,
+  INetwork,
+  NetworkType,
+  ICapability,
+  IProtocolDescriptor,
+  IPeerDescriptor
+} from './interfaces'
+
+export abstract class Node<P> extends EE implements INetwork<P> {
   protocols: Map<string, IProtocol<P>> = new Map()
-  peers: Map<string, NetworkPeer<P>> = new Map()
+  peers: Map<string, P> = new Map()
+  caps: ICapability[] = []
 
   abstract started: boolean
-  abstract peer: NetworkPeer<P>
+  abstract peer?: P
   abstract type: NetworkType
+
+  /**
+   * Check if this node supports the protocol
+   *
+   * @param protoDescriptor
+   */
+  isProtoSupported (protoDescriptor: IProtocolDescriptor<P>): boolean {
+    return this.caps.filter((cap) => {
+      if (cap.id === protoDescriptor.cap.id) {
+        return cap.versions.filter((v) => {
+          return protoDescriptor
+            .cap
+            .versions
+            .includes(v)
+        }).length > 0
+      }
+    }).length > 0
+  }
 
   /**
    * send a message to a remote
@@ -31,7 +59,10 @@ export abstract class Node<P> implements INetwork<P> {
   abstract receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U[]>
   abstract receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]>
 
+  // mount a protocol
   abstract mount (protocol: IProtocol<P>): void
+
+  // unmount a protocol
   abstract unmount (protocol: IProtocol<P>): void
 
   abstract start (): Promise<void>

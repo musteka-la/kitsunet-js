@@ -1,7 +1,7 @@
 'use strict'
 
 import EE from 'events'
-import { NodeType } from './constants'
+import { KsnNodeType } from './constants'
 import { KsnDialer, KsnProtocol } from './net'
 import { Discovery } from './slice/discovery/base'
 import { register } from 'opium-decorator-resolvers'
@@ -17,7 +17,7 @@ export class KsnDriver extends EE {
   ksnRpc: any
   discovery: any
   blockTracker: any
-  nodeType: NodeType
+  nodeType: KsnNodeType
   peers: Map<any, any>
   _headers: Set<any>
   idB58: any
@@ -41,7 +41,7 @@ export class KsnDriver extends EE {
     this.ksnRpc = ksnRpc
     this.discovery = discovery
     this.blockTracker = blockTracker
-    this.nodeType = this.isBridge ? NodeType.BRIDGE : NodeType.NODE
+    this.nodeType = this.isBridge ? KsnNodeType.BRIDGE : KsnNodeType.NODE
 
     // peers
     this.peers = new Map()
@@ -127,8 +127,8 @@ export class KsnDriver extends EE {
       // tracking the slice
       const _peers = await slices.map((slice) => {
         if (peer.sliceIds.has(`${slice.path}-${slice.depth}`) ||
-          peer.nodeType === NodeType.BRIDGE ||
-          peer.nodeType === NodeType.EXIT) {
+          peer.nodeType === KsnNodeType.BRIDGE ||
+          peer.nodeType === KsnNodeType.EXIT) {
           return peer
         }
       }).filter(Boolean)
