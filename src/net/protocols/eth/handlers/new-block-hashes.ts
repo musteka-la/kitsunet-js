@@ -1,12 +1,12 @@
 'use strict'
 
 import BN from 'bn.js'
-import { BaseHandler } from '../base-handler'
+import { EthHandler } from '../eth-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
-export class NewBlockHashes<P> extends BaseHandler<P> {
+export class NewBlockHashes<P> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('NewBlockHashes', ETH_MESSAGE_CODES.NEW_BLOCK_HASHES, networkProvider, peer)

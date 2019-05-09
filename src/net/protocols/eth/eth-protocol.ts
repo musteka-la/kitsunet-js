@@ -5,13 +5,13 @@ import { BaseProtocol } from '../base-protocol'
 import { IEthProtocol, BlockBody, Status } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
 import { IBlockchain } from '../../../blockchain'
-import { BaseHandler } from './base-handler'
+import { EthHandler } from './eth-handler'
 import Block from 'ethereumjs-block'
 import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
 export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
-  handlers: { [key: number]: BaseHandler<P> }
+  handlers: { [key: number]: EthHandler<P> }
 
   get status (): Status {
     return {} as any // TODO: return valid status

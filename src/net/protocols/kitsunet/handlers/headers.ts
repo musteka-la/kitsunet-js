@@ -1,12 +1,12 @@
 'use strict'
 
-import { BaseHandler } from '../base-handler'
+import { KitsunetHandler } from '../kitsunet-handler'
 import { KsnProtocol } from '../ksn-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 
 const { MsgType, Status } = Kitsunet
 
-export class Header<P> extends BaseHandler<P> {
+export class Header<P> extends KitsunetHandler<P> {
   constructor (networkProvider: KsnProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('headers', MsgType.HEADERS, networkProvider, peer)

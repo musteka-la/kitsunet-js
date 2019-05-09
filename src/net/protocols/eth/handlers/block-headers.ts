@@ -3,14 +3,14 @@
 import BN from 'bn.js'
 import Block from 'ethereumjs-block'
 import * as utils from 'ethereumjs-util'
-import { BaseHandler } from '../base-handler'
+import { EthHandler } from '../eth-handler'
 import { IPeerDescriptor } from '../../../interfaces'
 import { EthProtocol } from '../eth-protocol'
 import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
 
 type BlockHeader = Block.Header
 
-export class GetBlockHeaders<P> extends BaseHandler<P> {
+export class GetBlockHeaders<P> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('GetBlockHeaders', ETH_MESSAGE_CODES.GET_BLOCK_HEADERS, networkProvider, peer)
@@ -37,7 +37,7 @@ export class GetBlockHeaders<P> extends BaseHandler<P> {
   }
 }
 
-export class BlockHeaders<P> extends BaseHandler<P> {
+export class BlockHeaders<P> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('BlockHeaders', ETH_MESSAGE_CODES.BLOCK_HEADERS, networkProvider, peer)
