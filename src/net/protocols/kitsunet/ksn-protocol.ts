@@ -42,10 +42,6 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
     return 'ksn'
   }
 
-  get codec (): string {
-    return `/kitsunet/rpc/${VERSION}`
-  }
-
   constructor (public peer: IPeerDescriptor<P>,
                public networkProvider: INetwork<P>) {
     super(peer, networkProvider, new KsnEncoder())

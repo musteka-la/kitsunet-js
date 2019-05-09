@@ -1,7 +1,7 @@
 'use strict'
 
 import { Discovery } from './base'
-import promisify from 'promisify-this'
+import { promisify } from 'promisify-this'
 import multihashingAsync from 'multihashing-async'
 import CID from 'cids'
 import Libp2p from 'libp2p'

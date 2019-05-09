@@ -49,15 +49,22 @@ export interface IPeerDescriptor<T> {
   addrs: Set<string>    // a set of peer addresses
 }
 
-export interface IProtocolConstructor<T> {
-  new(peer: IPeerDescriptor<T>, provider: INetwork<T>, encoder?: IEncoder): IProtocol<T>
+export interface ICapability {
+  id: string          // id of the capability/protocol
+  versions: string[]  // versions supported
 }
 
-export interface IProtocol<T> extends INetwork<T> {
-  id: string                            // id of the protocol
-  codec: string                         // the codec for the protocol
+export interface IProtocolDescriptor<T> {
+  cap: ICapability
+  constructor: IProtocolConstructor<T>
+}
+
+export interface IProtocolConstructor<T> {
+  new(peer: T, provider: INetwork<T>, encoder?: IEncoder): IProtocol<T>
+}
+
+export interface IProtocol<T> extends INetwork<T>, ICapability {
   peer: IPeerDescriptor<T>              // protocols peer
   encoder?: IEncoder                    // the encoder
   networkProvider: INetwork<T>          // the network provider
-  versions: string[]                    // array of versions that the protocol speaks
 }

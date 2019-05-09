@@ -1,10 +1,10 @@
 'use strict'
 
 import Block from 'ethereumjs-block'
-import { NodeType } from '../../../constants'
+import { KsnNodeType } from '../../../constants'
 import { Slice } from '../../../slice'
 
-export { NodeType }
+export { KsnNodeType as NodeType }
 export type BlockHeader = typeof Block.Header
 
 export enum MsgType {
@@ -39,7 +39,7 @@ export type Message = KsnMsg | KsnResponse
 export interface Identify {
   version: string       // e.g. kitsunet-js/0.0.1
   userAgent: string     // e.g. kitsunet-js/0.0.1
-  nodeType: NodeType    // the node type - bridge, edge, normal
+  nodeType: KsnNodeType    // the node type - bridge, edge, normal
   latestBlock: number   // block number
   sliceIds: string[]     // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
 }
@@ -48,7 +48,7 @@ export interface Data {
   identify: Identify
   slices: any[]
   headers: BlockHeader[]
-  type: NodeType
+  type: KsnNodeType
   sliceIds: string[]
   latestBlock: Block
 }
@@ -80,7 +80,7 @@ export interface IKsnProtocol {
   /**
    * Get Node type - bridge, edge, node
    */
-  nodeType (): Promise<NodeType>
+  nodeType (): Promise<KsnNodeType>
 
   /**
    * Ping peer

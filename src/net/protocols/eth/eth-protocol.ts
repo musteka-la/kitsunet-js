@@ -43,10 +43,6 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
     return 'eth'
   }
 
-  get codec (): string {
-    return `/kitsunet/eth/${this.protocolVersion}`
-  }
-
   get versions (): string[] {
     return ['62', '63']
   }

@@ -1,4 +1,4 @@
-export enum NodeType {
+export enum KsnNodeType {
   NODE = 1,
   EDGE = 2,
   BRIDGE = 3

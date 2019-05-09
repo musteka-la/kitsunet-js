@@ -1,11 +1,12 @@
 'use strict'
 
-import { IPeerDescriptor } from '../interfaces'
+import { IProtocol } from '../interfaces'
 import PeerInfo from 'peer-info'
 import { register } from 'opium-decorator-resolvers'
+import { NetworkPeer } from '../peer'
 
 @register()
-export class Libp2pPeer implements IPeerDescriptor<PeerInfo> {
+export class Libp2pPeer extends NetworkPeer<PeerInfo, Libp2pPeer> {
   peer: PeerInfo
   get id (): string {
     return this.peer.id.toB58String()
@@ -16,6 +17,7 @@ export class Libp2pPeer implements IPeerDescriptor<PeerInfo> {
   }
 
   constructor (peer: PeerInfo) {
+    super()
     this.peer = peer
   }
 }
