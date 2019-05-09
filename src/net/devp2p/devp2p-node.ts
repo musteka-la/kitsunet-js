@@ -2,16 +2,13 @@
 
 import { Node } from '../node'
 import { Devp2pPeer } from './devp2p-peer'
-import { randomBytes } from 'crypto'
 import { register } from 'opium-decorator-resolvers'
-import { NetworkPeer } from '../peer'
 
 import {
   Peer,
   DPT,
   RLPx,
-  PeerInfo,
-  ProtocolDescriptor
+  PeerInfo
 } from 'ethereumjs-devp2p'
 
 import {
@@ -20,24 +17,9 @@ import {
   IProtocol,
   INetwork,
   IProtocolDescriptor,
-  ICapability,
-  IPeerDescriptor
+  ICapability
 } from '../interfaces'
 import proto = require('../protocols/kitsunet/proto')
-
-export interface RLPxNodeOptions {
-  key: Buffer
-  port: number
-  bootnodes: string[]
-  clientFilter: string[]
-}
-
-export const defaultOptions: RLPxNodeOptions = {
-  port: 30303,
-  key: randomBytes(32),
-  clientFilter: ['go1.5', 'go1.6', 'go1.7', 'quorum', 'pirl', 'ubiq', 'gmc', 'gwhale', 'prichain'],
-  bootnodes: []
-}
 
 const ignoredErrors = new RegExp([
   'EPIPE',
@@ -147,18 +129,31 @@ export class RlpxNode extends Node<Devp2pPeer> {
    */
   private async init () {
     this.rlpx.on('peer:added', async (rlpxPeer: Peer) => {
-      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer)
 
-      const peerProtos: string[] = rlpxPeer
-      .getProtocols()
-      .map(p => p.constructor.name.toLowerCase())
+      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer)
+      if (rlpxPeer.getId()! === this.peerInfo.id) {
+        this.peer = devp2pPeer
+      }
 
       this.protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Devp2pPeer>) => {
-        // TODO: we might have to use a map of id to proto name here or something similar
-        if (peerProtos.includes(proto.id)) {
+        // TODO: we might have to use a map of
+        // id to proto name here or something similar
+        const devp2pProto = rlpxPeer
+          .getProtocols()
+          .find(p => p.constructor.name.toLowerCase() === proto.id)
+
+        if (devp2pProto) {
           const Protocol: IProtocolConstructor<Devp2pPeer> = protoDescriptor.constructor
           const proto = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>)
           devp2pPeer.protocols.set(proto.id, proto)
+
+          devp2pProto.protocol.on('message', (code, payload) => {
+            proto.receive({
+              [Symbol.asyncIterator]: async function* () {
+                yield [code, ...payload]
+              }
+            })
+          })
         }
       })
 
@@ -200,14 +195,26 @@ export class RlpxNode extends Node<Devp2pPeer> {
     }
   }
 
-  send<T, U = T> (msg: T,
-                  protocol?: IProtocol<Devp2pPeer> | undefined,
-                  peer?: Devp2pPeer | undefined): Promise<void | U | U[]> {
-    throw new Error('Method not implemented.')
+  send<T, U = T> (msg: T[],
+                  protocol?: IProtocol<Devp2pPeer>,
+                  peer?: Devp2pPeer): Promise<void | U | U[]> {
+    if (!peer || !protocol) {
+      throw new Error('both peer and protocol are required!')
+    }
+
+    const proto = peer.peer.getProtocols()
+    .find((p) => p.protocol.constructor.name.toLowerCase() === protocol.id)
+    if (proto) {
+      return proto.protocol.sendMesage(msg.shift(), msg)
+    }
+
+    throw new Error('no such protocol!')
   }
+
   receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
     throw new Error('Method not implemented.')
   }
+
   mount (protocol: IProtocol<Devp2pPeer>): void {
     throw new Error('Method not implemented.')
   }
