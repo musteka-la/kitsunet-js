@@ -4,7 +4,7 @@ import EE from 'events'
 import debug from 'debug'
 import { KsnProtocol } from './ksn-protocol'
 import { IPeerDescriptor } from '../../interfaces'
-import { KsnResponse, KsnMsg, Status } from './interfaces'
+import { KsnResponse, ResponseStatus } from './interfaces'
 import { IHandler } from '../interfaces'
 
 export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
@@ -22,6 +22,8 @@ export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
    *
    * @param msg - the message to be sent
    */
+  abstract async handle<T, U> (msg?: T): Promise<U>
+  abstract async handle<T, U> (msg?: T): Promise<U[]>
   abstract async handle<T, U> (msg?: T): Promise<U | U[]>
 
   /**
@@ -29,13 +31,15 @@ export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
    *
    * @param msg - the message to be sent
    */
+  abstract async request<T, U> (msg?: T): Promise<U>
+  abstract async request<T, U> (msg?: T): Promise<U[]>
   abstract async request<T, U> (msg?: T): Promise<U | U[]>
 
   protected async send<T> (msg: T): Promise<KsnResponse> {
     this.log('sending request', msg)
     const res: KsnResponse = await this.networkProvider.send(msg)
 
-    if (res && res.status !== Status.OK) {
+    if (res && res.status !== ResponseStatus.OK) {
       const err = res.error ? new Error(res.error) : new Error('unknown error!')
       this.log(err)
       throw err
@@ -47,6 +51,6 @@ export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
 
   errResponse (err: Error) {
     this.log(err)
-    return { status: Status.ERROR, error: err }
+    return { status: ResponseStatus.ERROR, error: err }
   }
 }

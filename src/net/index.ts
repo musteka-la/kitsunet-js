@@ -1,6 +1,7 @@
 'use strict'
 
 export * from './protocols/kitsunet'
-export * from './libp2p/ksn-dialer'
+export * from './protocols/eth'
 export * from './libp2p'
+export * from './devp2p'
 export * from './interfaces'

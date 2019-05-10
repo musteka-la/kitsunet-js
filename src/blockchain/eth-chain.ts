@@ -6,11 +6,11 @@ import Blockchain from 'ethereumjs-blockchain'
 import { IBlockchain } from './interfaces'
 import { promisify, PromisifyAll } from 'promisify-this'
 import Block from 'ethereumjs-block'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 
 type Header = typeof Block.Header
 
-@register()
+@inject()
 export class Chain extends EE implements IBlockchain {
   private blockchain: PromisifyAll<Blockchain>
 
@@ -122,5 +122,17 @@ export class Chain extends EE implements IBlockchain {
    */
   async putHeader<T> (header: T[]): Promise<any> {
     return this.blockchain.putHeaders(header)
+  }
+
+  getBestBlock<T> (): Promise<T> {
+    throw new Error('Method not implemented.')
+  }
+
+  getNetworkId (): number {
+    throw new Error('Method not implemented.')
+  }
+
+  genesis (): Buffer[] {
+    throw new Error('Method not implemented.')
   }
 }

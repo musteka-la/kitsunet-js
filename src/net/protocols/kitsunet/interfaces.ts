@@ -18,7 +18,7 @@ export enum MsgType {
   PING          = 7
 }
 
-export enum Status {
+export enum ResponseStatus {
   UNKNOWN_ERROR = 0,
   OK            = 1,
   ERROR         = 2
@@ -30,7 +30,7 @@ export interface KsnMsg {
 }
 
 export interface KsnResponse extends KsnMsg {
-  status?: Status   // only used for responses - OK for success ERROR for errors
+  status?: ResponseStatus   // only used for responses - OK for success ERROR for errors
   error?: string    // only used for responses - if status == ERROR, this might contain an error string
 }
 
@@ -54,33 +54,33 @@ export interface Data {
 }
 
 export interface IKsnProtocol {
-  /**
-   * initiate the identify flow
-   */
-  identify (): Promise<Identify>
+  // /**
+  //  * initiate the identify flow
+  //  */
+  // identify (): Promise<Identify>
 
-  /**
-   * Get all slice ids for the peer
-   */
-  getSliceIds (): Promise<Set<string>>
+  // /**
+  //  * Get all slice ids for the peer
+  //  */
+  // getSliceIds (): Promise<Set<string>>
 
-  /**
-   * Get slices for the provided ids or all the
-   * slices the peer is holding
-   *
-   * @param {Array<SliceId>} slices - optional
-   */
-  getSlicesById (slices: string[]): Promise<Slice[]>
+  // /**
+  //  * Get slices for the provided ids or all the
+  //  * slices the peer is holding
+  //  *
+  //  * @param {Array<SliceId>} slices - optional
+  //  */
+  // getSlicesById (slices: string[]): Promise<Slice[]>
 
-  /**
-   * Get all headers
-   */
-  headers (): Promise<BlockHeader[]>
+  // /**
+  //  * Get all headers
+  //  */
+  // headers (): Promise<BlockHeader[]>
 
-  /**
-   * Get Node type - bridge, edge, node
-   */
-  nodeType (): Promise<KsnNodeType>
+  // /**
+  //  * Get Node type - bridge, edge, node
+  //  */
+  // nodeType (): Promise<KsnNodeType>
 
   /**
    * Ping peer

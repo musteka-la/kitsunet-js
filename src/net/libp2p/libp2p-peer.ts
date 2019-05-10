@@ -1,11 +1,9 @@
 'use strict'
 
-import { IProtocol } from '../interfaces'
 import PeerInfo from 'peer-info'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 import { NetworkPeer } from '../peer'
 
-@register()
 export class Libp2pPeer extends NetworkPeer<PeerInfo, Libp2pPeer> {
   peer: PeerInfo
   get id (): string {

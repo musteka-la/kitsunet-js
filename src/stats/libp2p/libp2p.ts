@@ -2,10 +2,10 @@
 
 import { Libp2pTrafficStats } from './traffic'
 import { Libp2pDhtStats } from './dht'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 import Libp2p from 'libp2p'
 
-@register()
+@inject()
 export class Libp2pStats {
   traffic: Libp2pTrafficStats
   dht: Libp2pDhtStats

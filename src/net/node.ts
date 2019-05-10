@@ -45,25 +45,33 @@ export abstract class Node<P> extends EE implements INetwork<P> {
    * @param msg - the message to send
    * @param protocol - a protocol object to pass to the network provider
    */
-  abstract send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U>
-  abstract send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U[]>
-  abstract send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<void>
-  abstract send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | U[] | void>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U[]>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<void>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | U[] | void> {
+    throw new Error('Method not implemented')
+  }
 
   /**
    * handle incoming messages
    *
    * @param readable - an AsyncIterable to read from
    */
-  abstract receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U>
-  abstract receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U[]>
-  abstract receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U[]>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+    throw new Error('Method not implemented')
+  }
 
   // mount a protocol
-  abstract mount (protocol: IProtocol<P>): void
+  mount (protocol: IProtocol<P>): void {
+    throw new Error('Method not implemented')
+  }
 
   // unmount a protocol
-  abstract unmount (protocol: IProtocol<P>): void
+  unmount (protocol: IProtocol<P>): void {
+    throw new Error('Method not implemented')
+  }
 
   abstract start (): Promise<void>
   abstract stop (): Promise<void>

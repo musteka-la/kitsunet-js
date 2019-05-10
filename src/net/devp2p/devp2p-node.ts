@@ -2,7 +2,7 @@
 
 import { Node } from '../node'
 import { Devp2pPeer } from './devp2p-peer'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 
 import {
   Peer,
@@ -35,7 +35,6 @@ const ignoredErrors = new RegExp([
   'Hash verification failed'
 ].join('|'))
 
-@register()
 export class RlpxNode extends Node<Devp2pPeer> {
   peer?: Devp2pPeer
 
@@ -60,10 +59,10 @@ export class RlpxNode extends Node<Devp2pPeer> {
     return NetworkType.DEVP2P
   }
 
-  constructor (@register() public dpt: DPT,
-               @register() public rlpx: RLPx,
-               @register() public peerInfo: PeerInfo,
-               @register() private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]) {
+  constructor (public dpt: DPT,
+               public rlpx: RLPx,
+               public peerInfo: PeerInfo,
+               private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]) {
     super()
   }
 
@@ -103,6 +102,7 @@ export class RlpxNode extends Node<Devp2pPeer> {
     }
     this.rlpx.destroy()
     this.dpt.destroy()
+    this.started = false
   }
 
   /**
@@ -203,22 +203,16 @@ export class RlpxNode extends Node<Devp2pPeer> {
     }
 
     const proto = peer.peer.getProtocols()
-    .find((p) => p.protocol.constructor.name.toLowerCase() === protocol.id)
+      .find((p) => p
+      .protocol
+      .constructor
+      .name.
+      toLowerCase() === protocol.id)
+
     if (proto) {
-      return proto.protocol.sendMesage(msg.shift(), msg)
+      return proto.protocol._send(msg.shift(), msg)
     }
 
     throw new Error('no such protocol!')
-  }
-
-  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
-    throw new Error('Method not implemented.')
-  }
-
-  mount (protocol: IProtocol<Devp2pPeer>): void {
-    throw new Error('Method not implemented.')
-  }
-  unmount (protocol: IProtocol<Devp2pPeer>): void {
-    throw new Error('Method not implemented.')
   }
 }

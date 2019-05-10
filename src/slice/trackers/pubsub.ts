@@ -4,7 +4,7 @@ import Cache from 'lru-cache'
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
 import debug from 'debug'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 
 const log = debug('kitsunet:kitsunet-pubsub-tracker')
 const DEFAULT_TOPIC_NAMESPACE: string = `/kitsunet/slice`
@@ -17,7 +17,7 @@ const createCache = (options = { max: 100, maxAge: DEFAULT_SLICE_TIMEOUT }): Sli
   return new Cache(options)
 }
 
-@register()
+@inject()
 export class KitsunetPubSub extends BaseTracker {
   multicast: any
   node: any

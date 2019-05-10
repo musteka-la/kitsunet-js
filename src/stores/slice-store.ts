@@ -3,11 +3,11 @@
 import { Slice, SliceId } from '../slice'
 import { Key, Datastore } from 'interface-datastore'
 import { promisify, PromisifyAll } from 'promisify-this'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 
 const SLICE_PREFIX = '/slices'
 
-@register()
+@inject()
 export class SliceStore {
   _store: PromisifyAll<Datastore>
 

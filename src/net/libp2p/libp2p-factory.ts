@@ -1,7 +1,7 @@
 'use strict'
 
 import { promisify } from 'promisify-this'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 import WS from 'libp2p-websockets'
 import TCP from 'libp2p-tcp'
 import MDNS from 'libp2p-mdns'
@@ -22,7 +22,6 @@ export class LibP2PFactory {
    * @param addrs {string[]} - an array of multiaddrs
    * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
    */
-  @register()
   async createLibP2PNode (identity?: { privKey?: string },
                           addrs?: string[],
                           bootstrap?: string[]): Promise<Libp2p> {
