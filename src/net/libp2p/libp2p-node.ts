@@ -5,7 +5,7 @@ import PeerInfo from 'peer-info'
 import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
 import debug from 'debug'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 import { promisify } from 'promisify-this'
 import { Node } from '../node'
 import { NetworkPeer } from '../peer'
@@ -21,7 +21,6 @@ import {
   IPeerDescriptor
 } from '../interfaces'
 
-@register()
 export class Libp2pNode extends Node<Libp2pPeer> {
   started: boolean = false
 
@@ -41,9 +40,9 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     return NetworkType.LIBP2P
   }
 
-  constructor (@register() public node: Libp2p,
-               @register() public peer: Libp2pPeer,
-               @register() protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
+  constructor (public node: Libp2p,
+               public peer: Libp2pPeer,
+               protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
     super()
     // register this nodes protos
     protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {

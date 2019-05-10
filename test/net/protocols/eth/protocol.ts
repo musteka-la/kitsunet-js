@@ -1,17 +1,30 @@
 'use strict'
 
 import 'mocha'
+import BN from 'bn.js'
 import { EventEmitter as EE } from 'events'
 import { expect } from 'chai'
-import BN from 'bn.js'
 import { EthProtocol } from '../../../../src/net/protocols/eth'
 import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
-import { IPeerDescriptor, INetwork, IEncoder, IProtocol } from '../../../../src/net'
 import { IBlockchain } from '../../../../src/blockchain'
 import fromRpc = require('ethereumjs-block/from-rpc')
 import Block from 'ethereumjs-block'
+
+import {
+  IPeerDescriptor,
+  INetwork,
+  IEncoder,
+  IProtocol
+} from '../../../../src/net'
+
+import {
+  GetBlockHeaders,
+  BlockHeaders,
+  NewBlockHashes,
+  Status
+} from '../../../../src/net/protocols/eth/handlers'
+
 import * as jsonBlock from '../../../fixtures/block.json'
-import { GetBlockHeaders, BlockHeaders, NewBlockHashes, Status } from '../../../../src/net/protocols/eth/handlers'
 
 const passthroughEncoder: IEncoder = {
   encode: async function* <T, U>(msg) { yield msg },

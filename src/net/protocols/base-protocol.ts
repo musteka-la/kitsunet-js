@@ -19,6 +19,8 @@ export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
     this.encoder = encoder
   }
 
+  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U>
+  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U[]>
   async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
     if (!this.encoder) {
       throw new Error('encoder not set!')
@@ -31,6 +33,12 @@ export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
     }
   }
 
+  send<T, U> (msg: T,
+              protocol?: IProtocol<P>): Promise<U>
+  send<T, U> (msg: T,
+              protocol?: IProtocol<P>): Promise<U[]>
+  send<T, U> (msg: T,
+              protocol?: IProtocol<P>): Promise<void>
   async send<T, U> (msg: T,
                     protocol?: IProtocol<P>): Promise<U | U[] | void> {
     if (!this.networkProvider) {

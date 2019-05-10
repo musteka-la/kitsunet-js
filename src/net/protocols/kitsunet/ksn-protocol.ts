@@ -3,16 +3,16 @@
 import * as Handlers from './handlers'
 import debug from 'debug'
 import { BaseProtocol } from '../base-protocol'
-import { INetwork, IPeerDescriptor } from '../../interfaces'
+import { INetwork, IPeerDescriptor, ICapability } from '../../interfaces'
 import { KitsunetHandler } from './kitsunet-handler'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 import { KsnEncoder } from './ksn-encoder'
 import { SliceId, Slice } from '../../../slice'
 
 import {
   Message,
   MsgType,
-  Status,
+  ResponseStatus,
   IKsnProtocol,
   Identify,
   NodeType,
@@ -24,18 +24,17 @@ const log = debug('kitsunet:kitsunet-proto')
 function errResponse (type: number | string) {
   const err = `unknown message type ${type}`
   log(err)
-  return { status: Status.ERROR, error: err }
+  return { status: ResponseStatus.ERROR, error: err }
 }
 
 const VERSION = '1.0.0'
 
-@register()
 export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
   handlers: { [key: string]: KitsunetHandler<P> }
   versions: string[] = [VERSION]
-  userAgent: string = 'ksn'
+  userAgent: string = 'ksn-client'
   latestBlock: number | null = null
 
   get id (): string {
@@ -69,57 +68,57 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
     return super.send(msg, this)
   }
 
-  /**
-   * initiate the identify flow
-   */
-  async identify (): Promise<Identify> {
-    const res = await this.handlers[MsgType.IDENTIFY].request()
-    this.versions = res.version
-    this.userAgent = res.userAgent
+  // /**
+  //  * initiate the identify flow
+  //  */
+  // async identify (): Promise<Identify> {
+  //   const res = await this.handlers[MsgType.IDENTIFY].request()
+  //   this.versions = res.version
+  //   this.userAgent = res.userAgent
 
-    this.sliceIds = res.sliceIds
-      ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
-      : new Set()
+  //   this.sliceIds = res.sliceIds
+  //     ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
+  //     : new Set()
 
-    this.latestBlock = res.latestBlock
-    this.type = res.nodeType
+  //   this.latestBlock = res.latestBlock
+  //   this.type = res.nodeType
 
-    return res
-  }
+  //   return res
+  // }
 
-  /**
-   * Get all slice ids for the peer
-   */
-  async getSliceIds () {
-    this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
-    return this.sliceIds
-  }
+  // /**
+  //  * Get all slice ids for the peer
+  //  */
+  // async getSliceIds () {
+  //   this.sliceIds = await this.handlers[MsgType.SLICE_ID].request()
+  //   return this.sliceIds
+  // }
 
-  /**
-   * Get slices for the provided ids or all the
-   * slices the peer is holding
-   *
-   * @param {Array<SliceId>} slices - optional
-   */
+  // /**
+  //  * Get slices for the provided ids or all the
+  //  * slices the peer is holding
+  //  *
+  //  * @param {Array<SliceId>} slices - optional
+  //  */
 
-  getSlicesById (slices: string[]): Promise<Slice[]> {
-    return this.handlers[MsgType.SLICES].request(slices)
-  }
+  // getSlicesById (slices: string[]): Promise<Slice[]> {
+  //   return this.handlers[MsgType.SLICES].request(slices)
+  // }
 
-  /**
-   * Get all headers
-   */
-  async headers (): Promise<BlockHeader[]> {
-    return this.handlers[MsgType.HEADERS].request()
-  }
+  // /**
+  //  * Get all headers
+  //  */
+  // async headers (): Promise<BlockHeader[]> {
+  //   return this.handlers[MsgType.HEADERS].request()
+  // }
 
-  /**
-   * Get Node type - bridge, edge, node
-   */
-  async nodeType () {
-    this.type = await this.handlers[MsgType.NODE_TYPE].request()
-    return this.type
-  }
+  // /**
+  //  * Get Node type - bridge, edge, node
+  //  */
+  // async nodeType () {
+  //   this.type = await this.handlers[MsgType.NODE_TYPE].request()
+  //   return this.type
+  // }
 
   /**
    * Ping peer

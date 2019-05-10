@@ -7,7 +7,7 @@ import {
   Capabilities
 } from 'ethereumjs-devp2p'
 import { randomBytes } from 'crypto'
-import { register } from 'opium-decorator-resolvers'
+import { inject } from 'opium-decorator-resolvers'
 
 export interface RLPxNodeOptions {
   key: Buffer
@@ -24,7 +24,6 @@ export const defaultOptions: RLPxNodeOptions = {
 }
 
 export class DevP2PFactory {
-  @register()
   static createDPT (key: Buffer, refreshInterval: number, endpoint: PeerInfo): DPT {
     endpoint = endpoint || {
       address: '0.0.0.0',
@@ -35,7 +34,6 @@ export class DevP2PFactory {
     return new DPT(key, { refreshInterval: refreshInterval, endpoint })
   }
 
-  @register()
   createRLPx (dpt: DPT,
               key: Buffer,
               maxPeers: number,
