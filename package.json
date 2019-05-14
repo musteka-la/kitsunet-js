@@ -65,7 +65,6 @@
     "multihashing-async": "^0.5.2",
     "multiplex": "^6.7.0",
     "normalize-keys": "^1.0.0",
-    "opium-decorator-resolvers": "github:dryajov/opium-decorator-resolvers",
     "opium-ioc": "^2.4.1",
     "pify": "^4.0.1",
     "promisify-this": "^2.2.0",

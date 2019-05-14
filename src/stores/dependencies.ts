@@ -2,15 +2,15 @@
 
 import { SliceStore } from './slice-store'
 import { MemoryDatastore } from 'interface-datastore'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 
 export class StoresFactory {
-  @inject()
+  @register()
   createStore (): MemoryDatastore {
     return new MemoryDatastore()
   }
 
-  @inject()
+  @register()
   createSliceStore (dataStore: MemoryDatastore): SliceStore {
     return new SliceStore(dataStore)
   }

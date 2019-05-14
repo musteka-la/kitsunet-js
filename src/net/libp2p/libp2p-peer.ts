@@ -1,7 +1,7 @@
 'use strict'
 
 import PeerInfo from 'peer-info'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 import { NetworkPeer } from '../peer'
 
 export class Libp2pPeer extends NetworkPeer<PeerInfo, Libp2pPeer> {

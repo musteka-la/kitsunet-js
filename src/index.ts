@@ -1,7 +1,7 @@
 'use strict'
 
 import { Kitsunet } from './kitsunet'
-import { register, wire } from 'opium-decorator-resolvers'
+import { register, _container } from 'opium-decorator-resolvers'
 import ethjsUtils from 'ethjs-util'
 import ethUtils from 'ethereumjs-util'
 import { SliceId } from './slice'
@@ -10,9 +10,9 @@ import { debug } from 'debug'
 const log = debug('kitsunet:kitsunet-factory')
 
 export class KitsunetFactory {
-  @wire()
+  @_container()
   static createKitsunet (kitsunet: Kitsunet,
-                         @inject('options') options: any): Kitsunet<T> {
+                         @register('options') options: any): Kitsunet<T> {
     let paths = options.slicePath || []
     let ethAddrs = options.ethAddrs || []
     if (ethAddrs.length) {

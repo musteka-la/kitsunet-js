@@ -5,28 +5,28 @@ import HttpProvider = require('ethjs-provider-http')
 import PollingBlockTracker = require('eth-block-tracker')
 import EthQuery = require('eth-query')
 
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 
 export class TrackerFactory {
-  @inject()
-  createEthHttpProvider (@inject('options') options: any): HttpProvider {
+  @register()
+  createEthHttpProvider (@register('options') options: any): HttpProvider {
     return options.bridge ? new HttpProvider(options.rpcUrl) : null
   }
 
-  @inject()
+  @register()
   createPollingBlockProvider (
-    @inject('options')
+    @register('options')
     options: any,
     provider: HttpProvider): PollingBlockTracker {
     return options.bridge ? new PollingBlockTracker({ provider }) : null
   }
 
-  @inject()
-  createEthQuery (@inject('options') options: any, provider: HttpProvider): EthQuery {
+  @register()
+  createEthQuery (@register('options') options: any, provider: HttpProvider): EthQuery {
     return options.bridge ? new KsnEthQuery(provider) : null
   }
 
-  @inject()
+  @register()
   createKitsunetBlockTracker (
     node: Node,
     blockTracker: PollingBlockTracker,

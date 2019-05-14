@@ -3,7 +3,7 @@
 import EE from 'events'
 import { SliceId } from './slice'
 import nextTick from 'async/nextTick'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 import { SliceManager } from './slice-manager'
 import { Libp2pStats } from './stats/libp2p'
 import { KitsunetStatsTracker } from './stats/kitsunet-stats'
@@ -12,7 +12,7 @@ import { Telemetry } from 'kitsunet-telemetry'
 
 const DEFUALT_DEPTH: number = 10
 
-@inject()
+@register()
 export class Kitsunet<T> extends EE {
   sliceManager: SliceManager
   ksnDriver: KsnDriver<T>
