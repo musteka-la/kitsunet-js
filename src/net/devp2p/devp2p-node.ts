@@ -2,7 +2,7 @@
 
 import { Node } from '../node'
 import { Devp2pPeer } from './devp2p-peer'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 
 import {
   Peer,

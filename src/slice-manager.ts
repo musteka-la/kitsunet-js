@@ -5,14 +5,14 @@ import { SliceId, Slice } from './slice'
 import { BaseTracker, KitsunetPubSub, KitsunetBridge } from './slice/trackers'
 import BlockTracker from 'kitsunet-block-tracker'
 import { retry } from 'async'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 import { SliceStore } from './stores/slice-store'
 import { KsnDriver } from './ksn-driver'
 import debug from 'debug'
 
 const log = debug('kitsches:kitsunet-slice-manager')
 
-@inject()
+@register()
 export class SliceManager extends BaseTracker {
 
   blockTracker: BlockTracker

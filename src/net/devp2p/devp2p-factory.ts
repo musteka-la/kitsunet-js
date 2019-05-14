@@ -7,7 +7,7 @@ import {
   Capabilities
 } from 'ethereumjs-devp2p'
 import { randomBytes } from 'crypto'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 
 export interface RLPxNodeOptions {
   key: Buffer
@@ -38,7 +38,7 @@ export class DevP2PFactory {
               key: Buffer,
               maxPeers: number,
               capabilities: Capabilities[],
-              remoteClientIdFilter: string,
+              remoteClientIdFilter: string[],
               port: number): RLPx {
     // TODO: manage multiaddr addresses instead of port/addr pairs
     return new RLPx(key, {

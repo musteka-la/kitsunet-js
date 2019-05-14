@@ -1,8 +1,8 @@
 'use strict'
 
 import { PeerInfo, Peer } from 'ethereumjs-devp2p'
-import { inject } from 'opium-decorator-resolvers'
 import { NetworkPeer } from '../peer'
+import { register } from 'opium-decorator-resolvers'
 
 export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
   peer: Peer

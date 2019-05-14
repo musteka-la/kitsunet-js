@@ -4,12 +4,12 @@ import EE from 'events'
 import { KsnNodeType } from './constants'
 import { KsnDialer, KsnProtocol } from './net'
 import { Discovery } from './slice/discovery/base'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 import debug from 'debug'
 
 const log = debug('kitsunet:kitsunet-driver')
 
-@inject()
+@register()
 export class KsnDriver extends EE {
   node: any
   isBridge: boolean

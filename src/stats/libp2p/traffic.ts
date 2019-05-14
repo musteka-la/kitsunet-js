@@ -5,12 +5,12 @@ import Stat from 'libp2p-switch/src/stats/stat'
 import Libp2p from 'libp2p'
 
 import debug from 'debug'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 const log = debug('kitsunet:telemetry:stats')
 
 export type PeerStats = { global: { transports: any, protocols: any, mystery: any }, peers: any }
 
-@inject()
+@register()
 export class Libp2pTrafficStats {
   _node: Libp2p
   _peerStats: PeerStats

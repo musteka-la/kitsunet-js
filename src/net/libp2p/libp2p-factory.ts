@@ -1,7 +1,7 @@
 'use strict'
 
 import { promisify } from 'promisify-this'
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 import WS from 'libp2p-websockets'
 import TCP from 'libp2p-tcp'
 import MDNS from 'libp2p-mdns'

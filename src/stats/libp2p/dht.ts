@@ -1,9 +1,9 @@
 'use strict'
 
-import { inject } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorator-resolvers'
 import Libp2p from 'libp2p'
 
-@inject()
+@register()
 export class Libp2pDhtStats {
   _node: Libp2p
   constructor (node: Libp2p) {
