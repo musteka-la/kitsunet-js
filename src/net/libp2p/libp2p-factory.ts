@@ -1,7 +1,7 @@
 'use strict'
 
 import { promisify } from 'promisify-this'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 import WS from 'libp2p-websockets'
 import TCP from 'libp2p-tcp'
 import MDNS from 'libp2p-mdns'
@@ -14,6 +14,12 @@ import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
 const PPeerInfo: any = promisify(PeerInfo, false)
 const PPeerId: any = promisify(PeerId, false)
 
+export class Libp2pOptions {
+  identity?: { privKey?: string }
+  addrs?: string[]
+  bootstrap?: string[]
+}
+
 export class LibP2PFactory {
   /**
    * Create libp2p node
@@ -22,12 +28,11 @@ export class LibP2PFactory {
    * @param addrs {string[]} - an array of multiaddrs
    * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
    */
-  async createLibP2PNode (identity?: { privKey?: string },
-                          addrs?: string[],
-                          bootstrap?: string[]): Promise<Libp2p> {
-    const peerInfo: PeerInfo = await LibP2PFactory.createPeerInfo(identity, addrs)
-    const options = this.getLibP2PConfig(peerInfo, addrs, bootstrap)
-    const node: Libp2p = new Libp2p(options)
+  @register()
+  async createLibP2PNode (options: Libp2pOptions): Promise<Libp2p> {
+    const peerInfo: PeerInfo = await LibP2PFactory.createPeerInfo(options.identity, options.addrs)
+    const config = this.getLibP2PConfig(peerInfo, options.addrs, options.bootstrap)
+    const node: Libp2p = new Libp2p(config)
 
     node.start = promisify(node.start.bind(node))
     node.start = promisify(node.stop.bind(node))

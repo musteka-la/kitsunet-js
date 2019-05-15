@@ -3,10 +3,11 @@
 import Cache from 'lru-cache'
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
-import debug from 'debug'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
+import debug from 'debug'
 const log = debug('kitsunet:kitsunet-pubsub-tracker')
+
 const DEFAULT_TOPIC_NAMESPACE: string = `/kitsunet/slice`
 const DEFAULT_SLICE_TIMEOUT: number = 300 * 1000
 const DEFAULT_DEPTH: number = 10

@@ -2,7 +2,7 @@
 
 import { SliceStore } from './slice-store'
 import { MemoryDatastore } from 'interface-datastore'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
 export class StoresFactory {
   @register()

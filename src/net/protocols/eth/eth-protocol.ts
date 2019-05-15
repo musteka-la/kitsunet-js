@@ -7,7 +7,7 @@ import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
 import { IBlockchain } from '../../../blockchain'
 import { EthHandler } from './eth-handler'
 import Block from 'ethereumjs-block'
-import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
+import { ETH } from 'ethereumjs-devp2p'
 
 export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
@@ -49,7 +49,7 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
 
   async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U | U[]> {
     for await (const msg of super.receive<Buffer, U[]>(readable)) {
-      const code: ETH_MESSAGE_CODES = msg.shift() as unknown as ETH_MESSAGE_CODES
+      const code: ETH.MESSAGE_CODES = msg.shift() as unknown as ETH.MESSAGE_CODES
       // tslint:disable-next-line: strict-type-predicates
       if (typeof code !== 'undefined') {
         yield this.handlers[code].handle(msg) as any // TODO: investigate type failure
@@ -65,7 +65,7 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
                           max: number,
                           skip?: number,
                           reverse?: boolean): AsyncIterable<Block[]> {
-    return this.handlers[ETH_MESSAGE_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
+    return this.handlers[ETH.MESSAGE_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
   }
 
   async *getBlockBodies (hashes: string[] | Buffer[]): AsyncIterable<BlockBody[]> {
@@ -77,6 +77,6 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   }
 
   handshake (): Promise<Status> {
-    return this.handlers[ETH_MESSAGE_CODES.STATUS].request(this.status)
+    return this.handlers[ETH.MESSAGE_CODES.STATUS].request(this.status)
   }
 }

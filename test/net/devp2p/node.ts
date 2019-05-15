@@ -7,8 +7,7 @@ import {
   IProtocolDescriptor,
   EthProtocol,
   RlpxNode,
-  Devp2pPeer,
-  IProtocolConstructor
+  Devp2pPeer
 } from '../../../src/net'
 
 import {

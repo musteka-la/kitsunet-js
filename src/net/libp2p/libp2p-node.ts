@@ -5,10 +5,9 @@ import PeerInfo from 'peer-info'
 import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
 import debug from 'debug'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 import { promisify } from 'promisify-this'
 import { Node } from '../node'
-import { NetworkPeer } from '../peer'
 import { Libp2pPeer } from './libp2p-peer'
 
 import {
@@ -17,10 +16,10 @@ import {
   IProtocolConstructor,
   INetwork,
   IProtocolDescriptor,
-  ICapability,
-  IPeerDescriptor
+  ICapability
 } from '../interfaces'
 
+@register()
 export class Libp2pNode extends Node<Libp2pPeer> {
   started: boolean = false
 

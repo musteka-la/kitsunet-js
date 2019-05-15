@@ -1,7 +1,7 @@
 'use strict'
 
 import { Kitsunet } from './kitsunet'
-import { register, _container } from 'opium-decorator-resolvers'
+import { register, _container } from 'opium-decorators'
 import ethjsUtils from 'ethjs-util'
 import ethUtils from 'ethereumjs-util'
 import { SliceId } from './slice'

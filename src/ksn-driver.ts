@@ -4,7 +4,7 @@ import EE from 'events'
 import { KsnNodeType } from './constants'
 import { KsnDialer, KsnProtocol } from './net'
 import { Discovery } from './slice/discovery/base'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 import debug from 'debug'
 
 const log = debug('kitsunet:kitsunet-driver')
@@ -121,14 +121,14 @@ export class KsnDriver extends EE {
    * @param {Array<slices>} slices - slices to resolve from peers
    * @param {Array<RpcPeer>} peers - peers to query
    */
-  async _rpcResolve (slices, peers) {
-    const resolve = async (peer) => {
+  async _rpcResolve (slices, peers): Promise<any[] | undefined> {
+    const resolve = async (peer): Promise<any[] | undefined> => {
       // first check if the peer has already reported
       // tracking the slice
       const _peers = await slices.map((slice) => {
         if (peer.sliceIds.has(`${slice.path}-${slice.depth}`) ||
           peer.nodeType === KsnNodeType.BRIDGE ||
-          peer.nodeType === KsnNodeType.EXIT) {
+          peer.nodeType === KsnNodeType.NODE) {
           return peer
         }
       }).filter(Boolean)
@@ -136,6 +136,7 @@ export class KsnDriver extends EE {
       if (_peers && _peers.length) {
         return Promise.race(_peers.map(p => p.getSlices(slices)))
       }
+      return
     }
 
     for (const p of peers) {

@@ -6,7 +6,7 @@ import Blockchain from 'ethereumjs-blockchain'
 import { IBlockchain } from './interfaces'
 import { promisify, PromisifyAll } from 'promisify-this'
 import Block from 'ethereumjs-block'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
 type Header = typeof Block.Header
 

@@ -3,7 +3,7 @@
 import EE from 'events'
 import { SliceId } from './slice'
 import nextTick from 'async/nextTick'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 import { SliceManager } from './slice-manager'
 import { Libp2pStats } from './stats/libp2p'
 import { KitsunetStatsTracker } from './stats/kitsunet-stats'

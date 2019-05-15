@@ -1,6 +1,6 @@
 'use strict'
 
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 import Libp2p from 'libp2p'
 
 @register()

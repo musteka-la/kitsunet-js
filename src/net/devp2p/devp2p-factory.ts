@@ -4,49 +4,57 @@ import {
   DPT,
   RLPx,
   PeerInfo,
-  Capabilities
+  Capabilities,
+  RLPxOptions
 } from 'ethereumjs-devp2p'
 import { randomBytes } from 'crypto'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
-export interface RLPxNodeOptions {
-  key: Buffer
-  port: number
-  bootnodes: string[]
-  clientFilter: string[]
+const defaultRemoteClientIdFilter = [
+  'go1.5',
+  'go1.6',
+  'go1.7',
+  'quorum',
+  'pirl',
+  'ubiq',
+  'gmc',
+  'gwhale',
+  'prichain'
+]
+
+export class RLPxNodeOptions implements RLPxOptions {
+  clientId?: Buffer | undefined
+  timeout?: number | undefined
+  remoteClientIdFilter?: string[] | undefined = defaultRemoteClientIdFilter
+  listenPort!: number | null
+  dpt!: DPT
+  capabilities!: Capabilities[]
+  port: number = 30303
+  key: Buffer = randomBytes(32)
+  bootnodes: string[] = []
+  maxPeers: number = 10
 }
 
-export const defaultOptions: RLPxNodeOptions = {
-  port: 30303,
-  key: randomBytes(32),
-  clientFilter: ['go1.5', 'go1.6', 'go1.7', 'quorum', 'pirl', 'ubiq', 'gmc', 'gwhale', 'prichain'],
-  bootnodes: []
+export class DTPOptions {
+  key!: Buffer
+  refreshInterval!: number
+  endpoint!: PeerInfo
 }
 
 export class DevP2PFactory {
-  static createDPT (key: Buffer, refreshInterval: number, endpoint: PeerInfo): DPT {
-    endpoint = endpoint || {
+  @register()
+  static createDPT (options: DTPOptions): DPT {
+    options.endpoint = options.endpoint || {
       address: '0.0.0.0',
       udpPort: null,
       tcpPort: null
     }
 
-    return new DPT(key, { refreshInterval: refreshInterval, endpoint })
+    return new DPT(options.key, options)
   }
 
-  createRLPx (dpt: DPT,
-              key: Buffer,
-              maxPeers: number,
-              capabilities: Capabilities[],
-              remoteClientIdFilter: string[],
-              port: number): RLPx {
-    // TODO: manage multiaddr addresses instead of port/addr pairs
-    return new RLPx(key, {
-      dpt: dpt,
-      maxPeers: maxPeers,
-      capabilities,
-      remoteClientIdFilter,
-      listenPort: port
-    })
+  @register()
+  createRLPx (options: RLPxNodeOptions): RLPx {
+    return new RLPx(options.key, options)
   }
 }

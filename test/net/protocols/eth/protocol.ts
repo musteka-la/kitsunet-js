@@ -5,7 +5,7 @@ import BN from 'bn.js'
 import { EventEmitter as EE } from 'events'
 import { expect } from 'chai'
 import { EthProtocol } from '../../../../src/net/protocols/eth'
-import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
+import { ETH } from 'ethereumjs-devp2p'
 import { IBlockchain } from '../../../../src/blockchain'
 import fromRpc = require('ethereumjs-block/from-rpc')
 import Block from 'ethereumjs-block'
@@ -68,7 +68,7 @@ describe('Eth protocol', () => {
     it('should handle Status request', async () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
-          yield [ETH_MESSAGE_CODES.STATUS, 0, 0, Buffer.from([0]), Buffer.from([0]), Buffer.from([0]), 0]
+          yield [ETH.MESSAGE_CODES.STATUS, 0, 0, Buffer.from([0]), Buffer.from([0]), Buffer.from([0]), 0]
         }
       }
 
@@ -87,7 +87,7 @@ describe('Eth protocol', () => {
     it('should handle block headers request', async () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
-          yield [ETH_MESSAGE_CODES.BLOCK_HEADERS, fromRpc(jsonBlock.block).header.raw]
+          yield [ETH.MESSAGE_CODES.BLOCK_HEADERS, fromRpc(jsonBlock.block).header.raw]
         }
       }
 
@@ -113,7 +113,7 @@ describe('Eth protocol', () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
           yield [
-            ETH_MESSAGE_CODES.GET_BLOCK_HEADERS,
+            ETH.MESSAGE_CODES.GET_BLOCK_HEADERS,
             new BN(block.header.number).toArrayLike(Buffer),
             Buffer.from([20]),
             Buffer.from([0]),
@@ -136,7 +136,7 @@ describe('Eth protocol', () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
           yield [
-            ETH_MESSAGE_CODES.GET_BLOCK_HEADERS,
+            ETH.MESSAGE_CODES.GET_BLOCK_HEADERS,
             block.header.hash(),
             Buffer.from([20]),
             Buffer.from([0]),
@@ -159,7 +159,7 @@ describe('Eth protocol', () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
           yield [
-            ETH_MESSAGE_CODES.NEW_BLOCK_HASHES, [block.header.hash(), block.header.number]
+            ETH.MESSAGE_CODES.NEW_BLOCK_HASHES, [block.header.hash(), block.header.number]
           ]
         }
       }
@@ -197,7 +197,7 @@ describe('Eth protocol', () => {
     it('should send Status request', async () => {
       sendHandler = (msg) => {
         const [msgId, protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
-        expect(msgId).to.eql(ETH_MESSAGE_CODES.STATUS)
+        expect(msgId).to.eql(ETH.MESSAGE_CODES.STATUS)
         expect(protocolVersion).to.eql(0)
         expect(networkId).to.eql(0)
         expect(td).to.eql(new BN(0).toArrayLike(Buffer))
@@ -220,7 +220,7 @@ describe('Eth protocol', () => {
     it('should send GetBlockHeaders request using block number', async () => {
       sendHandler = (msg) => {
         const [msgId, _block, max, skip, reverse] = msg
-        expect(msgId).to.eql(ETH_MESSAGE_CODES.GET_BLOCK_HEADERS)
+        expect(msgId).to.eql(ETH.MESSAGE_CODES.GET_BLOCK_HEADERS)
         expect(_block).to.eql(block.header.number)
         expect(max).to.eql(Buffer.from([20]))
         expect(skip).to.eql(Buffer.from([0]))
@@ -234,7 +234,7 @@ describe('Eth protocol', () => {
     it('should send GetBlockHeaders request using block hash', async () => {
       sendHandler = (msg) => {
         const [msgId, _block, max, skip, reverse] = msg
-        expect(msgId).to.eql(ETH_MESSAGE_CODES.GET_BLOCK_HEADERS)
+        expect(msgId).to.eql(ETH.MESSAGE_CODES.GET_BLOCK_HEADERS)
         expect(_block).to.eql(block.header.hash())
         expect(max).to.eql(Buffer.from([20]))
         expect(skip).to.eql(Buffer.from([0]))
@@ -247,7 +247,7 @@ describe('Eth protocol', () => {
 
     it('should send BlockHeaders', async () => {
       sendHandler = (msg) => {
-        expect(msg[0]).to.eq(ETH_MESSAGE_CODES.BLOCK_HEADERS)
+        expect(msg[0]).to.eq(ETH.MESSAGE_CODES.BLOCK_HEADERS)
         expect(msg[1]).to.eql(fromRpc(jsonBlock.block).header.raw)
       }
 
@@ -257,7 +257,7 @@ describe('Eth protocol', () => {
 
     it('should send NewBlockHashes', async () => {
       sendHandler = (msg) => {
-        expect(msg[0]).to.eq(ETH_MESSAGE_CODES.NEW_BLOCK_HASHES)
+        expect(msg[0]).to.eq(ETH.MESSAGE_CODES.NEW_BLOCK_HASHES)
         expect(msg[1]).to.eql([
           fromRpc(jsonBlock.block).header.hash(),
           fromRpc(jsonBlock.block).header.number

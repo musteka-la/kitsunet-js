@@ -7,12 +7,12 @@ import { EthHandler } from '../eth-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { Status as StatusMsg } from '../interfaces'
-import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
+import { ETH } from 'ethereumjs-devp2p'
 
 export class Status<P> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
-    super('Status', ETH_MESSAGE_CODES.STATUS, networkProvider, peer)
+    super('Status', ETH.MESSAGE_CODES.STATUS, networkProvider, peer)
   }
 
   async handle<T> (status: T[] & [number, number, Buffer, Buffer, Buffer, number]): Promise<any> {
