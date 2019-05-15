@@ -1,12 +1,12 @@
 'use strict'
 
+import debug from 'debug'
+import * as ethUtils from 'ethereumjs-util'
+import blockFromRpc = require('ethereumjs-block/from-rpc')
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
-import { promisify, PromisifyAll } from 'promisify-this'
-import * as ethUtils from 'ethereumjs-util'
+import { promisify } from 'promisify-this'
 import { nextTick } from 'async'
-import blockFromRpc = require('ethereumjs-block/from-rpc')
-import debug from 'debug'
 import { register } from 'opium-decorators'
 
 import KitsunetBlockTracker from 'kitsunet-block-tracker'
@@ -22,12 +22,12 @@ export class KitsunetBridge extends BaseTracker {
   rpcBlockTracker: PollingBlockTracker
   ethQuery: any
 
-  constructor (
-    rpcUrl: string,
-    blockTracker: KitsunetBlockTracker,
-    rpcBlockTracker: PollingBlockTracker,
-    ethQuery: KsnEthQuery,
-    slices?: Set<Slice>) {
+  constructor (@register('rpc-url')
+               rpcUrl: string,
+               blockTracker: KitsunetBlockTracker,
+               rpcBlockTracker: PollingBlockTracker,
+               ethQuery: KsnEthQuery,
+               slices?: Set<Slice>) {
     super(slices)
     this.rpcUrl = rpcUrl
     this.blockTracker = blockTracker

@@ -1,8 +1,11 @@
 'use strict'
 
+import Debug, { Debugger } from 'debug'
 import { Node } from '../node'
 import { Devp2pPeer } from './devp2p-peer'
 import { register } from 'opium-decorators'
+
+const debug = Debug('kitsunet:net:devp2p:node')
 
 import {
   Peer,
@@ -35,9 +38,18 @@ const ignoredErrors = new RegExp([
   'Hash verification failed'
 ].join('|'))
 
+/**
+ * Devp2p node
+ *
+ * @fires RlpxNode#kitsunet:peer:connected - fires on new connected peer
+ * @fires RlpxNode#kitsunet:peer:disconnected - fires when a peer disconnects
+ */
 @register()
 export class RlpxNode extends Node<Devp2pPeer> {
+  started: boolean = false
   peer?: Devp2pPeer
+
+  logger: Debugger = debug
 
   // the protocols that this node supports
   caps: ICapability[] = [
@@ -47,23 +59,18 @@ export class RlpxNode extends Node<Devp2pPeer> {
     }
   ]
 
-  port: any
-  key: any
-  clientFilter: any
-  bootnodes: any
-  started: any
-  refreshInterval: any
-  maxPeers: any
-  logger: any
-
   get type (): NetworkType {
     return NetworkType.DEVP2P
   }
 
   constructor (public dpt: DPT,
                public rlpx: RLPx,
+               @register('devp2p-peer-info')
                public peerInfo: PeerInfo,
-               private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]) {
+               @register('protocol-registry')
+               private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[],
+               @register('devp2p-bootnodes')
+               private bootnodes: any[]) {
     super()
   }
 
@@ -78,7 +85,7 @@ export class RlpxNode extends Node<Devp2pPeer> {
 
     const { udpPort, address } = this.peerInfo
     this.dpt.bind(udpPort, address)
-    this.bootnodes.map(async (node) => {
+    this.bootnodes.map(async (node: any) => {
       const bootnode: PeerInfo = {
         address: node.ip,
         udpPort: node.port,
@@ -159,14 +166,16 @@ export class RlpxNode extends Node<Devp2pPeer> {
       })
 
       this.peers.set(devp2pPeer.id, devp2pPeer)
+      this.emit('kitsunet:peer:connected', devp2pPeer)
     })
 
     this.rlpx.on('peer:removed', (rlpxPeer, reason) => {
       const id = rlpxPeer.getId().toString('hex')
-      const peer = this.peers.get(id)
-      if (peer) {
+      const devp2pPeer = this.peers.get(id)
+      if (devp2pPeer) {
         this.peers.delete(rlpxPeer.getId().toString('hex'))
-        this.logger.debug(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${peer}`)
+        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${devp2pPeer}`)
+        this.emit('kitsunet:peer:disconnected', devp2pPeer)
       }
     })
 
@@ -186,12 +195,12 @@ export class RlpxNode extends Node<Devp2pPeer> {
     this.rlpx.on('listening', () => {
       this.emit('listening', {
         transport: 'devp2p',
-        url: `enode://${this.rlpx._id.toString('hex')}@[::]:${this.port}`
+        url: `enode://${this.rlpx._id.toString('hex')}@[::]:${this.peerInfo.tcpPort}`
       })
     })
 
     const { tcpPort, address } = this.peerInfo
-    if (this.port) {
+    if (tcpPort) {
       this.rlpx.listen(tcpPort, address)
     }
   }

@@ -53,10 +53,13 @@ describe('simple test RLPx Node', () => {
     }
   ]
 
+  const bootnodes: any[] = []
+
   const rlpxNode = new RlpxNode(dpt,
                                 rlpx,
                                 peerInfo,
-                                protoRegistry)
+                                protoRegistry,
+                                bootnodes)
 
   it('should create valid rlpx node', (done) => {
     expect(rlpxNode).to.be.instanceOf(RlpxNode)

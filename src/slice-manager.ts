@@ -8,25 +8,26 @@ import { retry } from 'async'
 import { register } from 'opium-decorators'
 import { SliceStore } from './stores/slice-store'
 import { KsnDriver } from './ksn-driver'
-import debug from 'debug'
+import { IPeerDescriptor } from './net'
 
+import debug from 'debug'
 const log = debug('kitsches:kitsunet-slice-manager')
 
 @register()
-export class SliceManager extends BaseTracker {
+export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
 
   blockTracker: BlockTracker
   bridgeTracker: KitsunetBridge
   pubsubTracker: KitsunetPubSub
   slicesStore: SliceStore
-  ksnDriver: KsnDriver
+  ksnDriver: KsnDriver<T>
   isBridge: boolean
 
   constructor (bridgeTracker: KitsunetBridge,
                pubsubTracker: KitsunetPubSub,
                slicesStore: SliceStore,
                blockTracker: BlockTracker,
-               ksnDriver: KsnDriver) {
+               ksnDriver: KsnDriver<T>) {
     super()
 
     assert(blockTracker, 'blockTracker should be supplied')
