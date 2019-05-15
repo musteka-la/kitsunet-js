@@ -28,7 +28,7 @@ export class LibP2PFactory {
    * @param addrs {string[]} - an array of multiaddrs
    * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
    */
-  @register()
+  @register(Libp2p)
   async createLibP2PNode (options: Libp2pOptions): Promise<Libp2p> {
     const peerInfo: PeerInfo = await LibP2PFactory.createPeerInfo(options.identity, options.addrs)
     const config = this.getLibP2PConfig(peerInfo, options.addrs, options.bootstrap)
