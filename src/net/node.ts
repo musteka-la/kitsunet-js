@@ -1,17 +1,21 @@
 'use strict'
 
 import { EventEmitter as EE } from 'events'
-import { NetworkPeer } from './peer'
 
 import {
   IProtocol,
   INetwork,
   NetworkType,
   ICapability,
-  IProtocolDescriptor,
-  IPeerDescriptor
+  IProtocolDescriptor
 } from './interfaces'
 
+/**
+ * Abstract Node
+ *
+ * @fires NodeManager#kitsunet:peer:connected - fires on new connected peer
+ * @fires NodeManager#kitsunet:peer:discovered - fires on new discovered peer
+ */
 export abstract class Node<P> extends EE implements INetwork<P> {
   protocols: Map<string, IProtocol<P>> = new Map()
   peers: Map<string, P> = new Map()

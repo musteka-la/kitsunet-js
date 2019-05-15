@@ -1,5 +1,6 @@
 'use strict'
 
+import Libp2p from 'libp2p'
 import Cache from 'lru-cache'
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
@@ -27,7 +28,7 @@ export class KitsunetPubSub extends BaseTracker {
   forwardedSlicesCache: SliceCache
   isStarted: boolean = false
 
-  constructor (node: any, namespace: string, depth: number, slices?: Set<Slice>) {
+  constructor (node: Libp2p, namespace: string, depth: number, slices?: Set<Slice>) {
     super(slices)
     this.multicast = node.multicast
     this.node = node

@@ -23,7 +23,9 @@ declare class Libp2p {
   addListener(type: any, listener: any): any;
   dial(peer: PeerInfo, callback: any): void | Promise<any>;
   dialFSM(peer: any, protocol: any, callback: any): any;
+  dialProtocol(peer: any, callback?: any): any | Promise<any>;
   dialProtocol(peer: any, protocol: any, callback?: any): any | Promise<any>;
+  dialProtocol(peer: any, protocol?: any, callback?: any): any | Promise<any>;
   emit(eventName: any, args: any): void;
   eventNames(): any;
   getMaxListeners(): any;

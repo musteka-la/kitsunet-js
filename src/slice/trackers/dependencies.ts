@@ -8,6 +8,11 @@ import EthQuery from 'eth-query'
 import Libp2p from 'libp2p'
 
 export class TrackerFactory {
+  @register('rpc-url')
+  static getRpcUrl (@register('options') options: any) {
+    return options.rpcUrl
+  }
+
   @register()
   createEthHttpProvider (@register('options') options: any): HttpProvider | null {
     return options.bridge ? new HttpProvider(options.rpcUrl) : null

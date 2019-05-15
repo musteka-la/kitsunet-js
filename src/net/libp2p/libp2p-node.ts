@@ -18,7 +18,14 @@ import {
   IProtocolDescriptor,
   ICapability
 } from '../interfaces'
+import { Libp2pDialer } from './libp2p-dialer'
 
+/**
+ * Libp2p node
+ *
+ * @fires Libp2pNode#kitsunet:peer:connected - fires on new connected peer
+ * @fires Libp2pNode#kitsunet:peer:disconnected - fires on new discovered peer
+ */
 @register()
 export class Libp2pNode extends Node<Libp2pPeer> {
   started: boolean = false
@@ -41,6 +48,8 @@ export class Libp2pNode extends Node<Libp2pPeer> {
 
   constructor (public node: Libp2p,
                public peer: Libp2pPeer,
+               private libp2pDialer: Libp2pDialer,
+               @register('protocol-registry')
                protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
     super()
     // register this nodes protos
@@ -65,17 +74,23 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       })
 
       this.peers.set(libp2pPeer.id, libp2pPeer)
+      this.emit('kitsunet:peer:connected', libp2pPeer)
     })
 
     node.on('peer:disconnected', (peerInfo: PeerInfo) => {
       // remove disconnected peer
-      this.peers.delete(peerInfo.id.toB58String())
+      const libp2pPeer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
+      if (libp2pPeer) {
+        this.peers.delete(peerInfo.id.toB58String())
+        this.emit('kitsunet:peer:disconnected', libp2pPeer)
+      }
     })
   }
 
   mount (protocol: IProtocol<Libp2pPeer>): void {
     this.node.handle(this.mkCodec(protocol.id, protocol.versions),
-                     async (codec: string, conn: any) => this.handleIncoming(codec, promisify(conn)))
+                     async (codec: string, conn: any) =>
+                      this.handleIncoming(codec, promisify(conn)))
   }
 
   unmount (protocol: IProtocol<Libp2pPeer>): void {
@@ -106,7 +121,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       throw new Error('both peer and protocol are required!')
     }
 
-    const conn = await this.node.dialProtocol(peer.peer, this.mkCodec(protocol.id, protocol.versions))
+    const conn = await this.libp2pDialer.dial(peer.peer, this.mkCodec(protocol.id, protocol.versions))
     return new Promise((resolve, reject) => {
       pull(
         pull.values(msg),
@@ -118,20 +133,31 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     })
   }
 
-  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable <U> {
-    throw new Error('not implemented!')
-  }
-
   async start () {
-    await this.node.start()
-    this.peer.addrs.forEach((ma) => {
-      console.log('libp2p listening on', ma.toString())
+    const starter = new Promise<void>((resolve) => {
+      this.node.on('start', async () => {
+        this.started = true
+        this.peer.addrs.forEach((ma) => {
+          console.log('libp2p listening on', ma.toString())
+        })
+
+        return resolve()
+      })
     })
-    this.started = true
+
+    await this.node.start()
+    return starter
   }
 
   async stop () {
+    const stopper = new Promise<void>((resolve) => {
+      return this.node.on('stop', () => {
+        this.started = false
+        resolve()
+      })
+    })
+
     await this.node.stop()
-    this.started = false
+    return stopper
   }
 }

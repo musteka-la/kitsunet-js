@@ -1,44 +1,35 @@
 'use strict'
 
 import EE from 'events'
+import debug from 'debug'
+
 import { KsnNodeType } from './constants'
-import { KsnDialer, KsnProtocol } from './net'
 import { Discovery } from './slice/discovery/base'
 import { register } from 'opium-decorators'
-import debug from 'debug'
+import { Libp2pPromisified, NodeManager, IPeerDescriptor } from './net'
+import { Slice } from './slice';
 
 const log = debug('kitsunet:kitsunet-driver')
 
 @register()
-export class KsnDriver extends EE {
-  node: any
-  isBridge: boolean
-  ksnDialer: any
-  ksnRpc: any
-  discovery: any
-  blockTracker: any
+export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
   nodeType: KsnNodeType
-  peers: Map<any, any>
+  peers: Map<string, T>
   _headers: Set<any>
   idB58: any
   _stats: any
 
-  constructor (
-    node: Node,
-    ksnDialer: KsnDialer,
-    ksnRpc: KsnProtocol<T>,
-    isBridge: boolean,
-    discovery: Discovery,
-    // blockchain,
-    blockTracker: any
-  ) {
+  constructor (public node: Libp2pPromisified,
+               public isBridge: boolean,
+               public discovery: Discovery,
+               public nodeManager: NodeManager<T>,
+               // blockchain,
+               public blockTracker: any) {
     super()
 
     this.node = node
     this.isBridge = Boolean(isBridge)
     // this.blockChain = promisify(blockchain)
-    this.ksnDialer = ksnDialer
-    this.ksnRpc = ksnRpc
     this.discovery = discovery
     this.blockTracker = blockTracker
     this.nodeType = this.isBridge ? KsnNodeType.BRIDGE : KsnNodeType.NODE
@@ -50,14 +41,6 @@ export class KsnDriver extends EE {
     // should come from the blockchain
     this._headers = new Set()
 
-    this._init()
-  }
-
-  get peerInfo () {
-    return this.node.peerInfo
-  }
-
-  async _init () {
     // TODO: this needs to be reworked as a proper light sync
     // Currently the ethereumjs-blockchain doesn't support
     // checkpointed syncs, which is essential for any light client,
@@ -65,6 +48,10 @@ export class KsnDriver extends EE {
     this.blockTracker.on('latest', async (header) => {
       this._headers.add(header)
     })
+  }
+
+  get peerInfo () {
+    return this.node.peerInfo
   }
 
   /**
@@ -93,7 +80,7 @@ export class KsnDriver extends EE {
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
   async findPeers (slice) {
-    return this.discovery.findPeers(slice)
+    // return this.discovery.findPeers(slice)
   }
 
   /**
@@ -102,17 +89,17 @@ export class KsnDriver extends EE {
    * @param {Array<SliceId>} slices - the slices to find the peers for
    */
   async findAndConnect (slices) {
-    const peers = await this.findPeers(slices)
-    if (peers && peers.length) {
-      const _peers = await Promise.all(peers.map((peer) => {
-        if (peer.id.toB58String() === this.idB58) {
-          log('cant dial to self, skipping')
-          return
-        }
-        return this.ksnDialer.dial(peer)
-      }))
-      return _peers.filter(Boolean)
-    }
+    // const peers = await this.findPeers(slices)
+    // if (peers && peers.length) {
+    //   const _peers = await Promise.all(peers.map((peer) => {
+    //     if (peer.id.toB58String() === this.idB58) {
+    //       log('cant dial to self, skipping')
+    //       return
+    //     }
+    //     return this.ksnDialer.dial(peer)
+    //   }))
+    //   return _peers.filter(Boolean)
+    // }
   }
 
   /**
@@ -160,15 +147,16 @@ export class KsnDriver extends EE {
    * @param {Array<SliceId>} slices
    */
   async resolveSlices (slices) {
-    const resolved = await this._rpcResolve(slices, this.peers.values())
-    if (resolved && resolved.length) {
-      return resolved
-    }
+    // const resolved = await this._rpcResolve(slices, this.peers.values())
+    // if (resolved && resolved.length) {
+    //   return resolved
+    // }
 
-    const peers = await this.findAndConnect(slices)
-    if (peers && peers.length) {
-      return this._rpcResolve(slices, peers)
-    }
+    // const peers = await this.findAndConnect(slices)
+    // if (peers && peers.length) {
+    //   return this._rpcResolve(slices, peers)
+    // }
+    return {} as Slice
   }
 
   /**
@@ -185,30 +173,22 @@ export class KsnDriver extends EE {
    * Start the driver
    */
   async start () {
-    await this.ksnRpc.start()
-    await this.ksnDialer.start()
-
-    this.ksnRpc.on('kitsunet:peer-connected', (peer) => {
-      this.peers.set(peer.idB58, peer)
+    this.nodeManager.on('kitsunet:peer:connected', (peer: T) => {
+      this.peers.set(peer.id, peer)
     })
 
-    this.ksnRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
-      const idB58 = peerInfo.id.toB58String()
-      this.peers.delete(idB58)
+    this.nodeManager.on('kitsunet:peer:disconnected', (peer: T) => {
+      this.peers.delete(peer.id)
     })
+
+    await this.nodeManager.start()
   }
 
   /**
    * Stop the driver
    */
   async stop () {
-    await this.ksnRpc.stop()
-    await this.ksnDialer.stop()
-
-    this.ksnRpc.removeEventListener('kitsunet:peer-connected')
-    this.ksnRpc.removeEventListener('kitsunet:peer-disconnected')
-
-    // await this._stats.stop()
+    await this.nodeManager.start()
   }
 
   getState () {

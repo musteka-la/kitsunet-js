@@ -1,6 +1,6 @@
 'use strict'
 
-import { promisify } from 'promisify-this'
+import { promisify, PromisifyAll } from 'promisify-this'
 import { register } from 'opium-decorators'
 import WS from 'libp2p-websockets'
 import TCP from 'libp2p-tcp'
@@ -13,6 +13,13 @@ import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
 
 const PPeerInfo: any = promisify(PeerInfo, false)
 const PPeerId: any = promisify(PeerId, false)
+
+export type Libp2pPromisified = PromisifyAll<
+  Pick<
+    Libp2p,
+    'start' | 'stop' | 'dial' | 'dialProtocol' | 'multicast'
+  >
+> & Libp2p
 
 export class Libp2pOptions {
   identity?: { privKey?: string }
@@ -29,17 +36,16 @@ export class LibP2PFactory {
    * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
    */
   @register(Libp2p)
-  async createLibP2PNode (options: Libp2pOptions): Promise<Libp2p> {
+  async createLibP2PNode (options: Libp2pOptions): Promise<Libp2pPromisified> {
     const peerInfo: PeerInfo = await LibP2PFactory.createPeerInfo(options.identity, options.addrs)
     const config = this.getLibP2PConfig(peerInfo, options.addrs, options.bootstrap)
-    const node: Libp2p = new Libp2p(config)
+    const node: Libp2pPromisified = (new Libp2p(config) as unknown as Libp2pPromisified)
 
     node.start = promisify(node.start.bind(node))
     node.start = promisify(node.stop.bind(node))
     node.dial = promisify(node.dial.bind(node))
     node.dialProtocol = promisify(node.dialProtocol.bind(node))
     node.multicast = promisify(createMulticastConditional(node))
-
     return node
   }
 
@@ -67,7 +73,7 @@ export class LibP2PFactory {
   /**
    * Return a libp2p config
    *
-   * @param peerInfo {PeerInfo} - the peerInfo for this peer
+   * @param peerInfo {PPeerInfo} - the peerInfo for this peer
    * @param addrs {string[]} - the addrs array
    * @param bootstrap {string[]} - the bootstraps addrs array
    */

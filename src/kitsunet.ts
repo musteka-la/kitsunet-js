@@ -9,19 +9,20 @@ import { Libp2pStats } from './stats/libp2p'
 import { KitsunetStatsTracker } from './stats/kitsunet-stats'
 import { KsnDriver } from './ksn-driver'
 import { Telemetry } from 'kitsunet-telemetry'
+import { IPeerDescriptor } from './net';
 
 const DEFUALT_DEPTH: number = 10
 
 @register()
-export class Kitsunet<T> extends EE {
-  sliceManager: SliceManager
+export class Kitsunet<T extends IPeerDescriptor<any>> extends EE {
+  sliceManager: SliceManager<T>
   ksnDriver: KsnDriver<T>
   kitsunetStats: KitsunetStatsTracker
   libp2pStats: Libp2pStats
   telemetry: Telemetry
   depth: number
 
-  constructor (sliceManager: SliceManager,
+  constructor (sliceManager: SliceManager<T>,
                ksnDriver: KsnDriver<T>,
                telemetry: Telemetry,
                libp2pStats: Libp2pStats,
@@ -58,13 +59,13 @@ export class Kitsunet<T> extends EE {
   }
 
   /**
-  * Get a slice
-  *
-  * @param {SliceId|String} slice - the slice to return
-  * TODO: remove this - need to modify Geth to handle storage slices just any any other slice
-  * @param {Boolean} storage - weather the slice is a storage slice
-  * @return {Slice}
-  */
+   * Get a slice
+   *
+   * @param {SliceId|String} slice - the slice to return
+   * TODO: remove this - need to modify Geth to handle storage slices just any any other slice
+   * @param {Boolean} storage - weather the slice is a storage slice
+   * @return {Slice}
+   */
   async getSlice (slice, storage) {
     if (typeof slice === 'string') {
       const [path, depth, root] = slice.split('-')
@@ -108,8 +109,8 @@ export class Kitsunet<T> extends EE {
     await this.ksnDriver.start()
     await this.sliceManager.start()
 
-    await this.libp2pStats.start()
-    await this.kitsunetStats.start()
+    this.libp2pStats.start()
+    this.kitsunetStats.start()
     await this.telemetry.start()
 
     nextTick(() => this.emit('kitsunet:start'))
@@ -119,8 +120,8 @@ export class Kitsunet<T> extends EE {
     await this.sliceManager.stop()
     await this.ksnDriver.stop()
 
-    await this.libp2pStats.stop()
-    await this.kitsunetStats.stop()
+    this.libp2pStats.stop()
+    this.kitsunetStats.stop()
     await this.telemetry.stop()
 
     nextTick(() => this.emit('kitsunet:stop'))
