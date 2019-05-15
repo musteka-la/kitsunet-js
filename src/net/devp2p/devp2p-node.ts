@@ -2,7 +2,7 @@
 
 import { Node } from '../node'
 import { Devp2pPeer } from './devp2p-peer'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
 import {
   Peer,
@@ -35,6 +35,7 @@ const ignoredErrors = new RegExp([
   'Hash verification failed'
 ].join('|'))
 
+@register()
 export class RlpxNode extends Node<Devp2pPeer> {
   peer?: Devp2pPeer
 

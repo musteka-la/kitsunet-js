@@ -2,14 +2,15 @@
 
 import { Slice, SliceId } from '../slice'
 import { Key, Datastore } from 'interface-datastore'
-import { promisify, PromisifyAll } from 'promisify-this'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
 const SLICE_PREFIX = '/slices'
 
 @register()
 export class SliceStore {
-  _store: PromisifyAll<Datastore>
+  // query doesn't take a callback, so we need to
+  // extract it from the set of promisifiable members
+  _store: Datastore
 
   /**
    * The store where to retrieve data from
@@ -17,13 +18,13 @@ export class SliceStore {
    * @param {Store} store - underlying store where slice data is stored
    */
   constructor (store: Datastore) {
-    this._store = promisify(store)
+    this._store = store
   }
 
   async getSlices (): Promise<Slice[] | undefined> {
     const key = `${SLICE_PREFIX}`
-    const slices = await this._store.query({ prefix: key })
-    if (slices) {
+    const slices = [...this._store.query({ prefix: key })]
+    if (slices.length > 0) {
       return slices.map((s) => new Slice(s))
     }
     return
@@ -41,8 +42,8 @@ export class SliceStore {
    */
   async getByPath (sliceId: SliceId): Promise<Slice[] | undefined> {
     const key = SliceStore._mkKey(sliceId.path)
-    const slices = await this._store.query({ prefix: key })
-    if (slices) {
+    const slices = [...this._store.query({ prefix: key })]
+    if (slices.length > 0) {
       return slices.map((s) => new Slice(s))
     }
     return

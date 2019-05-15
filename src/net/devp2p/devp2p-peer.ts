@@ -2,8 +2,9 @@
 
 import { PeerInfo, Peer } from 'ethereumjs-devp2p'
 import { NetworkPeer } from '../peer'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 
+@register()
 export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
   peer: Peer
   addrs: Set<string> = new Set() // use multiaddr for internal representation

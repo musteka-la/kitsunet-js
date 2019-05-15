@@ -2,7 +2,7 @@
 
 import { Libp2pTrafficStats } from './traffic'
 import { Libp2pDhtStats } from './dht'
-import { register } from 'opium-decorator-resolvers'
+import { register } from 'opium-decorators'
 import Libp2p from 'libp2p'
 
 @register()

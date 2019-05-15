@@ -1,62 +1,70 @@
 
-// 'use strict'
+'use strict'
 
-// import { pingPeer } from './ping'
+import { pingPeer } from './ping'
 
-// import assert from 'assert'
-// import debug from 'debug'
-// const log = debug('kitsunet:telemetry:client')
+import Libp2p from 'libp2p'
+import assert from 'assert'
+import { register } from 'opium-decorators'
 
-// const clientState = {
-//   // kitsunet peers
-//   peers: {}, // {}
-//   // libp2p stats
-//   multicast: [],
-//   block: {},
-//   blockTrackerEnabled: false
-// }
+import debug from 'debug'
+const log = debug('kitsunet:telemetry:client')
 
-// export class KitsunetStatsTracker {
-//   constructor ({ ksnRpc, node }) {
-//     assert(node, 'node required')
-//     assert(ksnRpc, 'ksnRpc required')
+const clientState = {
+  // kitsunet peers
+  peers: {}, // {}
+  // libp2p stats
+  multicast: [],
+  block: {},
+  blockTrackerEnabled: false
+}
 
-//     this.started = false
-//     this.node = node
+@register()
+export class KitsunetStatsTracker {
+  started: boolean
+  node: Libp2p
+  ksnRpc: any
 
-//     this.ksnRpc = ksnRpc
-//   }
+  constructor ({ ksnRpc, node }) {
+    assert(node, 'node required')
+    assert(ksnRpc, 'ksnRpc required')
 
-//   start () {
-//     this.ksnRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
-//       this.removePeer(peerInfo)
-//     })
+    this.started = false
+    this.node = node
 
-//     this.ksnRpc.on('kitsunet:peer-connected', (peer) => {
-//       this.addPeer(peer)
-//       log(`kitsunet peer connected ${peer.idB58}`)
-//       pingPeer(peer, clientState.peers[peer.idB58])
-//     })
+    this.ksnRpc = ksnRpc
+  }
 
-//     this.started = true
-//   }
+  start () {
+    this.ksnRpc.on('kitsunet:peer-disconnected', (peerInfo) => {
+      return this.removePeer(peerInfo)
+    })
 
-//   stop () {
-//     this.ksnRpc.removeEventHandler('kitsunet:peer-disconnected')
-//     this.ksnRpc.removeEventHandler('kitsunet:peer-connected')
-//     this.started = false
-//   }
+    this.ksnRpc.on('kitsunet:peer-connected', async (peer) => {
+      await this.addPeer(peer)
+      log(`kitsunet peer connected ${peer.idB58}`)
+      return pingPeer(peer, clientState.peers[peer.idB58])
+    })
 
-//   getState () {
-//     return clientState
-//   }
+    this.started = true
+  }
 
-//   async addPeer (peer) {
-//     clientState.peers[peer.idB58] = { status: 'connected' }
-//   }
+  stop () {
+    this.ksnRpc.removeEventHandler('kitsunet:peer-disconnected')
+    this.ksnRpc.removeEventHandler('kitsunet:peer-connected')
+    this.started = false
+  }
 
-//   async removePeer (peerInfo) {
-//     const b58Id = peerInfo.id.toB58String()
-//     delete clientState.peers[b58Id]
-//   }
-// }
+  getState () {
+    return clientState
+  }
+
+  async addPeer (peer) {
+    clientState.peers[peer.idB58] = { status: 'connected' }
+  }
+
+  async removePeer (peerInfo) {
+    const b58Id = peerInfo.id.toB58String()
+    delete clientState.peers[b58Id]
+  }
+}

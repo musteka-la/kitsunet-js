@@ -1,6 +1,6 @@
 export = index;
 declare type Callback<T> = <T>(err?: Error, res?: T) => void;
-declare function index<T>(buf: any, func: any, length?: any, callback?: Callback<T>): void | Promise<T>;
+declare function index<T>(buf: any, func: any, length?: any): Promise<T>;
 declare namespace index {
   class Buffer {
     static BYTES_PER_ELEMENT: number;

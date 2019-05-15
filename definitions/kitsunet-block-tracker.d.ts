@@ -1,5 +1,5 @@
-export = index;
-declare class index {
+export = KistunetBlockTracker;
+declare class KistunetBlockTracker {
   static defaultMaxListeners: any;
   static init(): void;
   static listenerCount(emitter: any, type: any): any;
@@ -39,7 +39,7 @@ declare class index {
   start(): Promise<void>;
   stop(): Promise<void>;
 }
-declare namespace index {
+declare namespace KistunetBlockTracker {
   class EventEmitter {
     // Circular reference from index.EventEmitter
     static EventEmitter: any;

@@ -3,7 +3,7 @@
 import Block from 'ethereumjs-block'
 import Tx from 'ethereumjs-tx'
 import BN from 'bn.js'
-import { ETH_MESSAGE_CODES } from 'ethereumjs-devp2p'
+import { ETH } from 'ethereumjs-devp2p'
 
 // Placeholder interface, should be exposed by ethereumjs
 export interface BlockBody {
@@ -13,7 +13,7 @@ export interface BlockBody {
 }
 
 export interface BaseMessage {
-  code?: ETH_MESSAGE_CODES
+  code?: ETH.MESSAGE_CODES
 }
 
 export interface Status extends BaseMessage {

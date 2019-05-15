@@ -1,36 +1,34 @@
+import { register } from 'opium-decorators'
+
 import { KsnEthQuery } from '../../ksn-eth-query'
-
-import KitsunetBlockTracker = require('kitsunet-block-tracker')
-import HttpProvider = require('ethjs-provider-http')
-import PollingBlockTracker = require('eth-block-tracker')
-import EthQuery = require('eth-query')
-
-import { register } from 'opium-decorator-resolvers'
+import KitsunetBlockTracker from 'kitsunet-block-tracker'
+import HttpProvider from 'ethjs-provider-http'
+import PollingBlockTracker from 'eth-block-tracker'
+import EthQuery from 'eth-query'
+import Libp2p from 'libp2p'
 
 export class TrackerFactory {
   @register()
-  createEthHttpProvider (@register('options') options: any): HttpProvider {
+  createEthHttpProvider (@register('options') options: any): HttpProvider | null {
     return options.bridge ? new HttpProvider(options.rpcUrl) : null
   }
 
   @register()
-  createPollingBlockProvider (
-    @register('options')
-    options: any,
-    provider: HttpProvider): PollingBlockTracker {
+  createPollingBlockProvider (@register('options') options: any,
+                              provider: HttpProvider): PollingBlockTracker {
     return options.bridge ? new PollingBlockTracker({ provider }) : null
   }
 
   @register()
-  createEthQuery (@register('options') options: any, provider: HttpProvider): EthQuery {
+  createEthQuery (@register('options') options: any,
+                  provider: HttpProvider): EthQuery | null {
     return options.bridge ? new KsnEthQuery(provider) : null
   }
 
   @register()
-  createKitsunetBlockTracker (
-    node: Node,
-    blockTracker: PollingBlockTracker,
-    ethQuery: EthQuery): KitsunetBlockTracker {
+  createKitsunetBlockTracker (node: Libp2p,
+                              blockTracker: PollingBlockTracker,
+                              ethQuery: EthQuery): KitsunetBlockTracker {
     return new KitsunetBlockTracker({ node, blockTracker, ethQuery })
   }
 }

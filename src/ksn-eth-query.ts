@@ -1,6 +1,7 @@
 'use strict'
 
-import EthQuery = require('eth-query')
+import HttpProvider from 'ethjs-provider-http'
+import EthQuery from 'eth-query'
 
 /**
  * Extends EthQuery with getSlice call
@@ -8,7 +9,7 @@ import EthQuery = require('eth-query')
 export class KsnEthQuery extends EthQuery {
   getSlice: (path: string, depth: number, root: string, isStorage: boolean) => any
 
-  constructor (provider: any) {
+  constructor (provider: HttpProvider) {
     super(provider)
     this.getSlice = this.generateFnFor('eth_getSlice').bind(this)
   }
@@ -16,10 +17,7 @@ export class KsnEthQuery extends EthQuery {
   protected generateFnFor (methodName: string) {
     return (...args: any[]) => {
       let cb = args.pop()
-      this.sendAsync({
-        method: methodName,
-        params: args
-      },             cb)
+      this.sendAsync({ method: methodName, params: args }, cb)
     }
   }
 }

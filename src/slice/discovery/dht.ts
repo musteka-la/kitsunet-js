@@ -2,13 +2,12 @@
 
 import { Discovery } from './base'
 import { promisify } from 'promisify-this'
-import multihashingAsync from 'multihashing-async'
+import multihashing from 'multihashing-async'
 import CID from 'cids'
 import Libp2p from 'libp2p'
 
 const empty = Buffer.from([0])
 
-const multihashing = promisify(multihashingAsync)
 const TIMEOUT = 1000 * 60 // one minute
 
 export class DhtDiscovery extends Discovery {

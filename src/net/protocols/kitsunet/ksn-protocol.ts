@@ -5,7 +5,6 @@ import debug from 'debug'
 import { BaseProtocol } from '../base-protocol'
 import { INetwork, IPeerDescriptor, ICapability } from '../../interfaces'
 import { KitsunetHandler } from './kitsunet-handler'
-import { register } from 'opium-decorator-resolvers'
 import { KsnEncoder } from './ksn-encoder'
 import { SliceId, Slice } from '../../../slice'
 
