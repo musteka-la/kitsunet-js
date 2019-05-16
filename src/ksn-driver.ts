@@ -3,11 +3,18 @@
 import EE from 'events'
 import debug from 'debug'
 
+import Libp2p from 'libp2p'
 import { KsnNodeType } from './constants'
 import { Discovery } from './slice/discovery/base'
 import { register } from 'opium-decorators'
-import { Libp2pPromisified, NodeManager, IPeerDescriptor } from './net'
-import { Slice } from './slice';
+import { Slice } from './slice'
+import KistunetBlockTracker from 'kitsunet-block-tracker'
+
+import {
+  Libp2pPromisified,
+  NodeManager,
+  IPeerDescriptor
+} from './net'
 
 const log = debug('kitsunet:kitsunet-driver')
 
@@ -19,12 +26,14 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
   idB58: any
   _stats: any
 
-  constructor (public node: Libp2pPromisified,
+  constructor (@register(Libp2p)
+               public node: Libp2pPromisified,
+               @register('is-bridge')
                public isBridge: boolean,
                public discovery: Discovery,
                public nodeManager: NodeManager<T>,
                // blockchain,
-               public blockTracker: any) {
+               public blockTracker: KistunetBlockTracker) {
     super()
 
     this.node = node
@@ -41,10 +50,6 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
     // should come from the blockchain
     this._headers = new Set()
 
-    // TODO: this needs to be reworked as a proper light sync
-    // Currently the ethereumjs-blockchain doesn't support
-    // checkpointed syncs, which is essential for any light client,
-    // hence we just store the headers elsewhere
     this.blockTracker.on('latest', async (header) => {
       this._headers.add(header)
     })

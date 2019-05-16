@@ -2,6 +2,8 @@
 
 import debug from 'debug'
 import * as ethUtils from 'ethereumjs-util'
+
+import './dependencies'
 import blockFromRpc = require('ethereumjs-block/from-rpc')
 import { BaseTracker } from './base'
 import { Slice, SliceId } from '../'
