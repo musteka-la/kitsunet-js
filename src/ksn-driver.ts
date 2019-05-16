@@ -28,8 +28,8 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
 
   constructor (@register(Libp2p)
                public node: Libp2pPromisified,
-               @register('is-bridge')
-               public isBridge: boolean,
+               @register('options')
+               public options: any,
                public discovery: Discovery,
                public nodeManager: NodeManager<T>,
                // blockchain,
@@ -37,11 +37,11 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
     super()
 
     this.node = node
-    this.isBridge = Boolean(isBridge)
+    this.options = Boolean(options.isBridge)
     // this.blockChain = promisify(blockchain)
     this.discovery = discovery
     this.blockTracker = blockTracker
-    this.nodeType = this.isBridge ? KsnNodeType.BRIDGE : KsnNodeType.NODE
+    this.nodeType = this.options ? KsnNodeType.BRIDGE : KsnNodeType.NODE
 
     // peers
     this.peers = new Map()

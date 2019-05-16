@@ -1,5 +1,6 @@
 'use strict'
 
+import './dependencies'
 import { Slice, SliceId } from '../slice'
 import { Key, Datastore } from 'interface-datastore'
 import { register } from 'opium-decorators'
@@ -17,7 +18,7 @@ export class SliceStore {
    *
    * @param {Store} store - underlying store where slice data is stored
    */
-  constructor (@register('store') store: Datastore) {
+  constructor (@register('data-store') store: Datastore) {
     this._store = store
   }
 

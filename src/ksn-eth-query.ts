@@ -2,14 +2,16 @@
 
 import HttpProvider from 'ethjs-provider-http'
 import EthQuery from 'eth-query'
+import { register } from 'opium-decorators'
 
 /**
  * Extends EthQuery with getSlice call
  */
+@register()
 export class KsnEthQuery extends EthQuery {
   getSlice: (path: string, depth: number, root: string, isStorage: boolean) => any
 
-  constructor (provider: HttpProvider) {
+  constructor (@register('options') provider: HttpProvider) {
     super(provider)
     this.getSlice = this.generateFnFor('eth_getSlice').bind(this)
   }

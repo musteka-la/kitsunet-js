@@ -1,17 +1,21 @@
 'use strict'
 
 import { SliceStore } from './slice-store'
-import { MemoryDatastore } from 'interface-datastore'
+import {
+  MemoryDatastore,
+  Datastore
+} from 'interface-datastore'
 import { register } from 'opium-decorators'
 
 export class StoresFactory {
-  @register()
-  createStore (): MemoryDatastore {
+  @register('data-store')
+  createStore (): Datastore {
     return new MemoryDatastore()
   }
 
   @register()
-  createSliceStore (dataStore: MemoryDatastore): SliceStore {
+  createSliceStore (@register('data-store')
+                    dataStore: Datastore): SliceStore {
     return new SliceStore(dataStore)
   }
 }

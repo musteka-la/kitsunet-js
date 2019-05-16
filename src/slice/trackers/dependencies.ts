@@ -13,7 +13,7 @@ export class TrackerFactory {
     return options.rpcUrl
   }
 
-  @register()
+  @register(HttpProvider)
   createEthHttpProvider (@register('options')
                          options: any): HttpProvider | null {
     return options.bridge ? new HttpProvider(options.rpcUrl) : null
@@ -26,7 +26,7 @@ export class TrackerFactory {
     return options.bridge ? new PollingBlockTracker({ provider }) : null
   }
 
-  @register()
+  @register(EthQuery)
   createEthQuery (@register('options')
                   options: any,
                   provider: HttpProvider): EthQuery | null {
