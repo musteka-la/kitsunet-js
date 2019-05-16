@@ -17,7 +17,7 @@ export class SliceStore {
    *
    * @param {Store} store - underlying store where slice data is stored
    */
-  constructor (store: Datastore) {
+  constructor (@register('store') store: Datastore) {
     this._store = store
   }
 

@@ -1,19 +1,22 @@
 'use strict'
 
 import { Kitsunet } from './kitsunet'
-import { register, inject } from 'opium-decorators'
+import { register } from 'opium-decorators'
 import ethjsUtils from 'ethjs-util'
 import ethUtils from 'ethereumjs-util'
 import { SliceId } from './slice'
 import { debug } from 'debug'
 import { IPeerDescriptor } from './net'
 
+export * from './kitsunet'
+
 const log = debug('kitsunet:kitsunet-factory')
 
 export class KitsunetFactory {
-  @inject()
-  static createKitsunet<T extends IPeerDescriptor<any>> (kitsunet: Kitsunet<T>,
-                                                         @register('options') options: any): Kitsunet<T> {
+  @register('kitsunet')
+  static createKitsunet<T extends IPeerDescriptor<any>> (@register('options')
+                                                         options: any,
+                                                         kitsunet: Kitsunet<T>): Kitsunet<T> {
     let paths = options.slicePath || []
     let ethAddrs = options.ethAddrs || []
     if (ethAddrs.length) {

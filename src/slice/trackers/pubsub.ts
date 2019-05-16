@@ -28,7 +28,22 @@ export class KitsunetPubSub extends BaseTracker {
   forwardedSlicesCache: SliceCache
   isStarted: boolean = false
 
-  constructor (node: Libp2p, namespace: string, depth: number, slices?: Set<Slice>) {
+  @register('default-namespace')
+  static defaultNamespace (): string {
+    return DEFAULT_TOPIC_NAMESPACE
+  }
+
+  @register('default-timeout')
+  static defaultSliceTimeout (): number {
+    return DEFAULT_SLICE_TIMEOUT
+  }
+
+  constructor (node: Libp2p,
+               @register('default-namespace')
+               namespace?: string,
+               @register('default-timeout')
+               depth?: number,
+               slices?: Set<Slice>) {
     super(slices)
     this.multicast = node.multicast
     this.node = node

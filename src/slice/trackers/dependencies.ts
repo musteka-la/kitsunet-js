@@ -14,18 +14,21 @@ export class TrackerFactory {
   }
 
   @register()
-  createEthHttpProvider (@register('options') options: any): HttpProvider | null {
+  createEthHttpProvider (@register('options')
+                         options: any): HttpProvider | null {
     return options.bridge ? new HttpProvider(options.rpcUrl) : null
   }
 
   @register()
-  createPollingBlockProvider (@register('options') options: any,
+  createPollingBlockProvider (@register('options')
+                              options: any,
                               provider: HttpProvider): PollingBlockTracker {
     return options.bridge ? new PollingBlockTracker({ provider }) : null
   }
 
   @register()
-  createEthQuery (@register('options') options: any,
+  createEthQuery (@register('options')
+                  options: any,
                   provider: HttpProvider): EthQuery | null {
     return options.bridge ? new KsnEthQuery(provider) : null
   }

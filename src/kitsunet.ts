@@ -1,15 +1,13 @@
 'use strict'
 
 import EE from 'events'
-import { SliceId } from './slice'
 import nextTick from 'async/nextTick'
+import { SliceId } from './slice'
 import { register } from 'opium-decorators'
 import { SliceManager } from './slice-manager'
-import { Libp2pStats } from './stats/libp2p'
-import { KitsunetStatsTracker } from './stats/kitsunet-stats'
 import { KsnDriver } from './ksn-driver'
-import { Telemetry } from 'kitsunet-telemetry'
-import { IPeerDescriptor } from './net';
+import { IPeerDescriptor } from './net'
+import { DEFAULT_DEPTH } from './constants'
 
 const DEFUALT_DEPTH: number = 10
 
@@ -17,23 +15,20 @@ const DEFUALT_DEPTH: number = 10
 export class Kitsunet<T extends IPeerDescriptor<any>> extends EE {
   sliceManager: SliceManager<T>
   ksnDriver: KsnDriver<T>
-  kitsunetStats: KitsunetStatsTracker
-  libp2pStats: Libp2pStats
-  telemetry: Telemetry
   depth: number
+
+  @register('default-depth')
+  static getDefaultDepth (): number {
+    return DEFAULT_DEPTH
+  }
 
   constructor (sliceManager: SliceManager<T>,
                ksnDriver: KsnDriver<T>,
-               telemetry: Telemetry,
-               libp2pStats: Libp2pStats,
-               kitsunetStats: KitsunetStatsTracker,
+               @register('default-depth')
                depth: number = DEFUALT_DEPTH) {
     super()
     this.sliceManager = sliceManager
     this.ksnDriver = ksnDriver
-    this.kitsunetStats = kitsunetStats
-    this.libp2pStats = libp2pStats
-    this.telemetry = telemetry
 
     this.depth = depth
 
@@ -109,20 +104,12 @@ export class Kitsunet<T extends IPeerDescriptor<any>> extends EE {
     await this.ksnDriver.start()
     await this.sliceManager.start()
 
-    this.libp2pStats.start()
-    this.kitsunetStats.start()
-    await this.telemetry.start()
-
     nextTick(() => this.emit('kitsunet:start'))
   }
 
   async stop () {
     await this.sliceManager.stop()
     await this.ksnDriver.stop()
-
-    this.libp2pStats.stop()
-    this.kitsunetStats.stop()
-    await this.telemetry.stop()
 
     nextTick(() => this.emit('kitsunet:stop'))
   }
