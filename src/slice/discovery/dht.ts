@@ -5,11 +5,13 @@ import { promisify } from 'promisify-this'
 import multihashing from 'multihashing-async'
 import CID from 'cids'
 import Libp2p from 'libp2p'
+import { register } from 'opium-decorators'
 
 const empty = Buffer.from([0])
 
 const TIMEOUT = 1000 * 60 // one minute
 
+@register(Discovery)
 export class DhtDiscovery extends Discovery {
   contentRouting: any
 

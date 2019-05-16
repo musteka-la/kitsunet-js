@@ -33,14 +33,14 @@ export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
     assert(blockTracker, 'blockTracker should be supplied')
     assert(slicesStore, 'slicesStore should be supplied')
     assert(ksnDriver, 'driver should be supplied')
-    ksnDriver.isBridge && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
+    ksnDriver.options && assert(bridgeTracker, 'bridgeTracker should be supplied in bridge mode')
 
     this.blockTracker = blockTracker
     this.bridgeTracker = bridgeTracker
     this.pubsubTracker = pubsubTracker
     this.slicesStore = slicesStore
     this.ksnDriver = ksnDriver
-    this.isBridge = Boolean(ksnDriver.isBridge)
+    this.isBridge = Boolean(ksnDriver.options)
 
     this._setUp()
   }
