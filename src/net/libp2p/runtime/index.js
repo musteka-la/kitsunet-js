@@ -6,6 +6,8 @@ const WS = require('libp2p-websockets')
 const TCP = require('libp2p-tcp')
 const MDNS = require('libp2p-mdns')
 const Bootstrap = require('libp2p-bootstrap')
+const WStar = require('libp2p-webrtc-star')
+const wrtc = require('wrtc')
 
 const PeerInfo = promisify(require('peer-info'), false)
 const PeerId = promisify(require('peer-id'), false)
@@ -25,18 +27,27 @@ async function createNode ({ identity, addrs, bootstrap }) {
 
   addrs = addrs || []
   addrs.forEach((a) => peerInfo.multiaddrs.add(a))
+  const wstar = new WStar({ wrtc })
   const node = new Node(peerInfo, {
     modules: {
       transport: [
+        wstar,
         WS,
         TCP
       ],
       peerDiscovery: [
+        wstar.discovery,
         MDNS,
         Bootstrap
       ]
     },
     config: {
+      dht: {
+        enabled: true,
+        randomWalk: {
+          enabled: false
+        }
+      },
       peerDiscovery: {
         bootstrap: {
           list: bootstrap,

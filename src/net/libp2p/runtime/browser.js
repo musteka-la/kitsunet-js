@@ -38,6 +38,12 @@ async function createNode ({ identity, addrs, bootstrap }) {
       ]
     },
     config: {
+      dht: {
+        enabled: true,
+        randomWalk: {
+          enabled: false
+        }
+      },
       peerDiscovery: {
         bootstrap: {
           list: bootstrap,
