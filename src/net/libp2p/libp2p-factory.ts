@@ -1,6 +1,5 @@
 'use strict'
 
-import { promisify, PromisifyAll } from 'promisify-this'
 import PeerInfo from 'peer-info'
 import PeerId from 'peer-id'
 import Libp2p from 'libp2p'
@@ -8,9 +7,13 @@ import Mplex from 'pull-mplex'
 import SPDY from 'libp2p-spdy'
 import SECIO from 'libp2p-secio'
 import DHT from 'libp2p-kad-dht'
+
 import { Libp2pConfig } from './config'
-import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
+import { promisify, PromisifyAll } from 'promisify-this'
 import { register } from 'opium-decorators'
+
+import defaultsDeep from '@nodeutils/defaults-deep'
+import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
 
 const PPeerInfo: any = promisify(PeerInfo, false)
 const PPeerId: any = promisify(PeerId, false)
@@ -20,7 +23,7 @@ export type Libp2pPromisified = PromisifyAll<
     Libp2p,
     'start' | 'stop' | 'dial' | 'dialProtocol' | 'multicast'
   >
-> & Libp2p
+> & Libp2p  
 
 export class Libp2pOptions {
   identity?: { privKey?: string }
@@ -73,7 +76,7 @@ export class LibP2PFactory {
     }
 
     const config = await Libp2pConfig.getConfig(peerInfo, options.addrs, options.bootstrap)
-    const node: Libp2pPromisified = (new Libp2p(defaultsDeep(config, defaults)) as unknown as Libp2pPromisified)
+    const node: Libp2pPromisified = new Libp2p(defaultsDeep(defaults, config)) as Libp2pPromisified
 
     node.start = promisify(node.start.bind(node))
     node.stop = promisify(node.stop.bind(node))
