@@ -5,7 +5,6 @@ import assert from 'assert'
 import debug from 'debug'
 import PeerInfo from 'peer-info'
 import Libp2p from 'libp2p'
-import { Libp2pPromisified } from './libp2p-factory'
 import { register } from 'opium-decorators'
 
 const log = debug('kitsunet:node')

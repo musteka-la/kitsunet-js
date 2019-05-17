@@ -210,7 +210,7 @@ export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
       await this.bridgeTracker.start()
     }
 
-    await this.blockTracker.start()
+    await this.bridgeTracker.start()
     await this.pubsubTracker.start()
   }
 
@@ -219,7 +219,7 @@ export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
       await this.bridgeTracker.stop()
     }
 
-    await this.blockTracker.stop()
+    await this.bridgeTracker.stop()
     await this.pubsubTracker.stop()
   }
 }

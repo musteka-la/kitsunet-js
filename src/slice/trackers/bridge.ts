@@ -24,15 +24,15 @@ export class KitsunetBridge extends BaseTracker {
   rpcBlockTracker: PollingBlockTracker
   ethQuery: any
 
-  constructor (@register('rpc-url')
-               rpcUrl: string,
+  constructor (@register('options')
+               options: any,
                blockTracker: KitsunetBlockTracker,
                rpcBlockTracker: PollingBlockTracker,
                ethQuery: KsnEthQuery,
                @register('default-slices')
                slices?: Set<Slice>) {
     super(slices)
-    this.rpcUrl = rpcUrl
+    this.rpcUrl = options.rpcUrl
     this.blockTracker = blockTracker
     this.rpcBlockTracker = rpcBlockTracker
     this.ethQuery = promisify(ethQuery)
