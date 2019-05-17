@@ -1,7 +1,7 @@
 'use strict'
 
 import * as Handlers from './handlers'
-import { BaseProtocol } from '../base-protocol'
+import { BaseProtocol } from '../../base-protocol'
 import { IEthProtocol, BlockBody, Status } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
 import { IBlockchain } from '../../../blockchain'

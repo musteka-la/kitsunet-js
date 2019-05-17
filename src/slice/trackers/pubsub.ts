@@ -43,6 +43,7 @@ export class KitsunetPubSub extends BaseTracker {
                namespace?: string,
                @register('default-timeout')
                depth?: number,
+               @register('default-slices')
                slices?: Set<Slice>) {
     super(slices)
     this.multicast = node.multicast

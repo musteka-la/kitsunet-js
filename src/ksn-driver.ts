@@ -26,10 +26,10 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
   idB58: any
   _stats: any
 
-  constructor (@register(Libp2p)
+  constructor (@register('options')
+              public options: any,
+               @register(Libp2p)
                public node: Libp2pPromisified,
-               @register('options')
-               public options: any,
                public discovery: Discovery,
                public nodeManager: NodeManager<T>,
                // blockchain,

@@ -29,6 +29,7 @@ export class KitsunetBridge extends BaseTracker {
                blockTracker: KitsunetBlockTracker,
                rpcBlockTracker: PollingBlockTracker,
                ethQuery: KsnEthQuery,
+               @register('default-slices')
                slices?: Set<Slice>) {
     super(slices)
     this.rpcUrl = rpcUrl

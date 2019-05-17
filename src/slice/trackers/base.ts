@@ -3,8 +3,10 @@
 import EE from 'events'
 import { Slice } from '../slice'
 import { SliceId } from '../slice-id'
+import { register } from 'opium-decorators'
 
 export abstract class BaseTracker extends EE {
+
   slices: Set<Slice>
   isStarted: boolean
 

@@ -28,17 +28,19 @@ export class Libp2pDialer extends EE {
   discovered: Map<string, PeerInfo>
   dialing: Map<string, boolean>
 
+  interval: number = INTERVAL
+  maxPeers: number = MAX_PEERS
   constructor (public node: Libp2p,
-               @register('libp2p-max-peers') public maxPeers: number = MAX_PEERS,
-               @register('libp2p-dial-interval') public interval: number = INTERVAL) {
+               @register('options') options: any) {
     super()
 
     assert(node, 'node is required')
-
     this.intervalTimer = null
     this.connected = new Map()
     this.discovered = new Map()
     this.dialing = new Map()
+    this.interval = options.interval
+    this.maxPeers = options.maxPeers
 
     // store discovered peers to dial them later
     node.on('peer:discovery', (peerInfo: PeerInfo) => {

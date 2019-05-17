@@ -9,6 +9,7 @@ declare class Libp2p {
   static usingDomains: boolean;
   constructor(_options: any);
   multicast: any;
+  _multicast: any;
   datastore: any;
   peerInfo: any;
   peerBook: any;
