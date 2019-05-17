@@ -4,6 +4,10 @@ import { promisify, PromisifyAll } from 'promisify-this'
 import PeerInfo from 'peer-info'
 import PeerId from 'peer-id'
 import Libp2p from 'libp2p'
+import Mplex from 'pull-mplex'
+import SPDY from 'libp2p-spdy'
+import SECIO from 'libp2p-secio'
+import DHT from 'libp2p-kad-dht'
 import { Libp2pConfig } from './config'
 import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
 import { register } from 'opium-decorators'
@@ -45,8 +49,31 @@ export class LibP2PFactory {
   @register(Libp2p)
   static async createLibP2PNode (peerInfo: PeerInfo,
                                  options: Libp2pOptions): Promise <Libp2pPromisified> {
+    const defaults = {
+      peerInfo,
+      modules: {
+        streamMuxer: [
+          Mplex,
+          SPDY
+        ],
+        connEncryption: [
+          SECIO
+        ],
+        dht: DHT
+      },
+      config: {
+        relay: {
+          enabled: false
+        },
+        dht: {
+          kBucketSize: 20,
+          enabled: true
+        }
+      }
+    }
+
     const config = await Libp2pConfig.getConfig(peerInfo, options.addrs, options.bootstrap)
-    const node: Libp2pPromisified = (new Libp2p(config) as unknown as Libp2pPromisified)
+    const node: Libp2pPromisified = (new Libp2p(defaultsDeep(config, defaults)) as unknown as Libp2pPromisified)
 
     node.start = promisify(node.start.bind(node))
     node.stop = promisify(node.stop.bind(node))
