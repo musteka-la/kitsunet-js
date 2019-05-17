@@ -3,9 +3,8 @@
 import EE from 'events'
 import debug from 'debug'
 import { KsnProtocol } from './ksn-protocol'
-import { IPeerDescriptor } from '../../interfaces'
+import { IPeerDescriptor, IHandler } from '../../interfaces'
 import { KsnResponse, ResponseStatus } from './interfaces'
-import { IHandler } from '../interfaces'
 
 export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
   log: debug.Debugger

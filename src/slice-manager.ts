@@ -1,14 +1,19 @@
 'use strict'
 
 import assert from 'assert'
-import { SliceId, Slice } from './slice'
-import { BaseTracker, KitsunetPubSub, KitsunetBridge } from './slice/trackers'
 import BlockTracker from 'kitsunet-block-tracker'
+import { SliceId, Slice } from './slice'
 import { retry } from 'async'
 import { register } from 'opium-decorators'
 import { SliceStore } from './stores/slice-store'
 import { KsnDriver } from './ksn-driver'
 import { IPeerDescriptor } from './net'
+
+import {
+  BaseTracker,
+  KitsunetPubSub,
+  KitsunetBridge
+} from './slice/trackers'
 
 import debug from 'debug'
 const log = debug('kitsches:kitsunet-slice-manager')

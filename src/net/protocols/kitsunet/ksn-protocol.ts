@@ -2,7 +2,7 @@
 
 import * as Handlers from './handlers'
 import debug from 'debug'
-import { BaseProtocol } from '../base-protocol'
+import { BaseProtocol } from '../../base-protocol'
 import { INetwork, IPeerDescriptor, ICapability } from '../../interfaces'
 import { KitsunetHandler } from './kitsunet-handler'
 import { KsnEncoder } from './ksn-encoder'

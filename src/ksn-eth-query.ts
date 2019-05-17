@@ -11,7 +11,7 @@ import { register } from 'opium-decorators'
 export class KsnEthQuery extends EthQuery {
   getSlice: (path: string, depth: number, root: string, isStorage: boolean) => any
 
-  constructor (@register('options') provider: HttpProvider) {
+  constructor (@register(HttpProvider) provider: HttpProvider) {
     super(provider)
     this.getSlice = this.generateFnFor('eth_getSlice').bind(this)
   }

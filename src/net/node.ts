@@ -31,16 +31,16 @@ export abstract class Node<P> extends EE implements INetwork<P> {
    * @param protoDescriptor
    */
   isProtoSupported (protoDescriptor: IProtocolDescriptor<P>): boolean {
-    return this.caps.filter((cap) => {
+    return Boolean(this.caps.find((cap: any) => {
       if (cap.id === protoDescriptor.cap.id) {
-        return cap.versions.filter((v) => {
+        return cap.versions.find((v) => {
           return protoDescriptor
             .cap
             .versions
             .includes(v)
-        }).length > 0
+        })
       }
-    }).length > 0
+    }))
   }
 
   /**

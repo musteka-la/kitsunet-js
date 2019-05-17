@@ -27,9 +27,9 @@ export class Kitsunet<T extends IPeerDescriptor<any>> extends EE {
                @register('default-depth')
                depth: number = DEFUALT_DEPTH) {
     super()
+
     this.sliceManager = sliceManager
     this.ksnDriver = ksnDriver
-
     this.depth = depth
 
     this.sliceManager.blockTracker.on('latest', (block) =>
@@ -38,7 +38,8 @@ export class Kitsunet<T extends IPeerDescriptor<any>> extends EE {
     this.sliceManager.blockTracker.on('sync', ({ block, oldBlock }) =>
       this.emit('sync', { block, oldBlock }))
 
-    this.sliceManager.on('slice', (slice) => this.emit('slice', slice))
+    this.sliceManager.on('slice', (slice) =>
+      this.emit('slice', slice))
   }
 
   get node () {

@@ -136,6 +136,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   async start () {
     const starter = new Promise<void>((resolve) => {
       this.node.on('start', async () => {
+        await this.node._multicast.start()
         this.started = true
         this.peer.addrs.forEach((ma) => {
           console.log('libp2p listening on', ma.toString())
@@ -150,8 +151,9 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   async stop () {
-    const stopper = new Promise<void>((resolve) => {
-      return this.node.on('stop', () => {
+    const stopper = new Promise<void>(async (resolve) => {
+      return this.node.on('stop', async () => {
+        await this.node._multicast.stop()
         this.started = false
         resolve()
       })

@@ -3,8 +3,8 @@
 import { Kitsunet } from './kitsunet'
 import { register } from 'opium-decorators'
 import ethjsUtils from 'ethjs-util'
-import ethUtils from 'ethereumjs-util'
-import { SliceId } from './slice'
+import { isValidAddress, keccak256 } from 'ethereumjs-util'
+import { SliceId, Slice } from './slice'
 import { debug } from 'debug'
 import { IPeerDescriptor } from './net'
 
@@ -13,16 +13,14 @@ export * from './kitsunet'
 const log = debug('kitsunet:kitsunet-factory')
 
 export class KitsunetFactory {
-  @register('kitsunet')
-  static createKitsunet<T extends IPeerDescriptor<any>> (@register('options')
-                                                         options: any,
-                                                         kitsunet: Kitsunet<T>): Kitsunet<T> {
+  @register('default-slices')
+  static defaultSlices (@register('options') options: any): Slice[] {
     let paths = options.slicePath || []
     let ethAddrs = options.ethAddrs || []
     if (ethAddrs.length) {
       paths = paths.concat(ethAddrs.map((a) => {
-        if (ethUtils.isValidAddress(a)) {
-          return ethUtils.keccak256(ethjsUtils.stripHexPrefix(a)).toString('hex').slice(0, 4)
+        if (isValidAddress(a)) {
+          return keccak256(ethjsUtils.stripHexPrefix(a)).toString('hex').slice(0, 4)
         }
       }))
     }
@@ -38,10 +36,20 @@ export class KitsunetFactory {
       }))
     }
 
+    return slices
+  }
+
+  @register('kitsunet')
+  static async createKitsunet<T extends IPeerDescriptor<any>> (@register('default-slices')
+                                                               slices: Slice[],
+                                                               kitsunet: Kitsunet<T>): Promise<Kitsunet<T>> {
+
     kitsunet.on('kitsunet:start', () => {
       log('kitsunet started')
-      return kitsunet.sliceManager.track(new Set(...slices))
+      return kitsunet.sliceManager.track(new Set(slices))
     })
+
+    await kitsunet.start()
     return kitsunet
   }
 }

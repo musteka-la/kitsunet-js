@@ -1,19 +1,18 @@
 'use strict'
 
 import { KitsunetHandler } from '../kitsunet-handler'
-import Kitsunet = require('../proto')
 
-const { MsgType, Status } = Kitsunet
+import { MsgType, ResponseStatus } from '../interfaces'
 
 export class Ping<P> extends KitsunetHandler<P> {
   constructor (rpcEngine, peerInfo) {
-    super('ping', MsgType.PING, rpcEngine, peerInfo)
+    super('ping', MsgType[MsgType.PING], rpcEngine, peerInfo)
   }
 
   async handle (): Promise<any> {
     return {
       type: MsgType.PING,
-      status: Status.OK
+      status: ResponseStatus.OK
     }
   }
 

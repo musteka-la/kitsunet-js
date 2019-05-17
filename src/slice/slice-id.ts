@@ -20,7 +20,7 @@ export class SliceId {
   static parse (path: string, depth: number | string, root?: string, isStorage: boolean = false): any {
     if (Buffer.isBuffer(path)) {
       ({ path, depth, root, isStorage } = cbor.decode(path))
-    } else if (path.includes('-')) {
+    } else if (String(path).includes('-')) {
       [path, depth, root] = path.split('-')
     }
 

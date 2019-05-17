@@ -12,7 +12,7 @@ export class Libp2pPeer extends NetworkPeer<PeerInfo, Libp2pPeer> {
   }
 
   get addrs (): Set<string> {
-    return this.peer.multiaddrs.map((a) => a.toString())
+    return this.peer.multiaddrs.toArray().map((a) => a.toString())
   }
 
   constructor (peer: PeerInfo) {
