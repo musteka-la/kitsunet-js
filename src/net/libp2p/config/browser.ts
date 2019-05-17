@@ -1,6 +1,5 @@
 'use strict'
 
-import WS from 'libp2p-websockets'
 import WStar from 'libp2p-webrtc-star'
 import Bootstrap from 'libp2p-bootstrap'
 import PeerInfo from 'peer-info'
@@ -23,7 +22,6 @@ export class Libp2pConfig {
       peerInfo,
       modules: {
         transport: [
-          WS,
           wstar
         ],
         peerDiscovery: [
