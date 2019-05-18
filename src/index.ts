@@ -47,22 +47,21 @@ export class KitsunetFactory {
   }
 
   @register()
-  static async createKitsunet<T extends IPeerDescriptor<any>> (@register('default-slices')
-                                                               slices: Slice[],
-                                                               kitsunet: Kitsunet<T>): Promise<Kitsunet<T>> {
+  static async kitsunetFactory<T extends IPeerDescriptor<any>> (@register('default-slices')
+                                                                slices: Slice[],
+                                                                kitsunet: Kitsunet<T>): Promise<Kitsunet<T>> {
 
     kitsunet.on('kitsunet:start', () => {
       debug('kitsunet started')
       return kitsunet.sliceManager.track(new Set(slices))
     })
 
-    await kitsunet.start()
     return kitsunet
   }
 
-  static async run (options: any) {
+  static async createKitsunet (options: any) {
     KitsunetFactory.options = options
-    const injectable = injectableFactory()(KitsunetFactory, 'createKitsunet')
+    const injectable = injectableFactory()(KitsunetFactory, 'kitsunetFactory')
     return injectable.inject()
   }
 }
