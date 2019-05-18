@@ -24,6 +24,9 @@ export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
     return [libp2pNode] as unknown as Node<U>[]
   }
 
+  /**
+   * Create a protocol registry
+   */
   @register('protocol-registry')
   static protocolRegistry () {
     return [{
