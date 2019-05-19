@@ -23,7 +23,7 @@ export type Libp2pPromisified = PromisifyAll<
     Libp2p,
     'start' | 'stop' | 'dial' | 'dialProtocol' | 'multicast'
   >
-> & Libp2p  
+> & Libp2p
 
 export class Libp2pOptions {
   identity?: { privKey?: string }
@@ -70,7 +70,8 @@ export class LibP2PFactory {
         },
         dht: {
           kBucketSize: 20,
-          enabled: true
+          enabled: true,
+          randomWalk: false
         }
       }
     }

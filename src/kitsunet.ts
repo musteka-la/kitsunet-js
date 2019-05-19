@@ -6,13 +6,13 @@ import { SliceId } from './slice'
 import { register } from 'opium-decorators'
 import { SliceManager } from './slice-manager'
 import { KsnDriver } from './ksn-driver'
-import { IPeerDescriptor } from './net'
 import { DEFAULT_DEPTH } from './constants'
+import { NetworkPeer } from './net/peer'
 
 const DEFUALT_DEPTH: number = 10
 
 @register()
-export class Kitsunet<T extends IPeerDescriptor<any>> extends EE {
+export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
   sliceManager: SliceManager<T>
   ksnDriver: KsnDriver<T>
   depth: number

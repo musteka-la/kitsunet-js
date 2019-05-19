@@ -50,7 +50,7 @@ export class KitsunetBridge extends BaseTracker {
    */
   _blockHandler (blockId: string | number) {
     nextTick(async () => {
-      const block = await this.ethQuery.getBlockByNumber(blockId, false)
+      const block = await this.ethQuery.getBlockByNumber(blockId, true)
       this.blockTracker.publish(blockFromRpc(block))
       this.slices.forEach(async (slice) => {
         slice.root = block.stateRoot
