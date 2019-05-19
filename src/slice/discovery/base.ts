@@ -1,5 +1,7 @@
 'use strict'
 
+import { SliceId } from '../slice-id'
+
 export abstract class Discovery {
   /**
    * Discover peers tracking this slice
@@ -9,12 +11,12 @@ export abstract class Discovery {
    *                  - maxPeers - the maximum amount of peers to connect to
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
-  abstract findPeers (sliceId, options: {maxPeers: number})
+  abstract findPeers (sliceId: SliceId[], options?: { maxPeers: number })
 
   /**
    * Announces slice to the network using whatever mechanisms are available, e.g DHT, RPC, etc...
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
-  abstract announce (slices)
+  abstract announce (slices: SliceId[])
 }

@@ -5,13 +5,14 @@
 // import Kitsunet = require('../proto')
 // import { KsnProtocol } from '../../ksn-protocol'
 // import { IPeerDescriptor } from '../interfaces'
+// import { KitsunetHandler } from '../kitsunet-handler'
 
 // const { MsgType, Status } = Kitsunet
 
-// export class Identify<P> extends BaseHandler<P> {
+// export class Identify<P> extends KitsunetHandler<P> {
 //   constructor (networkProvider: KsnProtocol<P>,
 //                peer: IPeerDescriptor<P>) {
-//     super('identify', MsgType.IDENTIFY, rpcEngine, peerInfo)
+//     super('identify', MsgType.IDENTIFY, networkProvider, peer)
 //   }
 
 //   async handle (): Promise<any> {

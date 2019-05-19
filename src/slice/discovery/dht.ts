@@ -1,11 +1,12 @@
 'use strict'
 
-import { Discovery } from './base'
-import { promisify } from 'promisify-this'
-import multihashing from 'multihashing-async'
 import CID from 'cids'
 import Libp2p from 'libp2p'
+import multihashing from 'multihashing-async'
+import { Discovery } from './base'
+import { promisify } from 'promisify-this'
 import { register } from 'opium-decorators'
+import { SliceId } from '../slice-id'
 
 const empty = Buffer.from([0])
 
@@ -25,7 +26,7 @@ export class DhtDiscovery extends Discovery {
     this.contentRouting = promisify(node.contentRouting)
   }
 
-  async _makeKeyId (sliceId) {
+  async _makeKeyId (sliceId: SliceId) {
     const key: Buffer = (await multihashing(sliceId.serialize(), 'sha2-256')) || empty
     return new CID(key)
   }
@@ -36,7 +37,7 @@ export class DhtDiscovery extends Discovery {
    * @param {Array<SliceId>|SliceId} sliceId - the slices to find the peers for
    * @returns {Array<PeerInfo>} peers - an array of peers tracking the slice
    */
-  async findPeers (sliceId) {
+  async findPeers (sliceId: SliceId[]) {
     const providers = await Promise.all(sliceId.map(async (s) => {
       return this.contentRouting.findProviders(await this._makeKeyId(s), TIMEOUT)
     }))
@@ -50,7 +51,7 @@ export class DhtDiscovery extends Discovery {
    *
    * @param {Array<SliceId>} slices - the slices to announce to the network
    */
-  async announce (slices) {
+  async announce (slices: SliceId[]) {
     slices.forEach(async (sliceId) => {
       return this.contentRouting.provide(await this._makeKeyId(sliceId))
     })

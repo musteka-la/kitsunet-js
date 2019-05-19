@@ -5,7 +5,7 @@ import { Kitsunet } from './kitsunet'
 import { register, injectableFactory } from 'opium-decorators'
 import { isValidAddress, keccak256 } from 'ethereumjs-util'
 import { SliceId, Slice } from './slice'
-import { IPeerDescriptor } from './net'
+import { NetworkPeer } from './net'
 
 import Debug from 'debug'
 const debug = Debug('kitsunet:kitsunet-factory')
@@ -47,9 +47,9 @@ export class KitsunetFactory {
   }
 
   @register()
-  static async kitsunetFactory<T extends IPeerDescriptor<any>> (@register('default-slices')
-                                                                slices: Slice[],
-                                                                kitsunet: Kitsunet<T>): Promise<Kitsunet<T>> {
+  static async kitsunetFactory<T extends NetworkPeer<any, any>> (@register('default-slices')
+                                                                 slices: Slice[],
+                                                                 kitsunet: Kitsunet<T>): Promise<Kitsunet<T>> {
 
     kitsunet.on('kitsunet:start', () => {
       debug('kitsunet started')

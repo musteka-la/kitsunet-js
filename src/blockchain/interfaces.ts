@@ -1,5 +1,6 @@
 'use strict'
 import BN from 'bn.js'
+import Block from 'ethereumjs-block'
 
 export interface IBlockchain {
   /**
@@ -48,9 +49,9 @@ export interface IBlockchain {
    * @returns {T[]} - an array of blocks
    */
   getBlocks<T> (blockId: Buffer | number,
-                maxBlocks: number,
-                skip: number,
-                reverse: boolean): Promise <T[]>
+                maxBlocks?: number,
+                skip?: number,
+                reverse?: boolean): Promise <T[]>
 
   /**
    * Get an array of blocks
@@ -60,9 +61,9 @@ export interface IBlockchain {
    * @returns {T} - an array of blocks
    */
   getHeaders<T> (blockId: Buffer | number,
-                 maxBlocks: number,
-                 skip: number,
-                 reverse: boolean): Promise <T[]>
+                 maxBlocks?: number,
+                 skip?: number,
+                 reverse?: boolean): Promise <T[]>
 
   /**
    * Get the chains best block
@@ -81,7 +82,7 @@ export interface IBlockchain {
    *
    * @param {T} header
    */
-  putHeader<T> (header: T[]): Promise<any>
+  putHeaders<T> (header: T[]): Promise<any>
 
   /**
    * Get the network id
@@ -91,5 +92,14 @@ export interface IBlockchain {
   /**
    * Get the chain genesis
    */
-  genesis (): Buffer[]
+  genesis (): any
+
+  /**
+   * Set a checkpoint block. This allows to sync
+   * starting from that block as opposed to syncing
+   * the full header/block chain.
+   *
+   * @param block - the block to use as checkpoint
+   */
+  putCheckpoint (block: Block): Promise<void>
 }

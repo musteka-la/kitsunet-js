@@ -7,7 +7,7 @@ import { retry } from 'async'
 import { register } from 'opium-decorators'
 import { SliceStore } from './stores/slice-store'
 import { KsnDriver } from './ksn-driver'
-import { IPeerDescriptor } from './net'
+import Block from 'ethereumjs-block'
 
 import {
   BaseTracker,
@@ -15,11 +15,12 @@ import {
   KitsunetBridge
 } from './slice/trackers'
 
-import debug from 'debug'
-const log = debug('kitsches:kitsunet-slice-manager')
+import Debug from 'debug'
+import { NetworkPeer } from './net/peer'
+const debug = Debug('kitsches:kitsunet-slice-manager')
 
 @register()
-export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
+export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
 
   blockTracker: BlockTracker
   bridgeTracker: KitsunetBridge
@@ -138,7 +139,7 @@ export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
       const slice = await this.slicesStore.getById(sliceId)
       return slice // won't catch if just returned
     } catch (e) {
-      log(e)
+      debug(e)
       if (this.isBridge) {
         await this.track(new Set([sliceId]))
         return this.bridgeTracker.getSlice(sliceId)
@@ -157,7 +158,7 @@ export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
     try {
       return this.slicesStore.getSlices()
     } catch (e) {
-      log(e)
+      debug(e)
     }
   }
 
@@ -169,7 +170,7 @@ export class SliceManager<T extends IPeerDescriptor<any>> extends BaseTracker {
    */
   async getSliceForBlock (tag: number | string, slice: { path: any; depth: any; }) {
     let _slice = new SliceId(slice.path, slice.depth)
-    const block = await this.ksnDriver.getBlockByNumber(tag)
+    const block: Block | undefined = await this.ksnDriver.getBlockByNumber(tag)
     if (block) {
       _slice.root = block.header.stateRoot.toString('hex')
       return this.getSlice(_slice)

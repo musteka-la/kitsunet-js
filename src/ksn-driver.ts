@@ -1,7 +1,7 @@
 'use strict'
 
 import EE from 'events'
-import debug from 'debug'
+import Debug from 'debug'
 
 import Libp2p from 'libp2p'
 import { KsnNodeType } from './constants'
@@ -9,31 +9,34 @@ import { Discovery } from './slice/discovery/base'
 import { register } from 'opium-decorators'
 import { Slice } from './slice'
 import KistunetBlockTracker from 'kitsunet-block-tracker'
+import Block from 'ethereumjs-block'
 
 import {
   Libp2pPromisified,
-  NodeManager,
-  IPeerDescriptor
+  NodeManager
 } from './net'
 
-const log = debug('kitsunet:kitsunet-driver')
+import { Libp2pPeer } from './net/libp2p/libp2p-peer'
+import { NetworkPeer } from './net/peer'
+import { EthChain } from './blockchain'
+
+const debug = Debug('kitsunet:kitsunet-driver')
 
 @register()
-export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
+export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   nodeType: KsnNodeType
   peers: Map<string, T>
-  _headers: Set<any>
-  idB58: any
   _stats: any
 
   constructor (@register('options')
-              public isBridge: any,
+               public isBridge: any,
                @register(Libp2p)
                public node: Libp2pPromisified,
                public discovery: Discovery,
                public nodeManager: NodeManager<T>,
-               // blockchain,
-               public blockTracker: KistunetBlockTracker) {
+               public blockTracker: KistunetBlockTracker,
+               public ethChain: EthChain,
+               public libp2pPeer: Libp2pPeer) {
     super()
 
     this.node = node
@@ -45,14 +48,36 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
 
     // peers
     this.peers = new Map()
+    // let isCheckpointed = false
+    // let checkpointBlock: Block | null = null
+    // let blockStack: Block[] = []
+    // const putBlock = async (block) => {
+    //   debug(`block hash: ${block.header.hash().toString('hex')}`)
+    //   debug(`block number: ${parseInt(block.header.number.toString('hex'), 16)}`)
+    //   debug(`block parent hash: ${block.header.parentHash.toString('hex')}`)
 
-    // TODO: this is a workaround, headers
-    // should come from the blockchain
-    this._headers = new Set()
+    //   if (!isCheckpointed) {
+    //     if (!checkpointBlock) {
+    //       checkpointBlock = block
+    //       await this.ethChain.putCheckpoint(block)
+    //       isCheckpointed = true
+    //       blockStack = blockStack.filter(b => {
+    //         return b.header.hash().toString('hex') !== checkpointBlock!.header.hash().toString('hex')
+    //       })
+    //       if (blockStack.length > 0) {
+    //         await this.ethChain.putBlocks(blockStack)
+    //       }
+    //       return
+    //     } else {
+    //       blockStack.push(block)
+    //       return
+    //     }
+    //   }
 
-    this.blockTracker.on('latest', async (header) => {
-      this._headers.add(header)
-    })
+    //   await this.ethChain.putBlocks([block])
+    // }
+
+    // this.blockTracker.on('latest', putBlock)
   }
 
   get peerInfo () {
@@ -62,20 +87,26 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
   /**
    * Get the latest block
    */
-  async getLatestBlock () {
-    return this.blockTracker.getLatestBlock()
+  async getLatestBlock (): Promise<Block> {
+    return this.ethChain.getLatestBlock()
   }
 
   /**
    * Get a block by number
-   * @param {String|Number} block - the number of the block to retrieve
+   * @param {String|Number} blockId - the number/tag of the block to retrieve
    */
-  async getBlockByNumber (block) {
-    return this.blockTracker.getBlockByNumber(block)
+  async getBlockByNumber (blockId): Promise<Block | undefined> {
+    const block: Block[] = await this.ethChain.getBlocks(blockId, 1)
+    if (block && block.length > 0) {
+      return block[0]
+    }
   }
 
-  getHeaders () {
-    return [...this._headers]
+  getHeaders (blockId: Buffer | number,
+              maxBlocks: number = 25,
+              skip: number = 0,
+              reverse: boolean = false) {
+    return this.ethChain.getHeaders(blockId, maxBlocks, skip, reverse)
   }
 
   /**
@@ -85,7 +116,7 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
    * @returns {Array<Peer>} peers - an array of peers tracking the slice
    */
   async findPeers (slice) {
-    // return this.discovery.findPeers(slice)
+    return this.discovery.findPeers(slice)
   }
 
   /**
@@ -93,18 +124,17 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
    *
    * @param {Array<SliceId>} slices - the slices to find the peers for
    */
-  async findAndConnect (slices) {
-    // const peers = await this.findPeers(slices)
-    // if (peers && peers.length) {
-    //   const _peers = await Promise.all(peers.map((peer) => {
-    //     if (peer.id.toB58String() === this.idB58) {
-    //       log('cant dial to self, skipping')
-    //       return
-    //     }
-    //     return this.ksnDialer.dial(peer)
-    //   }))
-    //   return _peers.filter(Boolean)
-    // }
+  async findSlicePeers (slices) {
+    const peers = await this.findPeers(slices)
+    if (peers && peers.length) {
+      const _peers = await Promise.all(peers.map((peer) => {
+        if (peer.id.toB58String() === this.libp2pPeer.id) {
+          debug('cant dial to self, skipping')
+          return
+        }
+      }))
+      return _peers.filter(Boolean)
+    }
   }
 
   /**
@@ -113,11 +143,11 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
    * @param {Array<slices>} slices - slices to resolve from peers
    * @param {Array<RpcPeer>} peers - peers to query
    */
-  async _rpcResolve (slices, peers): Promise<any[] | undefined> {
+  async _rpcResolve (slices: Slice[], peers: NetworkPeer<any, any>[]): Promise<any[] | undefined> {
     const resolve = async (peer): Promise<any[] | undefined> => {
       // first check if the peer has already reported
       // tracking the slice
-      const _peers = await slices.map((slice) => {
+      const _peers = slices.map((slice) => {
         if (peer.sliceIds.has(`${slice.path}-${slice.depth}`) ||
           peer.nodeType === KsnNodeType.BRIDGE ||
           peer.nodeType === KsnNodeType.NODE) {
@@ -134,7 +164,7 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
     for (const p of peers) {
       let resolved = await resolve(p)
       if (resolved && resolved.length) return resolved
-      await p.getSliceIds() // refresh the ids
+      await p.protocols['ksn'].getSliceIds() // refresh the ids
       resolved = await resolve(p)
       if (resolved && resolved.length) return resolved
     }
@@ -152,15 +182,15 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
    * @param {Array<SliceId>} slices
    */
   async resolveSlices (slices) {
-    // const resolved = await this._rpcResolve(slices, this.peers.values())
-    // if (resolved && resolved.length) {
-    //   return resolved
-    // }
+    const resolved = await this._rpcResolve(slices, [...this.peers.values()])
+    if (resolved && resolved.length) {
+      return resolved
+    }
 
-    // const peers = await this.findAndConnect(slices)
-    // if (peers && peers.length) {
-    //   return this._rpcResolve(slices, peers)
-    // }
+    const peers = await this.findSlicePeers(slices)
+    if (peers && peers.length) {
+      return this._rpcResolve(slices, peers as NetworkPeer<any, any>[])
+    }
     return {} as Slice
   }
 
@@ -187,13 +217,15 @@ export class KsnDriver<T extends IPeerDescriptor<any>> extends EE {
     })
 
     await this.nodeManager.start()
+    await this.blockTracker.start()
   }
 
   /**
    * Stop the driver
    */
   async stop () {
-    await this.nodeManager.start()
+    await this.nodeManager.stop()
+    await this.blockTracker.stop()
   }
 
   getState () {
