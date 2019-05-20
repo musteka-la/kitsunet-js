@@ -25,6 +25,7 @@ import {
 } from '../interfaces'
 import proto = require('../protocols/kitsunet/proto')
 import { EthChain } from '../../blockchain'
+import Common from 'ethereumjs-common'
 
 const ignoredErrors = new RegExp([
   'EPIPE',
@@ -70,10 +71,9 @@ export class Devp2pNode extends Node<Devp2pPeer> {
                public ethChain: EthChain,
                @register('devp2p-peer-info')
                public peerInfo: PeerInfo,
+               public common: Common,
                @register('protocol-registry')
-               private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[],
-               @register('devp2p-bootnodes')
-               private bootnodes: any[]) {
+               private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]) {
     super()
   }
 
@@ -88,7 +88,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     const { udpPort, address } = this.peerInfo
     this.dpt.bind(udpPort, address)
-    this.bootnodes.map(async (node: any) => {
+    this.common.bootstrapNodes().map(async (node: any) => {
       const bootnode: PeerInfo = {
         address: node.ip,
         udpPort: node.port,
