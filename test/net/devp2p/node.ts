@@ -6,7 +6,7 @@ import { expect } from 'chai'
 import {
   IProtocolDescriptor,
   EthProtocol,
-  RlpxNode,
+  Devp2pNode,
   Devp2pPeer
 } from '../../../src/net'
 
@@ -55,14 +55,14 @@ describe('simple test RLPx Node', () => {
 
   const bootnodes: any[] = []
 
-  const rlpxNode = new RlpxNode(dpt,
-                                rlpx,
-                                peerInfo,
-                                protoRegistry,
-                                bootnodes)
+  const rlpxNode = new Devp2pNode(dpt,
+                                  rlpx,
+                                  peerInfo,
+                                  protoRegistry,
+                                  bootnodes)
 
   it('should create valid rlpx node', (done) => {
-    expect(rlpxNode).to.be.instanceOf(RlpxNode)
+    expect(rlpxNode).to.be.instanceOf(Devp2pNode)
     done()
   })
 })

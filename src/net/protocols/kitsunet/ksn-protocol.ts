@@ -3,10 +3,10 @@
 import * as Handlers from './handlers'
 import debug from 'debug'
 import { BaseProtocol } from '../../base-protocol'
-import { INetwork, IPeerDescriptor, ICapability } from '../../interfaces'
+import { INetwork, IPeerDescriptor } from '../../interfaces'
 import { KitsunetHandler } from './kitsunet-handler'
 import { KsnEncoder } from './ksn-encoder'
-import { SliceId, Slice } from '../../../slice'
+import { EthChain } from '../../../blockchain'
 
 import {
   Message,
@@ -14,9 +14,8 @@ import {
   ResponseStatus,
   IKsnProtocol,
   Identify,
-  NodeType,
-  BlockHeader
-} from './interfaces'
+  NodeType} from './interfaces'
+import { SliceId } from '../../../slice'
 
 const log = debug('kitsunet:kitsunet-proto')
 
@@ -28,7 +27,7 @@ function errResponse (type: number | string) {
 
 const VERSION = '1.0.0'
 
-export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
+export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
   handlers: { [key: string]: KitsunetHandler<P> }
@@ -40,8 +39,9 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
     return 'ksn'
   }
 
-  constructor (public peer: IPeerDescriptor<P>,
-               public networkProvider: INetwork<P>) {
+  constructor (public peer: P,
+               public networkProvider: INetwork<P>,
+               public ethChain: EthChain) {
     super(peer, networkProvider, new KsnEncoder())
     this.sliceIds = new Set()
     this.type = NodeType.NODE
@@ -56,7 +56,7 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
     for await (const msg of super.receive<Buffer, Message>(readable)) {
       if (msg.type !== MsgType.UNKNOWN_MSG) {
-        yield this.handlers[msg.type].handle<Message, U>(msg)
+        yield this.handlers[MsgType[msg.type]].handle<Message, U>(msg)
       }
 
       errResponse(msg.type)
@@ -67,12 +67,16 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
     return super.send(msg, this)
   }
 
-  // /**
-  //  * initiate the identify flow
-  //  */
-  // async identify (): Promise<Identify> {
-  //   const res = await this.handlers[MsgType.IDENTIFY].request()
-  //   this.versions = res.version
+  async handshake (): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+
+  /**
+   * initiate the identify flow
+   */
+  // async handshake (): Promise<boolean> {
+  //   const res: Identify = await this.handlers[MsgType[MsgType.IDENTIFY]].request()
+  //   this.versions = res.versions
   //   this.userAgent = res.userAgent
 
   //   this.sliceIds = res.sliceIds
@@ -82,7 +86,8 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   //   this.latestBlock = res.latestBlock
   //   this.type = res.nodeType
 
-  //   return res
+  //   console.dir(res)
+  //   return true
   // }
 
   // /**
@@ -122,7 +127,7 @@ export class KsnProtocol<P> extends BaseProtocol<P> implements IKsnProtocol {
   /**
    * Ping peer
    */
-  async ping (): Promise<boolean> {
-    return this.handlers[MsgType.PING].request()
-  }
+  // async ping (): Promise<boolean> {
+  //   return this.handlers[MsgType.PING].request()
+  // }
 }

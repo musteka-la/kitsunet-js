@@ -10,6 +10,8 @@ import {
   EthProtocol
 } from './protocols'
 
+// import { Devp2pNode } from './devp2p'
+
 /**
  * A node manager to start/stop nodes as well
  * as subscribet to discovery events

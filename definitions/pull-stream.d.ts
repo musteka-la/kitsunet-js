@@ -5,7 +5,7 @@ declare namespace index {
   function collect(cb: any): any;
   function concat(cb: any): any;
   function count(max: any): any;
-  function drain(op: any, done?: any): any;
+  function drain(op?: any, done?: any): any;
   function empty(): any;
   function error(err: any): any;
   function filter(test: any): any;

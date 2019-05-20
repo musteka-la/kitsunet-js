@@ -7,7 +7,8 @@ import {
   INetwork,
   NetworkType,
   ICapability,
-  IProtocolDescriptor
+  IProtocolDescriptor,
+  IPeerDescriptor
 } from './interfaces'
 
 /**
@@ -61,9 +62,9 @@ export abstract class Node<P> extends EE implements INetwork<P> {
    *
    * @param readable - an AsyncIterable to read from
    */
-  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U>
-  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U[]>
-  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+  receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U >
+  receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U[] >
+  receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U | U[] > {
     throw new Error('Method not implemented')
   }
 
@@ -77,6 +78,6 @@ export abstract class Node<P> extends EE implements INetwork<P> {
     throw new Error('Method not implemented')
   }
 
-  abstract start (): Promise<void>
+  abstract start (): Promise < void >
   abstract stop (): Promise<void>
 }

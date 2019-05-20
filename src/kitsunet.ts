@@ -8,6 +8,7 @@ import { SliceManager } from './slice-manager'
 import { KsnDriver } from './ksn-driver'
 import { DEFAULT_DEPTH } from './constants'
 import { NetworkPeer } from './net/peer'
+import Block from 'ethereumjs-block'
 
 const DEFUALT_DEPTH: number = 10
 
@@ -42,12 +43,8 @@ export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
       this.emit('slice', slice))
   }
 
-  get node () {
-    return this.ksnDriver.node
-  }
-
-  get peerInfo () {
-    return this.ksnDriver.peerInfo
+  get clientPeers (): T[] {
+    return this.ksnDriver.clientPeers
   }
 
   get peers () {
@@ -97,7 +94,7 @@ export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
    *
    * @param {String|Number} block - the block number, if string is passed assumed to be in hex
    */
-  async getBlockByNumber (block) {
+  async getBlockByNumber (block: number): Promise<Block | undefined> {
     return this.ksnDriver.getBlockByNumber(block)
   }
 

@@ -3,13 +3,13 @@
 import { IEncoder } from '../../interfaces'
 import proto from './proto'
 
-const kitsunet = proto.kitsunet
+const { Kitsunet } = proto
 export class KsnEncoder implements IEncoder {
   async *encode<T, U> (msg: T): AsyncIterable<U> {
-    return kitsunet.encode(msg)
+    yield Kitsunet.encode(msg)
   }
 
   async *decode<T, U> (msg: T): AsyncIterable<U> {
-    return kitsunet.decode(msg)
+    yield Kitsunet.decode(msg)
   }
 }

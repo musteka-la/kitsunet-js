@@ -1,47 +1,43 @@
-// 'use strict'
+'use strict'
 
-// import { BaseHandler } from '../base'
-// import BN from 'bn.js'
-// import Kitsunet = require('../proto')
-// import { KsnProtocol } from '../../ksn-protocol'
-// import { IPeerDescriptor } from '../interfaces'
-// import { KitsunetHandler } from '../kitsunet-handler'
+import { KsnProtocol } from '../ksn-protocol'
+import { IPeerDescriptor } from '../../../interfaces'
+import { KitsunetHandler } from '../kitsunet-handler'
+import Block from 'ethereumjs-block'
 
-// const { MsgType, Status } = Kitsunet
+import { MsgType, ResponseStatus } from '../interfaces'
+import { BN } from 'ethereumjs-util'
 
-// export class Identify<P> extends KitsunetHandler<P> {
-//   constructor (networkProvider: KsnProtocol<P>,
-//                peer: IPeerDescriptor<P>) {
-//     super('identify', MsgType.IDENTIFY, networkProvider, peer)
-//   }
+export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P> {
+  constructor (networkProvider: KsnProtocol<P>,
+               peer: P) {
+    super('identify', MsgType[MsgType.IDENTIFY], networkProvider, peer)
+  }
 
-//   async handle (): Promise<any> {
-//     try {
-//       const block = await this.rpcEngine.getLatestBlock()
-//       return {
-//         type: MsgType.IDENTIFY,
-//         status: Status.OK,
-//         payload: {
-//           identify: {
-//             version: this.rpcEngine.VERSION,
-//             userAgent: this.rpcEngine.USER_AGENT,
-//             nodeType: this.rpcEngine.nodeType,
-//             latestBlock: block ? block.header.number : new BN(0).toBuffer(),
-//             sliceIds: this.rpcEngine.getSliceIds()
-//           }
-//         }
-//       }
-//     } catch (e) {
-//       this.log(e)
-//       return this.errResponse(e)
-//     }
-//   }
+  async handle (): Promise<any> {
+    try {
+      const block: Block = await this.networkProvider.ethChain.getLatestBlock()
+      return {
+        type: MsgType.IDENTIFY,
+        status: ResponseStatus.OK,
+        payload: {
+          identify: {
+            version: this.networkProvider.versions.join(','),
+            userAgent: this.networkProvider.userAgent,
+            nodeType: this.networkProvider.type,
+            latestBlock: block ? block.header.number : new BN(0).toBuffer()
+            // sliceIds: this.networkProvider.getSliceIds()
+          }
+        }
+      }
+    } catch (e) {
+      this.log(e)
+      return this.errResponse(e)
+    }
+  }
 
-//   async request (): Promise<any> {
-//     const res = await this.sendRequest({
-//       type: MsgType.IDENTIFY
-//     })
-
-//     return res.payload.identify
-//   }
-// }
+  async request (): Promise<any> {
+    const res = await this.send({ type: MsgType.IDENTIFY })
+    return res.payload.identify
+  }
+}

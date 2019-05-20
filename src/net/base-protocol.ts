@@ -8,14 +8,17 @@ import {
   IPeerDescriptor
 } from './interfaces'
 
-export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
+import Debug from 'debug'
+const debug = Debug('kitsunet:net:base-protocol')
+
+export abstract class BaseProtocol<P extends IPeerDescriptor<any>> extends EE implements IProtocol<P> {
   abstract get id (): string
   abstract get versions (): string[]
 
-  peer: IPeerDescriptor<P>
+  peer: P
   networkProvider: INetwork<P>
   encoder?: IEncoder
-  constructor (peer: IPeerDescriptor<P>,
+  constructor (peer: P,
                networkProvider: INetwork<P>,
                encoder: IEncoder) {
     super()
@@ -31,6 +34,7 @@ export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
       throw new Error('encoder not set!')
     }
 
+    debug('reading incoming stream')
     for await (const msg of readable) {
       for await (const parsed of this.encoder.decode(msg)) {
         yield parsed as unknown as U
@@ -50,7 +54,6 @@ export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
       throw new Error('encoder not set!')
     }
 
-    let response: string = ''
     for await (const chunk of this.encoder.encode(msg)) {
       // protocol might choose to reply in a request/response manner
       // we might return something from send
@@ -58,10 +61,10 @@ export abstract class BaseProtocol<P> extends EE implements IProtocol<P> {
       .networkProvider
       .send(chunk, protocol, this.peer.peer || undefined) || Buffer.from([0])
       for await (const recvd of this.encoder.decode(sent)) {
-        response += recvd
+        return recvd as unknown as U
       }
     }
-
-    return response as unknown as U
   }
+
+  abstract handshake (): Promise<void>
 }

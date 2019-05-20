@@ -6,7 +6,7 @@ import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { ETH } from 'ethereumjs-devp2p'
 
-export class NewBlockHashes<P> extends EthHandler<P> {
+export class NewBlockHashes<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('NewBlockHashes', ETH.MESSAGE_CODES.NEW_BLOCK_HASHES, networkProvider, peer)

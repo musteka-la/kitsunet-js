@@ -10,7 +10,7 @@ import { ETH } from 'ethereumjs-devp2p'
 
 type BlockHeader = Block.Header
 
-export class GetBlockHeaders<P> extends EthHandler<P> {
+export class GetBlockHeaders<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('GetBlockHeaders', ETH.MESSAGE_CODES.GET_BLOCK_HEADERS, networkProvider, peer)
@@ -37,7 +37,7 @@ export class GetBlockHeaders<P> extends EthHandler<P> {
   }
 }
 
-export class BlockHeaders<P> extends EthHandler<P> {
+export class BlockHeaders<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('BlockHeaders', ETH.MESSAGE_CODES.BLOCK_HEADERS, networkProvider, peer)
@@ -47,7 +47,7 @@ export class BlockHeaders<P> extends EthHandler<P> {
     return headers.map(raw => new Block.Header(raw))
   }
 
-  async request<T, U> (headers: T[]): Promise < U[] > {
+  async request<T, U> (headers: T[]): Promise<U[]> {
     return this.send(headers.map((h: any) => h.raw))
   }
 }

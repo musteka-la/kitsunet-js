@@ -37,11 +37,11 @@ export interface KsnResponse extends KsnMsg {
 export type Message = KsnMsg | KsnResponse
 
 export interface Identify {
-  version: string       // e.g. kitsunet-js/0.0.1
-  userAgent: string     // e.g. kitsunet-js/0.0.1
+  versions: string[]       // e.g. kitsunet-js/0.0.1
+  userAgent: string        // e.g. kitsunet-js/0.0.1
   nodeType: KsnNodeType    // the node type - bridge, edge, normal
-  latestBlock: number   // block number
-  sliceIds: string[]     // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
+  latestBlock: number      // block number
+  sliceIds: string[]       // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
 }
 
 export interface Data {
@@ -85,5 +85,5 @@ export interface IKsnProtocol {
   /**
    * Ping peer
    */
-  ping (): Promise<boolean>
+  // ping (): Promise<boolean>
 }

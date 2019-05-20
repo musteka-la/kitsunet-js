@@ -13,7 +13,8 @@ import Block from 'ethereumjs-block'
 
 import {
   Libp2pPromisified,
-  NodeManager
+  NodeManager,
+  IPeerDescriptor
 } from './net'
 
 import { Libp2pPeer } from './net/libp2p/libp2p-peer'
@@ -30,8 +31,6 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
 
   constructor (@register('options')
                public isBridge: any,
-               @register(Libp2p)
-               public node: Libp2pPromisified,
                public discovery: Discovery,
                public nodeManager: NodeManager<T>,
                public blockTracker: KistunetBlockTracker,
@@ -39,7 +38,6 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
                public libp2pPeer: Libp2pPeer) {
     super()
 
-    this.node = node
     this.isBridge = Boolean(isBridge.bridge)
     // this.blockChain = promisify(blockchain)
     this.discovery = discovery
@@ -80,8 +78,8 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
     // this.blockTracker.on('latest', putBlock)
   }
 
-  get peerInfo () {
-    return this.node.peerInfo
+  get clientPeers (): T[] {
+    return [this.libp2pPeer] as T[]
   }
 
   /**
@@ -95,7 +93,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
    * Get a block by number
    * @param {String|Number} blockId - the number/tag of the block to retrieve
    */
-  async getBlockByNumber (blockId): Promise<Block | undefined> {
+  async getBlockByNumber (blockId: number): Promise<Block | undefined> {
     const block: Block[] = await this.ethChain.getBlocks(blockId, 1)
     if (block && block.length > 0) {
       return block[0]
@@ -210,10 +208,12 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   async start () {
     this.nodeManager.on('kitsunet:peer:connected', (peer: T) => {
       this.peers.set(peer.id, peer)
+      this.emit('kitsunet:peer:connected', peer)
     })
 
     this.nodeManager.on('kitsunet:peer:disconnected', (peer: T) => {
       this.peers.delete(peer.id)
+      this.emit('kitsunet:peer:disconnected', peer)
     })
 
     await this.nodeManager.start()

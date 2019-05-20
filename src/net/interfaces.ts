@@ -67,6 +67,7 @@ export interface IProtocol<T> extends INetwork<T>, ICapability {
   peer: IPeerDescriptor<T>              // protocols peer
   encoder?: IEncoder                    // the encoder
   networkProvider: INetwork<T>          // the network provider
+  handshake (): Promise<void>            // initiate protocol handshake
 }
 
 export interface IHandler<P> {
