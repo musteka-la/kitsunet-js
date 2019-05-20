@@ -9,6 +9,12 @@ import { register } from 'opium-decorators'
 import { Node } from '../node'
 import { Libp2pPeer } from './libp2p-peer'
 import * as semver from 'semver'
+import pushable from 'pull-pushable'
+import lp from 'pull-length-prefixed'
+import pb from 'pull-protocol-buffers'
+
+import proto from '../protocols/kitsunet/proto'
+const { Kitsunet } = proto
 
 import {
   IProtocol,
@@ -19,6 +25,7 @@ import {
   ICapability
 } from '../interfaces'
 import { Libp2pDialer } from './libp2p-dialer'
+import { EthChain } from '../../blockchain'
 
 /**
  * Libp2p node
@@ -49,6 +56,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   constructor (public node: Libp2p,
                public peer: Libp2pPeer,
                private libp2pDialer: Libp2pDialer,
+               public ethChain: EthChain,
                @register('protocol-registry')
                protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
     super()
@@ -56,7 +64,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
       if (this.isProtoSupported(protoDescriptor)) {
         const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
-        const proto: IProtocol<Libp2pPeer> = new Protocol(this.peer, this as INetwork<Libp2pPeer>)
+        const proto: IProtocol<Libp2pPeer> = new Protocol(this.peer, this as INetwork<Libp2pPeer>, this.ethChain)
         this.protocols.set(proto.id, proto)
         this.mount(proto)
       }
@@ -68,7 +76,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       if (!this.peers.has(libp2pPeer.id)) {
         protocolRegistry.forEach(async (protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
           const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
-          const proto: IProtocol<Libp2pPeer> = new Protocol(libp2pPeer, this as INetwork<Libp2pPeer>)
+          const proto: IProtocol<Libp2pPeer> = new Protocol(libp2pPeer, this as INetwork<Libp2pPeer>, this.ethChain)
           libp2pPeer.protocols.set(proto.id, proto)
           await proto.handshake()
         })
@@ -110,8 +118,16 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       const protocol: IProtocol<Libp2pPeer> | undefined = peer.protocols.get(id)
       if (protocol) {
         try {
-          const iterable = toIterator(conn)
-          protocol.receive(iterable)
+          const stream = pushable()
+          pull(
+            stream,
+            lp.encode(),
+            conn)
+
+          for await (const msg of protocol.receive(toIterator(pull(conn,lp.decode())))) {
+            stream.push(msg)
+          }
+          stream.end()
         } catch (err) {
           debug(err)
         }
@@ -133,11 +149,13 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     const conn = await this.node.dialProtocol(peer.peer, this.mkCodec(protocol.id, protocol.versions))
     return new Promise((resolve, reject) => {
       pull(
-        pull.values(msg),
+        pull.values([msg]),
+        lp.encode(),
         conn,
+        lp.decode(),
         pull.collect((err: Error, values: U) => {
           if (err) return reject(err)
-          resolve(values)
+          resolve(values[0])
         }))
     })
   }

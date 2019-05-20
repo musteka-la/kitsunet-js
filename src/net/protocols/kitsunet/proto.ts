@@ -28,7 +28,7 @@ message Kitsunet {
   }
 
   message Identify {
-    optional string   version      = 1; // e.g. kitsunet-js/0.0.1
+    repeated string   versions     = 1; // e.g. kitsunet-js/0.0.1
     optional string   userAgent    = 2; // e.g. kitsunet-js/0.0.1
     optional NodeType nodeType     = 3; // the node type - bridge, edge, normal
     optional bytes    latestBlock  = 4; // block number

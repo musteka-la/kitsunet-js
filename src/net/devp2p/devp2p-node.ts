@@ -24,6 +24,7 @@ import {
   IPeerDescriptor
 } from '../interfaces'
 import proto = require('../protocols/kitsunet/proto')
+import { EthChain } from '../../blockchain'
 
 const ignoredErrors = new RegExp([
   'EPIPE',
@@ -66,6 +67,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
   constructor (public dpt: DPT,
                public rlpx: RLPx,
+               public ethChain: EthChain,
                @register('devp2p-peer-info')
                public peerInfo: PeerInfo,
                @register('protocol-registry')
@@ -153,7 +155,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
         if (devp2pProto) {
           const Protocol: IProtocolConstructor<Devp2pPeer> = protoDescriptor.constructor
-          const proto = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>)
+          const proto = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>, this.ethChain)
           devp2pPeer.protocols.set(proto.id, proto)
 
           devp2pProto.protocol.on('message', (code, payload) => {

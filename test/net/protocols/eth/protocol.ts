@@ -40,10 +40,10 @@ describe('Eth protocol', () => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
                                     new EE() as unknown as INetwork<any>,
-                                    passthroughEncoder,
-                                    new Common('mainnet'), {
+                                    passthroughEncoder, {
                                       getBlocksTD: () => Buffer.from([0]),
-                                      getBestBlock: () => block
+                                      getBestBlock: () => block,
+                                      common: new Common('mainnet')
                                     } as any)
     })
 
@@ -62,10 +62,10 @@ describe('Eth protocol', () => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
                                     new EE() as unknown as INetwork<any>,
-                                    passthroughEncoder,
-                                    new Common('mainnet'), {
+                                    passthroughEncoder, {
                                       getBlocksTD: () => Buffer.from([0]),
-                                      getBestBlock: () => block
+                                      getBestBlock: () => block,
+                                      common: new Common('mainnet')
                                     } as any)
     })
 
@@ -195,10 +195,10 @@ describe('Eth protocol', () => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
                                     networkProvider,
-                                    passthroughEncoder,
-                                    new Common('mainnet'), {
+                                    passthroughEncoder, {
                                       getBlocksTD: () => Buffer.from([0]),
-                                      getBestBlock: () => block
+                                      getBestBlock: () => block,
+                                      common: new Common('mainnet')
                                     } as any)
     })
 

@@ -16,16 +16,17 @@ export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P>
 
   async handle (): Promise<any> {
     try {
-      const block: Block = await this.networkProvider.ethChain.getLatestBlock()
+      // const block: Block = await this.networkProvider.ethChain.getLatestBlock()
       return {
         type: MsgType.IDENTIFY,
         status: ResponseStatus.OK,
         payload: {
           identify: {
-            version: this.networkProvider.versions.join(','),
+            versions: this.networkProvider.versions,
             userAgent: this.networkProvider.userAgent,
             nodeType: this.networkProvider.type,
-            latestBlock: block ? block.header.number : new BN(0).toBuffer()
+            // latestBlock: block ? block.header.number : new BN(0).toBuffer()
+            latestBlock: new BN(0).toBuffer()
             // sliceIds: this.networkProvider.getSliceIds()
           }
         }

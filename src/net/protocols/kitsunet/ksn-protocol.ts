@@ -19,12 +19,6 @@ import { SliceId } from '../../../slice'
 
 const log = debug('kitsunet:kitsunet-proto')
 
-function errResponse (type: number | string) {
-  const err = `unknown message type ${type}`
-  log(err)
-  return { status: ResponseStatus.ERROR, error: err }
-}
-
 const VERSION = '1.0.0'
 
 export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IKsnProtocol {
@@ -56,10 +50,11 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
     for await (const msg of super.receive<Buffer, Message>(readable)) {
       if (msg.type !== MsgType.UNKNOWN_MSG) {
-        yield this.handlers[MsgType[msg.type]].handle<Message, U>(msg)
+        const res: any = await this.handlers[MsgType[msg.type]].handle<Message, U>(msg)
+        for await (const encoded of this.encoder!.encode(res)) {
+          yield encoded
+        }
       }
-
-      errResponse(msg.type)
     }
   }
 
@@ -67,28 +62,21 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return super.send(msg, this)
   }
 
-  async handshake (): Promise<void> {
-    throw new Error('Method not implemented.')
-  }
-
   /**
    * initiate the identify flow
    */
-  // async handshake (): Promise<boolean> {
-  //   const res: Identify = await this.handlers[MsgType[MsgType.IDENTIFY]].request()
-  //   this.versions = res.versions
-  //   this.userAgent = res.userAgent
+  async handshake (): Promise<void> {
+    const res: Identify = await this.handlers[MsgType[MsgType.IDENTIFY]].request()
+    this.versions = res.versions
+    this.userAgent = res.userAgent
 
-  //   this.sliceIds = res.sliceIds
-  //     ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
-  //     : new Set()
+    this.sliceIds = res.sliceIds
+      ? new Set(res.sliceIds.map((s) => new SliceId(s.toString())))
+      : new Set()
 
-  //   this.latestBlock = res.latestBlock
-  //   this.type = res.nodeType
-
-  //   console.dir(res)
-  //   return true
-  // }
+    this.latestBlock = res.latestBlock
+    this.type = res.nodeType
+  }
 
   // /**
   //  * Get all slice ids for the peer
