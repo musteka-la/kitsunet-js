@@ -7,7 +7,7 @@
     "build": "npm run clean && tsc --pretty -p tsconfig-prod.json",
     "watch": "npm run clean && tsc --watch --pretty",
     "clean": "rm -rf dist/",
-    "test": "npm run build && mocha -r source-map-support/register dist/test/",
+    "test": "npm run build && mocha -r source-map-support/register dist/test/**/*.js",
     "lint": "tslint --project tsconfig.json",
     "lint:fix": "tslint --project tsconfig.json --fix"
   },
@@ -83,6 +83,7 @@
     "rlp": "^2.2.3",
     "rpc-stream": "^2.1.2",
     "safe-event-emitter": "^1.0.1",
+    "semver": "^6.0.0",
     "tslint": "^5.16.0",
     "tslint-config-standard": "^8.0.1",
     "websocket-stream": "^5.1.2"
@@ -96,6 +97,7 @@
     "@types/expect": "^1.20.4",
     "@types/levelup": "^3.1.0",
     "@types/mocha": "^5.2.6",
+    "@types/semver": "^6.0.0",
     "@types/sinon": "^7.0.11",
     "@types/yargs": "^13.0.0",
     "chai": "^4.2.0",

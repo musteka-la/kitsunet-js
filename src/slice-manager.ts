@@ -170,7 +170,7 @@ export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
    */
   async getSliceForBlock (tag: number | string, slice: { path: any; depth: any; }) {
     let _slice = new SliceId(slice.path, slice.depth)
-    const block: Block | undefined = await this.ksnDriver.getBlockByNumber(tag)
+    const block: Block | undefined = await this.ksnDriver.getBlockByNumber(tag as number)
     if (block) {
       _slice.root = block.header.stateRoot.toString('hex')
       return this.getSlice(_slice)
@@ -195,15 +195,17 @@ export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
         times: 10,
         interval: 3000
       },
-            async () => {
-              const _slice = await this.ksnDriver.resolveSlices([slice])
-              if (_slice) return _slice
-              throw new Error(`no slice retrieved, retrying ${++times}!`)
-            },
-            (err, res) => {
-              if (err) return reject(err)
-              resolve(res)
-            })
+      // tslint:disable-next-line: align
+      async () => {
+        const _slice = await this.ksnDriver.resolveSlices([slice])
+        if (_slice) return _slice
+        throw new Error(`no slice retrieved, retrying ${++times}!`)
+      },
+      // tslint:disable-next-line: align
+      (err, res) => {
+        if (err) return reject(err)
+        resolve(res)
+      })
     })
   }
 

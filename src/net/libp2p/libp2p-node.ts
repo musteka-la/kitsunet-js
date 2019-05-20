@@ -6,9 +6,9 @@ import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
 import debug from 'debug'
 import { register } from 'opium-decorators'
-import { promisify } from 'promisify-this'
 import { Node } from '../node'
 import { Libp2pPeer } from './libp2p-peer'
+import * as semver from 'semver'
 
 import {
   IProtocol,
@@ -63,21 +63,22 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     })
 
     // a peer has connected, store it
-    node.on('peer:connected', (peer: PeerInfo) => {
+    node.on('peer:connect', (peer: PeerInfo) => {
       const libp2pPeer: Libp2pPeer = new Libp2pPeer(peer)
-      protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
-        if (peer.protocols.includes(protoDescriptor.cap.id)) {
+      if (!this.peers.has(libp2pPeer.id)) {
+        protocolRegistry.forEach(async (protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
           const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
           const proto: IProtocol<Libp2pPeer> = new Protocol(libp2pPeer, this as INetwork<Libp2pPeer>)
-          libp2pPeer.protocols.set(this.mkCodec(proto.id, proto.versions), proto)
-        }
-      })
+          libp2pPeer.protocols.set(proto.id, proto)
+          await proto.handshake()
+        })
 
-      this.peers.set(libp2pPeer.id, libp2pPeer)
-      this.emit('kitsunet:peer:connected', libp2pPeer)
+        this.peers.set(libp2pPeer.id, libp2pPeer)
+        this.emit('kitsunet:peer:connected', libp2pPeer)
+      }
     })
 
-    node.on('peer:disconnected', (peerInfo: PeerInfo) => {
+    node.on('peer:disconnect', (peerInfo: PeerInfo) => {
       // remove disconnected peer
       const libp2pPeer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
       if (libp2pPeer) {
@@ -88,9 +89,10 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   mount (protocol: IProtocol<Libp2pPeer>): void {
-    this.node.handle(this.mkCodec(protocol.id, protocol.versions),
-                     async (codec: string, conn: any) =>
-                      this.handleIncoming(codec, promisify(conn)))
+    const codec = this.mkCodec(protocol.id, protocol.versions)
+    this.node.handle(codec, async (_: any, conn: any) => {
+      return this.handleIncoming(protocol.id, conn)
+    })
   }
 
   unmount (protocol: IProtocol<Libp2pPeer>): void {
@@ -98,20 +100,27 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   private async handleIncoming (id: string, conn: any) {
-    const peerInfo: PeerInfo = await conn.getPeerInfo()
-    const peer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
-    if (!peer) {
-      return debug(`unknown peer ${peerInfo.id.toB58String()}`)
-    }
+    conn.getPeerInfo(async (err: Error, peerInfo) => {
+      if (err) throw err
+      const peer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
+      if (!peer) {
+        return debug(`unknown peer ${peerInfo.id.toB58String()}`)
+      }
 
-    const protocol: IProtocol<Libp2pPeer> | undefined = peer.protocols.get(id)
-    if (protocol) {
-      return protocol.receive(toIterator(conn))
-    }
+      const protocol: IProtocol<Libp2pPeer> | undefined = peer.protocols.get(id)
+      if (protocol) {
+        try {
+          const iterable = toIterator(conn)
+          protocol.receive(iterable)
+        } catch (err) {
+          debug(err)
+        }
+      }
+    })
   }
 
   private mkCodec (id: string, versions: string[]): string {
-    return `/kitsunet/${id}/${Math.max(...versions.map(Number))}`
+    return `/kitsunet/${id}/${semver.sort(versions)[0]}`
   }
 
   async send<T, U = T> (msg: T,
@@ -121,7 +130,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       throw new Error('both peer and protocol are required!')
     }
 
-    const conn = await this.libp2pDialer.dial(peer.peer, this.mkCodec(protocol.id, protocol.versions))
+    const conn = await this.node.dialProtocol(peer.peer, this.mkCodec(protocol.id, protocol.versions))
     return new Promise((resolve, reject) => {
       pull(
         pull.values(msg),
@@ -142,6 +151,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
           console.log('libp2p listening on', ma.toString())
         })
 
+        await this.libp2pDialer.start()
         return resolve()
       })
     })
@@ -152,6 +162,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
 
   async stop () {
     const stopper = new Promise<void>(async (resolve) => {
+      await this.libp2pDialer.stop()
       return this.node.on('stop', async () => {
         await this.node._multicast.stop()
         this.started = false

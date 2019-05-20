@@ -6,9 +6,10 @@ import { EventEmitter as EE } from 'events'
 import { expect } from 'chai'
 import { EthProtocol } from '../../../../src/net/protocols/eth'
 import { ETH } from 'ethereumjs-devp2p'
-import { IBlockchain } from '../../../../src/blockchain'
+import { IBlockchain, EthChain } from '../../../../src/blockchain'
 import fromRpc = require('ethereumjs-block/from-rpc')
 import Block from 'ethereumjs-block'
+import Common from 'ethereumjs-common'
 
 import {
   IPeerDescriptor,
@@ -25,13 +26,12 @@ import {
 } from '../../../../src/net/protocols/eth/handlers'
 
 import * as jsonBlock from '../../../fixtures/block.json'
+const block: Block = new Block(fromRpc(jsonBlock.block))
 
 const passthroughEncoder: IEncoder = {
   encode: async function* <T, U>(msg) { yield msg },
   decode: async function* <T, U>(msg) { yield msg }
 }
-
-const block: Block = new Block(fromRpc(jsonBlock.block))
 
 describe('Eth protocol', () => {
   describe('setup', () => {
@@ -39,16 +39,16 @@ describe('Eth protocol', () => {
     beforeEach(() => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
-                                    {} as INetwork<any>,
-                                    {} as IEncoder)
+                                    new EE() as unknown as INetwork<any>,
+                                    passthroughEncoder,
+                                    new Common('mainnet'), {
+                                      getBlocksTD: () => Buffer.from([0]),
+                                      getBestBlock: () => block
+                                    } as any)
     })
 
     it('should have correct protocol id', () => {
       expect(ethProtocol.id).to.eql('eth')
-    })
-
-    it('should have correct protocol codec', () => {
-      expect(ethProtocol.codec).to.eql('/kitsunet/eth/63')
     })
 
     it('should have correct protocol versions', () => {
@@ -62,7 +62,11 @@ describe('Eth protocol', () => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
                                     new EE() as unknown as INetwork<any>,
-                                    passthroughEncoder)
+                                    passthroughEncoder,
+                                    new Common('mainnet'), {
+                                      getBlocksTD: () => Buffer.from([0]),
+                                      getBestBlock: () => block
+                                    } as any)
     })
 
     it('should handle Status request', async () => {
@@ -178,7 +182,7 @@ describe('Eth protocol', () => {
     let sendHandler: Function | undefined
     let receiveHandler: (msg: any) => AsyncIterable<any> | undefined
     const networkProvider: INetwork<any> = {
-      send: async <T, U>(msg: T, protocol?: IProtocol<any>, peer?: any): Promise<any> => {
+      send: async function <T, U>(msg: T, protocol?: IProtocol<any>, peer?: any): Promise<any> {
         return sendHandler ? sendHandler(msg) : msg
       },
       receive: async function* <T, U>(readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
@@ -191,7 +195,11 @@ describe('Eth protocol', () => {
       ethProtocol = new EthProtocol({} as IBlockchain,
                                     {} as IPeerDescriptor<any>,
                                     networkProvider,
-                                    passthroughEncoder)
+                                    passthroughEncoder,
+                                    new Common('mainnet'), {
+                                      getBlocksTD: () => Buffer.from([0]),
+                                      getBestBlock: () => block
+                                    } as any)
     })
 
     it('should send Status request', async () => {

@@ -4,17 +4,20 @@ import * as Handlers from './handlers'
 import { BaseProtocol } from '../../base-protocol'
 import { IEthProtocol, BlockBody, Status } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
-import { IBlockchain } from '../../../blockchain'
+import { IBlockchain, EthChain } from '../../../blockchain'
 import { EthHandler } from './eth-handler'
 import Block from 'ethereumjs-block'
 import { ETH } from 'ethereumjs-devp2p'
+import Common from 'ethereumjs-common'
+import { nextTick } from 'async'
 
-export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
+export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
   handlers: { [key: number]: EthHandler<P> }
+  private _status: Status | undefined
 
   get status (): Status {
-    return {} as any // TODO: return valid status
+    return this._status!
   }
 
   /**
@@ -26,11 +29,24 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
    * @param encoder - an encoder to use with the peer
    */
   constructor (public blockChain: IBlockchain,
-               peer: IPeerDescriptor<P>,
+               peer: P,
                networkProvider: INetwork<P>,
-               encoder: IEncoder) {
+               encoder: IEncoder,
+               public common: Common,
+               public ethChain: EthChain) {
     super(peer, networkProvider, encoder)
     this.protocolVersion = Math.max.apply(Math, this.versions.map(v => Number(v)))
+
+    // needs to be async
+    nextTick(async () => {
+      this._status = {
+        networkId: common.networkId(),
+        td: await ethChain.getBlocksTD(),
+        genesisHash: common.genesis().hash,
+        bestHash: (await ethChain.getBestBlock() as any).hash,
+        protocolVersion: this.protocolVersion
+      }
+    })
 
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
@@ -44,7 +60,10 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
   }
 
   get versions (): string[] {
-    return ['62', '63']
+    return [
+      ETH.eth62.version.toString(),
+      ETH.eth63.version.toString()
+    ]
   }
 
   async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U | U[]> {
@@ -76,7 +95,7 @@ export class EthProtocol<P> extends BaseProtocol<P> implements IEthProtocol {
     throw new Error('Method not implemented.')
   }
 
-  handshake (): Promise<Status> {
+  async handshake (): Promise<void> {
     return this.handlers[ETH.MESSAGE_CODES.STATUS].request(this.status)
   }
 }

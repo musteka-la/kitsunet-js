@@ -5,13 +5,14 @@ import debug from 'debug'
 import { KsnProtocol } from './ksn-protocol'
 import { IPeerDescriptor, IHandler } from '../../interfaces'
 import { KsnResponse, ResponseStatus } from './interfaces'
+import { reject } from 'async'
 
-export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
+export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE implements IHandler<P> {
   log: debug.Debugger
   constructor (public name: string,
                public id: string,
                public networkProvider: KsnProtocol<P>,
-               public peer: IPeerDescriptor<P>) {
+               public peer: P) {
     super()
     this.log = debug(`kitsunet:kitsunet-proto:base-handler-${this.name}`)
   }
@@ -21,9 +22,9 @@ export abstract class KitsunetHandler<P> extends EE implements IHandler<P> {
    *
    * @param msg - the message to be sent
    */
-  abstract async handle<T, U> (msg?: T): Promise<U>
-  abstract async handle<T, U> (msg?: T): Promise<U[]>
-  abstract async handle<T, U> (msg?: T): Promise<U | U[]>
+  abstract handle<T, U> (msg?: T): Promise<U>
+  abstract handle<T, U> (msg?: T): Promise<U[]>
+  abstract handle<T, U> (msg?: T): Promise<U | U[]>
 
   /**
    * Send a request

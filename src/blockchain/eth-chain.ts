@@ -144,12 +144,13 @@ export class EthChain extends EE implements IBlockchain {
    *
    * @param {Header} header
    */
-  async putHeaders<T> (header: T[]): Promise<any> {
-    return this.blockchain.putHeaders(header)
+  async putHeaders<T> (header: T[]): Promise<void> {
+    await this.blockchain.putHeaders(header)
   }
 
-  getBestBlock<T> (): Promise<T> {
-    throw new Error('Method not implemented.')
+  async getBestBlock<Block> (): Promise<Block> {
+    // TODO: calculate best block
+    return {} as Block
   }
 
   getNetworkId (): number {

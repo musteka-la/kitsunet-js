@@ -9,7 +9,7 @@ import { IPeerDescriptor } from '../../../interfaces'
 import { Status as StatusMsg } from '../interfaces'
 import { ETH } from 'ethereumjs-devp2p'
 
-export class Status<P> extends EthHandler<P> {
+export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
     super('Status', ETH.MESSAGE_CODES.STATUS, networkProvider, peer)
@@ -33,7 +33,7 @@ export class Status<P> extends EthHandler<P> {
       status.td.toArrayLike(Buffer),
       status.bestHash,
       status.genesisHash,
-      status.number.toArrayLike(Buffer)
+      status.number ? status.number.toArrayLike(Buffer) : undefined
     ])
   }
 }

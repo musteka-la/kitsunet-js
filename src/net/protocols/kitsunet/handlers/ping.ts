@@ -3,10 +3,13 @@
 import { KitsunetHandler } from '../kitsunet-handler'
 
 import { MsgType, ResponseStatus } from '../interfaces'
+import { IPeerDescriptor } from '../../../interfaces'
+import { KsnProtocol } from '../ksn-protocol'
 
-export class Ping<P> extends KitsunetHandler<P> {
-  constructor (rpcEngine, peerInfo) {
-    super('ping', MsgType[MsgType.PING], rpcEngine, peerInfo)
+export class Ping<P extends IPeerDescriptor<any>> extends KitsunetHandler<P> {
+  constructor (networkProvider: KsnProtocol<P>,
+               peer: P) {
+    super('ping', MsgType[MsgType.PING], networkProvider, peer)
   }
 
   async handle (): Promise<any> {
@@ -17,10 +20,6 @@ export class Ping<P> extends KitsunetHandler<P> {
   }
 
   async request (): Promise<any> {
-    await this.send({
-      type: MsgType.PING
-    })
-
-    return true
+    return this.send({ type: MsgType.PING })
   }
 }

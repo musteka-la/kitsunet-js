@@ -20,7 +20,8 @@ import {
   IProtocol,
   INetwork,
   IProtocolDescriptor,
-  ICapability
+  ICapability,
+  IPeerDescriptor
 } from '../interfaces'
 import proto = require('../protocols/kitsunet/proto')
 
@@ -45,7 +46,7 @@ const ignoredErrors = new RegExp([
  * @fires RlpxNode#kitsunet:peer:disconnected - fires when a peer disconnects
  */
 @register()
-export class RlpxNode extends Node<Devp2pPeer> {
+export class Devp2pNode extends Node<Devp2pPeer> {
   started: boolean = false
   peer?: Devp2pPeer
 
@@ -220,7 +221,7 @@ export class RlpxNode extends Node<Devp2pPeer> {
       toLowerCase() === protocol.id)
 
     if (proto) {
-      return proto.protocol._send(msg.shift(), msg)
+      return proto.protocol._send((msg as any).shsift(), msg)
     }
 
     throw new Error('no such protocol!')

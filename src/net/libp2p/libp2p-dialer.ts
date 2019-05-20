@@ -7,7 +7,7 @@ import PeerInfo from 'peer-info'
 import Libp2p from 'libp2p'
 import { register } from 'opium-decorators'
 
-const log = debug('kitsunet:node')
+const log = debug('kitsunet:net:libp2p:libp2p-dialer')
 
 const MAX_PEERS = 25
 const MAX_PEERS_DISCOVERED = 250
@@ -38,8 +38,8 @@ export class Libp2pDialer extends EE {
     this.connected = new Map()
     this.discovered = new Map()
     this.dialing = new Map()
-    this.interval = options.interval
-    this.maxPeers = options.maxPeers
+    this.interval = options.interval || this.interval
+    this.maxPeers = options.maxPeers || this.maxPeers
 
     // store discovered peers to dial them later
     node.on('peer:discovery', (peerInfo: PeerInfo) => {
@@ -81,14 +81,19 @@ export class Libp2pDialer extends EE {
       return
     }
 
+    let conn = null
     try {
       this.dialing.set(id, true)
-      return await this.node.dialProtocol(peerInfo, protocol)
+      conn = await this.node.dialProtocol(peerInfo, protocol)
+      this.connected.set(id, peerInfo)
     } catch (err) {
       log(err)
+      throw err
     } finally {
       this.dialing.delete(id)
     }
+
+    return conn
   }
 
   async hangup (peer: PeerInfo) {
