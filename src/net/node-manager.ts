@@ -5,6 +5,7 @@ import { register } from 'opium-decorators'
 import { EventEmitter } from 'events'
 import { IPeerDescriptor } from './interfaces'
 import { Libp2pNode } from './libp2p'
+import { Devp2pNode } from './devp2p'
 import {
   KsnProtocol,
   EthProtocol
@@ -22,8 +23,9 @@ import {
 @register()
 export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
   @register('nodes')
-  static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode): Node<U>[] {
-    return [libp2pNode] as unknown as Node<U>[]
+  static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode,
+                                           devp2pNode: Devp2pNode): Node<U>[] {
+    return [libp2pNode, devp2pNode] as unknown as Node<U>[]
   }
 
   /**
