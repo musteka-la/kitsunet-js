@@ -38,8 +38,8 @@ export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE
   protected async send<T> (msg: T): Promise<KsnResponse> {
     this.log('sending request', msg)
     const res: KsnResponse = await this.networkProvider.send(msg)
-
     if (res && res.status !== ResponseStatus.OK) {
+      console.dir(res)
       const err = res.error ? new Error(res.error) : new Error('unknown error!')
       this.log(err)
       throw err

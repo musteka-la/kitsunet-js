@@ -1,7 +1,6 @@
 'use strict'
 
 import 'mocha'
-import BN from 'bn.js'
 import { expect } from 'chai'
 import Block from 'ethereumjs-block'
 import fromRpc = require('ethereumjs-block/from-rpc')

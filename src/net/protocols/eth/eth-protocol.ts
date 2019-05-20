@@ -32,7 +32,6 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
                peer: P,
                networkProvider: INetwork<P>,
                encoder: IEncoder,
-               public common: Common,
                public ethChain: EthChain) {
     super(peer, networkProvider, encoder)
     this.protocolVersion = Math.max.apply(Math, this.versions.map(v => Number(v)))
@@ -40,9 +39,9 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     // needs to be async
     nextTick(async () => {
       this._status = {
-        networkId: common.networkId(),
+        networkId: ethChain.common.networkId(),
         td: await ethChain.getBlocksTD(),
-        genesisHash: common.genesis().hash,
+        genesisHash: ethChain.common.genesis().hash,
         bestHash: (await ethChain.getBestBlock() as any).hash,
         protocolVersion: this.protocolVersion
       }
