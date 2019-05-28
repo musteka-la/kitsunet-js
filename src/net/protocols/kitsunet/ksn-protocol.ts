@@ -11,7 +11,6 @@ import { EthChain } from '../../../blockchain'
 import {
   Message,
   MsgType,
-  ResponseStatus,
   IKsnProtocol,
   Identify,
   NodeType} from './interfaces'
@@ -50,10 +49,7 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
     for await (const msg of super.receive<Buffer, Message>(readable)) {
       if (msg.type !== MsgType.UNKNOWN_MSG) {
-        const res: any = await this.handlers[MsgType[msg.type]].handle<Message, U>(msg)
-        for await (const encoded of this.encoder!.encode(res)) {
-          yield encoded
-        }
+        yield await this.handlers[MsgType[msg.type]].handle<Message, U>(msg)
       }
     }
   }
