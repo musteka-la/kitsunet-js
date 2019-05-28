@@ -23,6 +23,7 @@ import { EthChain } from './blockchain'
 
 const debug = Debug('kitsunet:kitsunet-driver')
 
+// TODO: Plugin blockchain and header sync
 @register()
 export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   nodeType: KsnNodeType
@@ -46,36 +47,6 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
 
     // peers
     this.peers = new Map()
-    // let isCheckpointed = false
-    // let checkpointBlock: Block | null = null
-    // let blockStack: Block[] = []
-    // const putBlock = async (block) => {
-    //   debug(`block hash: ${block.header.hash().toString('hex')}`)
-    //   debug(`block number: ${parseInt(block.header.number.toString('hex'), 16)}`)
-    //   debug(`block parent hash: ${block.header.parentHash.toString('hex')}`)
-
-    //   if (!isCheckpointed) {
-    //     if (!checkpointBlock) {
-    //       checkpointBlock = block
-    //       await this.ethChain.putCheckpoint(block)
-    //       isCheckpointed = true
-    //       blockStack = blockStack.filter(b => {
-    //         return b.header.hash().toString('hex') !== checkpointBlock!.header.hash().toString('hex')
-    //       })
-    //       if (blockStack.length > 0) {
-    //         await this.ethChain.putBlocks(blockStack)
-    //       }
-    //       return
-    //     } else {
-    //       blockStack.push(block)
-    //       return
-    //     }
-    //   }
-
-    //   await this.ethChain.putBlocks([block])
-    // }
-
-    // this.blockTracker.on('latest', putBlock)
   }
 
   get clientPeers (): T[] {

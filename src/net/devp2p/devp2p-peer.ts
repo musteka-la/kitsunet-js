@@ -9,9 +9,9 @@ export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
   peer: Peer
   addrs: Set<string> = new Set() // use multiaddr for internal representation
 
-  private _id?: string = ''
+  private _id: string = ''
   get id (): string {
-    return this._id!
+    return this._id
   }
 
   peerInfo: PeerInfo

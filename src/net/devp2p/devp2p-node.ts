@@ -20,11 +20,11 @@ import {
   IProtocol,
   INetwork,
   IProtocolDescriptor,
-  ICapability,
-  IPeerDescriptor
+  ICapability
 } from '../interfaces'
-import proto = require('../protocols/kitsunet/proto')
+
 import { EthChain } from '../../blockchain'
+import proto = require('../protocols/kitsunet/proto')
 import Common from 'ethereumjs-common'
 
 const ignoredErrors = new RegExp([
@@ -78,7 +78,8 @@ export class Devp2pNode extends Node<Devp2pPeer> {
   }
 
   /**
-   * Start Devp2p/RLPx server. Returns a promise that resolves once server has been started.
+   * Start Devp2p/RLPx server. Returns a promise that
+   * resolves once server has been started.
    * @return {Promise}
    */
   async start (): Promise <void> {
@@ -104,10 +105,12 @@ export class Devp2pNode extends Node<Devp2pPeer> {
   }
 
   /**
-   * Stop Devp2p/RLPx server. Returns a promise that resolves once server has been stopped.
+   * Stop Devp2p/RLPx server. Returns a promise that
+   * resolves once server has been stopped.
+   *
    * @return {Promise}
    */
-  async stop () {
+  async stop (): Promise<any> {
     if (!this .started) {
       return
     }
@@ -140,7 +143,6 @@ export class Devp2pNode extends Node<Devp2pPeer> {
    */
   private async init () {
     this.rlpx.on('peer:added', async (rlpxPeer: Peer) => {
-
       const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer)
       if (rlpxPeer.getId()! === this.peerInfo.id) {
         this.peer = devp2pPeer
@@ -196,10 +198,12 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     this.rlpx.on('error', e => this.error(e))
     this.rlpx.on('listening', () => {
-      this.emit('listening', {
+      const enode = {
         transport: 'devp2p',
         url: `enode://${this.rlpx._id.toString('hex')}@[::]:${this.peerInfo.tcpPort}`
-      })
+      }
+      this.emit('listening', enode)
+      console.log(`devp2p listening on ${enode.url}`)
     })
 
     const { tcpPort, address } = this.peerInfo
@@ -219,8 +223,8 @@ export class Devp2pNode extends Node<Devp2pPeer> {
       .find((p) => p
       .protocol
       .constructor
-      .name.
-      toLowerCase() === protocol.id)
+      .name
+      .toLowerCase() === protocol.id)
 
     if (proto) {
       return proto.protocol._send((msg as any).shsift(), msg)
