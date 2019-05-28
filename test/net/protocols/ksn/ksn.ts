@@ -12,7 +12,6 @@ const { Kitsunet } = proto
 import {
   IPeerDescriptor,
   INetwork,
-  IEncoder,
   IProtocol,
   KsnProtocol,
   Libp2pPeer,
@@ -25,6 +24,7 @@ import {
 import { Identify as IdentifyHandler } from '../../../../src/net/protocols/kitsunet/handlers'
 
 import * as jsonBlock from '../../../fixtures/block.json'
+import BN from 'bn.js'
 const block: Block = new Block(fromRpc(jsonBlock.block))
 
 describe('Ksn protocol', () => {
@@ -59,10 +59,10 @@ describe('Ksn protocol', () => {
         status: ResponseStatus.OK,
         payload: {
           identify: {
-            version: '1.0.0',
+            versions: ['1.0.0'],
             userAgent: 'ksn-client',
             nodeType: NodeType.NODE,
-            latestBlock: block.header.number
+            latestBlock: new BN(0).toBuffer()
             // sliceIds: this.networkProvider.getSliceIds()
           }
         }
@@ -75,7 +75,7 @@ describe('Ksn protocol', () => {
       }
 
       for await (const msg of ksnProtocol.receive(source)) {
-        expect(msg).to.deep.eq(identify)
+        expect(msg.payload).to.deep.eq(identify.payload)
       }
     })
 
@@ -123,7 +123,7 @@ describe('Ksn protocol', () => {
         status: ResponseStatus.OK,
         payload: {
           identify: {
-            version: '1.0.0',
+            versions: ['1.0.0'],
             userAgent: 'ksn-client',
             nodeType: NodeType.NODE,
             latestBlock: block.header.number,

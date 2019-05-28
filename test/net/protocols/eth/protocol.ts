@@ -6,7 +6,6 @@ import { EventEmitter as EE } from 'events'
 import { expect } from 'chai'
 import { EthProtocol } from '../../../../src/net/protocols/eth'
 import { ETH } from 'ethereumjs-devp2p'
-import { IBlockchain, EthChain } from '../../../../src/blockchain'
 import fromRpc = require('ethereumjs-block/from-rpc')
 import Block from 'ethereumjs-block'
 import Common from 'ethereumjs-common'
@@ -37,14 +36,13 @@ describe('Eth protocol', () => {
   describe('setup', () => {
     let ethProtocol
     beforeEach(() => {
-      ethProtocol = new EthProtocol({} as IBlockchain,
-                                    {} as IPeerDescriptor<any>,
-                                    new EE() as unknown as INetwork<any>,
-                                    passthroughEncoder, {
+      ethProtocol = new EthProtocol({} as IPeerDescriptor<any>,
+                                    new EE() as unknown as INetwork<any>, {
                                       getBlocksTD: () => Buffer.from([0]),
                                       getBestBlock: () => block,
                                       common: new Common('mainnet')
-                                    } as any)
+                                    } as any,
+                                    passthroughEncoder)
     })
 
     it('should have correct protocol id', () => {
@@ -59,14 +57,13 @@ describe('Eth protocol', () => {
   describe('handlers - handle', () => {
     let ethProtocol
     beforeEach(() => {
-      ethProtocol = new EthProtocol({} as IBlockchain,
-                                    {} as IPeerDescriptor<any>,
-                                    new EE() as unknown as INetwork<any>,
-                                    passthroughEncoder, {
+      ethProtocol = new EthProtocol({} as IPeerDescriptor<any>,
+                                    new EE() as unknown as INetwork<any>, {
                                       getBlocksTD: () => Buffer.from([0]),
                                       getBestBlock: () => block,
                                       common: new Common('mainnet')
-                                    } as any)
+                                    } as any,
+                                    passthroughEncoder)
     })
 
     it('should handle Status request', async () => {
@@ -192,18 +189,17 @@ describe('Eth protocol', () => {
 
     let ethProtocol
     beforeEach(() => {
-      ethProtocol = new EthProtocol({} as IBlockchain,
-                                    {} as IPeerDescriptor<any>,
-                                    networkProvider,
-                                    passthroughEncoder, {
+      ethProtocol = new EthProtocol({} as IPeerDescriptor<any>,
+                                    networkProvider, {
                                       getBlocksTD: () => Buffer.from([0]),
                                       getBestBlock: () => block,
                                       common: new Common('mainnet')
-                                    } as any)
+                                    } as any,
+                                    passthroughEncoder)
     })
 
     it('should send Status request', async () => {
-      sendHandler = (msg) => {
+      sendHandler = (msg: [any, any, any, any, any, any, any]) => {
         const [msgId, protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
         expect(msgId).to.eql(ETH.MESSAGE_CODES.STATUS)
         expect(protocolVersion).to.eql(0)
@@ -235,7 +231,7 @@ describe('Eth protocol', () => {
         expect(reverse).to.eql(Buffer.from([0]))
       }
 
-      const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol,{} as IPeerDescriptor<any>)
+      const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
       await getBlockHeaders.request([new BN(block.header.number), 20, 0, 0])
     })
 
@@ -249,7 +245,7 @@ describe('Eth protocol', () => {
         expect(reverse).to.eql(Buffer.from([0]))
       }
 
-      const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol,{} as IPeerDescriptor<any>)
+      const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
       await getBlockHeaders.request([block.header.hash(), 20, 0, 0])
     })
 
@@ -259,7 +255,7 @@ describe('Eth protocol', () => {
         expect(msg[1]).to.eql(fromRpc(jsonBlock.block).header.raw)
       }
 
-      const blockHeaders: BlockHeaders<any> = new BlockHeaders(ethProtocol,{} as IPeerDescriptor<any>)
+      const blockHeaders: BlockHeaders<any> = new BlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
       await blockHeaders.request([fromRpc(jsonBlock.block).header])
     })
 

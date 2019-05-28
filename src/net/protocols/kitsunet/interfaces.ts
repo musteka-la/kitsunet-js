@@ -7,6 +7,7 @@ import { Slice } from '../../../slice'
 export { KsnNodeType as NodeType }
 export type BlockHeader = typeof Block.Header
 
+// tslint:disable: no-multi-spaces
 export enum MsgType {
   UNKNOWN_MSG   = 0,
   IDENTIFY      = 1,
@@ -23,6 +24,7 @@ export enum ResponseStatus {
   OK            = 1,
   ERROR         = 2
 }
+// tslint:enable: no-multi-spaces
 
 export interface KsnMsg {
   type: MsgType   // the message type

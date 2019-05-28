@@ -68,8 +68,8 @@ export class SliceStore {
    *
    * @param {Slice} slice - the slice to store
    */
-  async put (slice) {
-    const key = SliceStore._mkKey(slice.path, slice.depth, slice.root)
-    this._store.put(new Key(key), slice.serialize())
+  async put (slice: Slice) {
+    const key = SliceStore._mkKey(slice.path, String(slice.depth), slice.root)
+    return this._store.put(new Key(key), slice.serialize())
   }
 }
