@@ -111,7 +111,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
    * @return {Promise}
    */
   async stop (): Promise<any> {
-    if (!this .started) {
+    if (!this.started) {
       return
     }
     this.rlpx.destroy()
@@ -130,6 +130,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     if (ignoredErrors.test(error.message)) {
       return
     }
+
     if (peer) {
       peer.emit('error', error)
     } else {
@@ -153,15 +154,15 @@ export class Devp2pNode extends Node<Devp2pPeer> {
         // id to proto name here or something similar
         const devp2pProto = rlpxPeer
           .getProtocols()
-          .find(p => p.constructor.name.toLowerCase() === proto.id)
+          .find(p => protoDescriptor.cap.id === p.constructor.name.toLowerCase())
 
         if (devp2pProto) {
           const Protocol: IProtocolConstructor<Devp2pPeer> = protoDescriptor.constructor
-          const proto = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>, this.ethChain)
-          devp2pPeer.protocols.set(proto.id, proto)
+          const protocol = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>, this.ethChain)
+          devp2pPeer.protocols.set(devp2pProto.constructor.name.toLowerCase(), protocol)
 
-          devp2pProto.protocol.on('message', (code, payload) => {
-            proto.receive({
+          devp2pProto.on('message', (code: any, payload: any) => {
+            protocol.receive({
               [Symbol.asyncIterator]: async function* () {
                 yield [code, ...payload]
               }
@@ -221,13 +222,12 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     const proto = peer.peer.getProtocols()
       .find((p) => p
-      .protocol
       .constructor
       .name
       .toLowerCase() === protocol.id)
 
     if (proto) {
-      return proto.protocol._send((msg as any).shsift(), msg)
+      return proto._send((msg as any).shsift(), msg)
     }
 
     throw new Error('no such protocol!')

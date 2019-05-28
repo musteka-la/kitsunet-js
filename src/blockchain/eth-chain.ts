@@ -150,7 +150,7 @@ export class EthChain extends EE implements IBlockchain {
 
   async getBestBlock<Block> (): Promise<Block> {
     // TODO: calculate best block
-    return {} as Block
+    return this.common.genesis().block
   }
 
   getNetworkId (): number {
