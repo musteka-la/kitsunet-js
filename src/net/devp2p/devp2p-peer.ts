@@ -15,7 +15,7 @@ export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
   }
 
   peerInfo: PeerInfo
-  constructor (@register('devp2p-peer') peer: Peer) {
+  constructor (peer: Peer) {
     super()
     this.peer = peer
     this.peerInfo = {

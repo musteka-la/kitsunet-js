@@ -28,21 +28,20 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * @param networkProvider - the network provider
    * @param encoder - an encoder to use with the peer
    */
-  constructor (public blockChain: IBlockchain,
-               peer: P,
+  constructor (peer: P,
                networkProvider: INetwork<P>,
-               encoder: IEncoder,
-               public ethChain: EthChain) {
+               public ethChain: EthChain,
+               encoder: IEncoder) {
     super(peer, networkProvider, encoder)
     this.protocolVersion = Math.max.apply(Math, this.versions.map(v => Number(v)))
 
     // needs to be async
     nextTick(async () => {
       this._status = {
-        networkId: ethChain.common.networkId(),
-        td: await ethChain.getBlocksTD(),
-        genesisHash: ethChain.common.genesis().hash,
-        bestHash: (await ethChain.getBestBlock() as any).hash,
+        networkId: this.ethChain.common.networkId(),
+        td: await this.ethChain.getBlocksTD(),
+        genesisHash: this.ethChain.common.genesis().hash,
+        bestHash: (await this.ethChain.getBestBlock() as any).hash,
         protocolVersion: this.protocolVersion
       }
     })

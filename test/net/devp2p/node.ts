@@ -18,7 +18,7 @@ import {
   ETH
 } from 'ethereumjs-devp2p'
 import { rlp } from 'ethereumjs-util'
-import Common from 'ethereumjs-blockchain/node_modules/ethereumjs-common';
+import Common from 'ethereumjs-blockchain/node_modules/ethereumjs-common'
 
 describe('simple test RLPx Node', () => {
   const capabilities = [ETH.eth63, ETH.eth62]
@@ -57,13 +57,13 @@ describe('simple test RLPx Node', () => {
   const bootnodes: any[] = []
 
   const rlpxNode = new Devp2pNode(dpt,
-                                  rlpx,{
+                                  rlpx, {
                                     getBlocksTD: () => Buffer.from([0]),
                                     getBestBlock: () => Buffer.from([0]),
                                     common: new Common('mainnet')
                                   } as any,
                                   peerInfo,
-                                  protoRegistry,
+                                  protoRegistry as any,
                                   bootnodes)
 
   it('should create valid rlpx node', (done) => {
