@@ -60,11 +60,13 @@ export class Libp2pNode extends Node<Libp2pPeer> {
                @register('protocol-registry')
                protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
     super()
-    // register this nodes protos
+    // register our node's protos
     protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
       if (this.isProtoSupported(protoDescriptor)) {
         const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
-        const proto: IProtocol<Libp2pPeer> = new Protocol(this.peer, this as INetwork<Libp2pPeer>, this.ethChain)
+        const proto: IProtocol<Libp2pPeer> = new Protocol(this.peer,
+                                                          this as INetwork<Libp2pPeer>,
+                                                          this.ethChain)
         this.protocols.set(proto.id, proto)
         this.mount(proto)
       }
@@ -76,7 +78,9 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       if (!this.peers.has(libp2pPeer.id)) {
         protocolRegistry.forEach(async (protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
           const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
-          const proto: IProtocol<Libp2pPeer> = new Protocol(libp2pPeer, this as INetwork<Libp2pPeer>, this.ethChain)
+          const proto: IProtocol<Libp2pPeer> = new Protocol(libp2pPeer,
+                                                            this as INetwork<Libp2pPeer>,
+                                                            this.ethChain)
           libp2pPeer.protocols.set(proto.id, proto)
           await proto.handshake()
         })
@@ -119,12 +123,8 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       if (protocol) {
         try {
           const stream = pushable()
-          pull(
-            stream,
-            lp.encode(),
-            conn)
-
-          for await (const msg of protocol.receive(toIterator(pull(conn,lp.decode())))) {
+          pull(stream, lp.encode(), conn)
+          for await (const msg of protocol.receive(toIterator(pull(conn, lp.decode())))) {
             stream.push(msg)
           }
           stream.end()

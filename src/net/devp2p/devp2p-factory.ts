@@ -5,7 +5,8 @@ import {
   RLPx,
   PeerInfo,
   Capabilities,
-  RLPxOptions
+  RLPxOptions,
+  ETH
 } from 'ethereumjs-devp2p'
 import { randomBytes } from 'crypto'
 import { register } from 'opium-decorators'
@@ -57,14 +58,25 @@ export class DevP2PFactory {
   }
 
   @register()
-  static createDptOptions (): DPTOptions {
-    return new DPTOptions()
+  static createDptOptions (@register('devp2p-peer-info')
+                           peerInfo: PeerInfo,
+                           @register('options')
+                           options: any): DPTOptions {
+    const dptOpts = new DPTOptions()
+    dptOpts.endpoint = peerInfo
+    return dptOpts
   }
 
   @register()
-  static createRlpxOptions (common: Common, dptOptions: DPTOptions): RLPxNodeOptions {
+  static createRlpxOptions (common: Common,
+                            dpt: DPT,
+                            @register('devp2p-peer-info')
+                            peerInfo: PeerInfo): RLPxNodeOptions {
     const rlpx = new RLPxNodeOptions()
-    rlpx.bootnodes = common.genesis().bootnodes
+    rlpx.dpt = dpt
+    rlpx.bootnodes = common.bootstrapNodes()
+    rlpx.capabilities = [ETH.eth62, ETH.eth63]
+    rlpx.listenPort = peerInfo.tcpPort || 30303
     return rlpx
   }
 
@@ -80,7 +92,7 @@ export class DevP2PFactory {
   }
 
   @register()
-  createRLPx (options: RLPxNodeOptions): RLPx {
+  createRLPx (options: RLPxNodeOptions, common: Common): RLPx {
     return new RLPx(options.key, options)
   }
 }
