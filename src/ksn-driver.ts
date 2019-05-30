@@ -3,7 +3,6 @@
 import EE from 'events'
 import Debug from 'debug'
 
-import Libp2p from 'libp2p'
 import { KsnNodeType } from './constants'
 import { Discovery } from './slice/discovery/base'
 import { register } from 'opium-decorators'
@@ -11,11 +10,7 @@ import { Slice } from './slice'
 import KistunetBlockTracker from 'kitsunet-block-tracker'
 import Block from 'ethereumjs-block'
 
-import {
-  Libp2pPromisified,
-  NodeManager,
-  IPeerDescriptor
-} from './net'
+import { NodeManager } from './net'
 
 import { Libp2pPeer } from './net/libp2p/libp2p-peer'
 import { NetworkPeer } from './net/peer'
@@ -40,7 +35,6 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
     super()
 
     this.isBridge = Boolean(isBridge.bridge)
-    // this.blockChain = promisify(blockchain)
     this.discovery = discovery
     this.blockTracker = blockTracker
     this.nodeType = this.isBridge ? KsnNodeType.BRIDGE : KsnNodeType.NODE

@@ -11,6 +11,11 @@ import {
 import Debug from 'debug'
 const debug = Debug('kitsunet:net:base-protocol')
 
+const passthroughEncoder: IEncoder = {
+  encode: async function* <T, U>(msg) { yield msg },
+  decode: async function* <T, U>(msg) { yield msg }
+}
+
 export abstract class BaseProtocol<P extends IPeerDescriptor<any>> extends EE implements IProtocol<P> {
   abstract get id (): string
   abstract get versions (): string[]
@@ -20,7 +25,7 @@ export abstract class BaseProtocol<P extends IPeerDescriptor<any>> extends EE im
   encoder?: IEncoder
   constructor (peer: P,
                networkProvider: INetwork<P>,
-               encoder: IEncoder) {
+               encoder: IEncoder = passthroughEncoder) {
     super()
     this.peer = peer
     this.networkProvider = networkProvider

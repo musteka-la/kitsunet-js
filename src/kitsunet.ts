@@ -43,8 +43,12 @@ export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
       this.emit('slice', slice))
   }
 
-  get clientPeers (): T[] {
-    return this.ksnDriver.clientPeers
+  get addrs (): string[] {
+    return this.ksnDriver.clientPeers.reduce((addrs: any, addr) => {
+      addrs.push(addr)
+      return addr
+// tslint:disable-next-line: align
+    }, [])
   }
 
   get peers () {

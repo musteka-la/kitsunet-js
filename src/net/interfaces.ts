@@ -1,6 +1,7 @@
 'use strict'
 
 import { IBlockchain } from '../blockchain'
+import { EventEmitter as EE } from 'events'
 
 export enum NetworkType {
   LIBP2P, DEVP2P
@@ -62,14 +63,14 @@ export interface IProtocolDescriptor<T> {
 }
 
 export interface IProtocolConstructor<T> {
-  new(peer: T, provider: INetwork<T>, blockchain: IBlockchain, encoder?: IEncoder): IProtocol<T>
+  new(peer: IPeerDescriptor<T>, provider: INetwork<T>, blockchain: IBlockchain, encoder?: IEncoder): IProtocol<T>
 }
 
-export interface IProtocol<T> extends INetwork<T>, ICapability {
-  peer: IPeerDescriptor<T>              // protocols peer
+export interface IProtocol<T> extends INetwork<T>, ICapability, EE {
+  peer: T                               // the peer that talks this protocol
   encoder?: IEncoder                    // the encoder
   networkProvider: INetwork<T>          // the network provider
-  handshake (): Promise<void>            // initiate protocol handshake
+  handshake (): Promise<void>           // initiate protocol handshake
 }
 
 export interface IHandler<P> {

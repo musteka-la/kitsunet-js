@@ -11,20 +11,19 @@ import {
   Peer,
   DPT,
   RLPx,
-  PeerInfo
+  PeerInfo,
+  LES,
+  ETH
 } from 'ethereumjs-devp2p'
 
 import {
   NetworkType,
-  IProtocolConstructor,
   IProtocol,
-  INetwork,
   IProtocolDescriptor,
   ICapability
 } from '../interfaces'
 
-import { EthChain } from '../../blockchain'
-import proto = require('../protocols/kitsunet/proto')
+import { EthChain, IBlockchain } from '../../blockchain'
 import Common from 'ethereumjs-common'
 
 const ignoredErrors = new RegExp([
@@ -68,7 +67,8 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
   constructor (public dpt: DPT,
                public rlpx: RLPx,
-               public ethChain: EthChain,
+               @register(EthChain)
+               public chain: IBlockchain,
                @register('devp2p-peer-info')
                public peerInfo: PeerInfo,
                public common: Common,
@@ -138,6 +138,14 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
   }
 
+  private getRlpxProto (proto: IProtocol<Devp2pPeer>): ETH | LES | undefined {
+    return proto.peer.peer.getProtocols()
+      .find((p) => p
+        .constructor
+        .name
+        .toLowerCase() === proto.id)
+  }
+
   /**
    * Initializes RLPx instance for peer management
    * @private
@@ -145,31 +153,25 @@ export class Devp2pNode extends Node<Devp2pPeer> {
   private async init () {
     this.rlpx.on('peer:added', async (rlpxPeer: Peer) => {
       const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer)
-      if (rlpxPeer.getId()! === this.peerInfo.id) {
-        this.peer = devp2pPeer
-      }
-
-      this.protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Devp2pPeer>) => {
-        // TODO: we might have to use a map of
-        // id to proto name here or something similar
-        const devp2pProto = rlpxPeer
-          .getProtocols()
-          .find(p => protoDescriptor.cap.id === p.constructor.name.toLowerCase())
-
-        if (devp2pProto) {
-          const Protocol: IProtocolConstructor<Devp2pPeer> = protoDescriptor.constructor
-          const protocol = new Protocol(devp2pPeer, this as INetwork<Devp2pPeer>, this.ethChain)
-          devp2pPeer.protocols.set(devp2pProto.constructor.name.toLowerCase(), protocol)
-
-          devp2pProto.on('message', (code: any, payload: any) => {
-            protocol.receive({
+      const protos = this.registerProtos(this.protocolRegistry, devp2pPeer)
+      for (const proto of protos) {
+        const rlpxProto = this.getRlpxProto(proto)
+        if (rlpxProto) {
+          rlpxProto.on('message', async (code: any, payload: any) => {
+            const source: AsyncIterable<any> = {
               [Symbol.asyncIterator]: async function* () {
                 yield [code, ...payload]
               }
-            })
+            }
+
+            for await (const msg of proto.receive(source)) {
+              return msg
+            }
           })
         }
-      })
+
+        await proto.handshake()
+      }
 
       this.peers.set(devp2pPeer.id, devp2pPeer)
       this.emit('kitsunet:peer:connected', devp2pPeer)
@@ -180,7 +182,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
       const devp2pPeer = this.peers.get(id)
       if (devp2pPeer) {
         this.peers.delete(rlpxPeer.getId().toString('hex'))
-        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${devp2pPeer}`)
+        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${devp2pPeer.id}`)
         this.emit('kitsunet:peer:disconnected', devp2pPeer)
       }
     })
@@ -220,16 +222,19 @@ export class Devp2pNode extends Node<Devp2pPeer> {
       throw new Error('both peer and protocol are required!')
     }
 
-    const proto = peer.peer.getProtocols()
-      .find((p) => p
-      .constructor
-      .name
-      .toLowerCase() === protocol.id)
-
-    if (proto) {
-      return proto._send((msg as any).shsift(), msg)
+    const rlpxProto = this.getRlpxProto(protocol)
+    if (rlpxProto) {
+      return rlpxProto._send(msg.shift(), msg.shift())
     }
 
     throw new Error('no such protocol!')
+  }
+
+  // tslint:disable-next-line: no-empty
+  mount (protocol: IProtocol<Devp2pPeer>): void {
+  }
+
+  // tslint:disable-next-line: no-empty
+  unmount (protocol: IProtocol<Devp2pPeer>): void {
   }
 }
