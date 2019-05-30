@@ -25,8 +25,8 @@ export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P>
             versions: this.networkProvider.versions,
             userAgent: this.networkProvider.userAgent,
             nodeType: this.networkProvider.type,
-            // latestBlock: block ? block.header.number : new BN(0).toBuffer()
-            latestBlock: new BN(0).toBuffer()
+            // latestBlock: block ? block.header.number : new BN(0).toArrayLike(Buffer)
+            latestBlock: (new BN(0)).toArrayLike(Buffer)
             // sliceIds: this.networkProvider.getSliceIds()
           }
         }

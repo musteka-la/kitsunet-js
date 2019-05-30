@@ -10,6 +10,9 @@ import { register } from 'opium-decorators'
 import { LevelUp } from 'levelup'
 import level from 'level'
 import Common from 'ethereumjs-common'
+import Debug from 'debug'
+
+const debug = Debug(`kitsunet:blockchain:eth-chain`)
 
 type Header = typeof Block.Header
 
@@ -22,7 +25,7 @@ export class EthChain extends EE implements IBlockchain {
   static blockChain (@register('chain-db')
                      db: LevelUp,
                      common: Common): PromisifyAll<Blockchain> {
-    return promisify(new Blockchain({ db, common, validate: false }))
+    return promisify<Blockchain>(new Blockchain({ db, common, validate: false }))
   }
 
   @register(Common)
@@ -32,7 +35,7 @@ export class EthChain extends EE implements IBlockchain {
 
   @register('chain-db')
   static getChainDb (@register('options')
-                     options: any): LevelUp {
+  options: any): LevelUp {
     return level(options.ethChainDb) as LevelUp
   }
 
@@ -55,8 +58,13 @@ export class EthChain extends EE implements IBlockchain {
    * @returns {Number}
    */
   async getBlocksTD (): Promise<BN> {
-    const block: Block = await this.getLatestBlock()
-    return this.blockchain.getTd(block.header.hash, block.header.number) as unknown as BN
+    try {
+      const block: Block = await this.getLatestBlock()
+      return this.blockchain.getTd(block.header.hash, block.header.number) as unknown as BN
+    } catch (e) {
+      debug(e)
+    }
+    return new BN(0)
   }
 
   /**
@@ -88,8 +96,8 @@ export class EthChain extends EE implements IBlockchain {
    *
    * @returns {Array<Header>}
    */
-  async getLatestHeader<Header> (): Promise<Header> {
-    return this.blockchain.getLatestHeader() as Promise<Header>
+  async getLatestHeader<T> (): Promise<T> {
+    return this.blockchain.getLatestHeader() as unknown as T
   }
 
   /**
@@ -111,7 +119,7 @@ export class EthChain extends EE implements IBlockchain {
   async getBlocks<Block> (blockId: Buffer | number,
                           maxBlocks: number = 25,
                           skip: number = 0,
-                          reverse: boolean = false): Promise <Block[]> {
+                          reverse: boolean = false): Promise<Block[]> {
     return this.blockchain.getBlocks(blockId, maxBlocks, skip, reverse) as Promise<Block[]>
   }
 
@@ -122,10 +130,10 @@ export class EthChain extends EE implements IBlockchain {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Header>} - an array of blocks
    */
-  async getHeaders<Header> (blockId: Buffer | number,
-                            maxBlocks: number = 25,
-                            skip: number = 0,
-                            reverse: boolean = false): Promise<Header[] > {
+  async getHeaders<T> (blockId: Buffer | number,
+                       maxBlocks: number = 25,
+                       skip: number = 0,
+                       reverse: boolean = false): Promise<T[]> {
     const blocks = await this.blockchain.getBlocks(blockId, maxBlocks, skip, reverse)
     return (blocks as unknown as Block[]).map(b => b.header)
   }
@@ -135,7 +143,7 @@ export class EthChain extends EE implements IBlockchain {
    *
    * @param {Block} block
    */
-  async putBlocks<Block> (block: Block[]): Promise<any> {
+  async putBlocks<T = Block> (block: T[]): Promise<any> {
     return this.blockchain.putBlocks(block)
   }
 
@@ -144,13 +152,13 @@ export class EthChain extends EE implements IBlockchain {
    *
    * @param {Header} header
    */
-  async putHeaders<T> (header: T[]): Promise<void> {
+  async putHeaders<T = Header> (header: T[]): Promise<void> {
     await this.blockchain.putHeaders(header)
   }
 
-  async getBestBlock<Block> (): Promise<Block> {
+  async getBestBlock<T> (): Promise<T> {
     // TODO: calculate best block
-    return this.common.genesis().block
+    return new Block() as unknown as T
   }
 
   getNetworkId (): number {

@@ -4,7 +4,6 @@ import EE from 'events'
 import debug from 'debug'
 import { IHandler, IPeerDescriptor } from '../../interfaces'
 import { EthProtocol } from './eth-protocol'
-import { reject } from 'async'
 
 export abstract class EthHandler<P extends IPeerDescriptor<any>> extends EE implements IHandler<P> {
   log: debug.Debugger

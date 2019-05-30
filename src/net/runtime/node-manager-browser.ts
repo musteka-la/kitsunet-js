@@ -1,15 +1,11 @@
 'use strict'
 
-import { Node } from './node'
+import { Node } from '../node'
 import { register } from 'opium-decorators'
 import { EventEmitter } from 'events'
-import { IPeerDescriptor } from './interfaces'
-import { Libp2pNode } from './libp2p'
-import { Devp2pNode } from './devp2p'
-import {
-  KsnProtocol,
-  EthProtocol
-} from './protocols'
+import { IPeerDescriptor } from '../interfaces'
+import { Libp2pNode } from '../libp2p'
+import { KsnProtocol, EthProtocol } from '../protocols'
 
 /**
  * A node manager to start/stop nodes as well
@@ -21,9 +17,8 @@ import {
 @register()
 export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
   @register('nodes')
-  static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode,
-                                           devp2pNode: Devp2pNode): Node<U>[] {
-    return [libp2pNode, devp2pNode] as unknown as Node<U>[]
+  static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode): Node<U>[] {
+    return [libp2pNode] as unknown as Node<U>[]
   }
 
   /**
@@ -37,8 +32,8 @@ export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
         id: 'ksn',
         versions: ['1.0.0']
       }
-// tslint:disable-next-line: align
-    },{
+      // tslint:disable-next-line: align
+    }, {
       constructor: EthProtocol,
       cap: {
         id: 'eth',

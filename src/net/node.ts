@@ -8,8 +8,10 @@ import {
   NetworkType,
   ICapability,
   IProtocolDescriptor,
-  IPeerDescriptor
+  IProtocolConstructor
 } from './interfaces'
+import { IBlockchain } from '../blockchain'
+import { NetworkPeer } from './peer'
 
 /**
  * Abstract Node
@@ -25,6 +27,7 @@ export abstract class Node<P> extends EE implements INetwork<P> {
   abstract started: boolean
   abstract peer?: P
   abstract type: NetworkType
+  abstract chain: IBlockchain
 
   /**
    * Check if this node supports the protocol
@@ -78,6 +81,21 @@ export abstract class Node<P> extends EE implements INetwork<P> {
     throw new Error('Method not implemented')
   }
 
-  abstract start (): Promise < void >
+  protected registerProtos (protocolRegistry: IProtocolDescriptor<P>[],
+                            peer: NetworkPeer<any, any>): IProtocol<P>[] {
+    return protocolRegistry.map((protoDescriptor: IProtocolDescriptor<P>) => {
+      if (this.isProtoSupported(protoDescriptor)) {
+        const Protocol: IProtocolConstructor<P> = protoDescriptor.constructor
+        const proto: IProtocol<P> = new Protocol(peer,
+                                                 this as INetwork<P>,
+                                                 this.chain)
+        peer.protocols.set(proto.id, proto)
+        this.mount(proto)
+        return proto
+      }
+    }).filter(Boolean) as any
+  }
+
+  abstract start (): Promise <void>
   abstract stop (): Promise<void>
 }

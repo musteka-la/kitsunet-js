@@ -5,27 +5,21 @@ import PeerInfo from 'peer-info'
 import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
 import debug from 'debug'
+import pushable from 'pull-pushable'
+import lp from 'pull-length-prefixed'
+import * as semver from 'semver'
 import { register } from 'opium-decorators'
 import { Node } from '../node'
 import { Libp2pPeer } from './libp2p-peer'
-import * as semver from 'semver'
-import pushable from 'pull-pushable'
-import lp from 'pull-length-prefixed'
-import pb from 'pull-protocol-buffers'
-
-import proto from '../protocols/kitsunet/proto'
-const { Kitsunet } = proto
 
 import {
   IProtocol,
   NetworkType,
-  IProtocolConstructor,
-  INetwork,
   IProtocolDescriptor,
   ICapability
 } from '../interfaces'
 import { Libp2pDialer } from './libp2p-dialer'
-import { EthChain } from '../../blockchain'
+import { EthChain, IBlockchain } from '../../blockchain'
 
 /**
  * Libp2p node
@@ -56,38 +50,25 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   constructor (public node: Libp2p,
                public peer: Libp2pPeer,
                private libp2pDialer: Libp2pDialer,
-               public ethChain: EthChain,
+               @register(EthChain)
+               public chain: IBlockchain,
                @register('protocol-registry')
-               protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
+               public protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]) {
     super()
-    // register our node's protos
-    protocolRegistry.forEach((protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
-      if (this.isProtoSupported(protoDescriptor)) {
-        const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
-        const proto: IProtocol<Libp2pPeer> = new Protocol(this.peer,
-                                                          this as INetwork<Libp2pPeer>,
-                                                          this.ethChain)
-        this.protocols.set(proto.id, proto)
-        this.mount(proto)
-      }
-    })
+
+    // register own protocols
+    this.registerProtos(protocolRegistry, this.peer)
 
     // a peer has connected, store it
-    node.on('peer:connect', (peer: PeerInfo) => {
+    node.on('peer:connect', async (peer: PeerInfo) => {
       const libp2pPeer: Libp2pPeer = new Libp2pPeer(peer)
-      if (!this.peers.has(libp2pPeer.id)) {
-        protocolRegistry.forEach(async (protoDescriptor: IProtocolDescriptor<Libp2pPeer>) => {
-          const Protocol: IProtocolConstructor<Libp2pPeer> = protoDescriptor.constructor
-          const proto: IProtocol<Libp2pPeer> = new Protocol(libp2pPeer,
-                                                            this as INetwork<Libp2pPeer>,
-                                                            this.ethChain)
-          libp2pPeer.protocols.set(proto.id, proto)
-          await proto.handshake()
-        })
-
-        this.peers.set(libp2pPeer.id, libp2pPeer)
-        this.emit('kitsunet:peer:connected', libp2pPeer)
+      const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
+      for (const proto of protocols) {
+        await proto.handshake()
       }
+
+      this.peers.set(libp2pPeer.id, libp2pPeer)
+      this.emit('kitsunet:peer:connected', libp2pPeer)
     })
 
     node.on('peer:disconnect', (peerInfo: PeerInfo) => {
@@ -112,7 +93,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   private async handleIncoming (id: string, conn: any) {
-    conn.getPeerInfo(async (err: Error, peerInfo) => {
+    conn.getPeerInfo(async (err: Error, peerInfo: PeerInfo) => {
       if (err) throw err
       const peer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
       if (!peer) {
@@ -136,7 +117,13 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   private mkCodec (id: string, versions: string[]): string {
-    return `/kitsunet/${id}/${semver.sort(versions)[0]}`
+    const v = versions.map((v) => {
+      if (!semver.valid(v)) {
+        return `${v}.0.0`
+      }
+      return v
+    })
+    return `/kitsunet/${id}/${semver.rsort(v)[0]}`
   }
 
   async send<T, U = T> (msg: T,
@@ -146,7 +133,8 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       throw new Error('both peer and protocol are required!')
     }
 
-    const conn = await this.node.dialProtocol(peer.peer, this.mkCodec(protocol.id, protocol.versions))
+    const conn = await this.node.dialProtocol(peer.peer,
+                                              this.mkCodec(protocol.id, protocol.versions))
     return new Promise((resolve, reject) => {
       pull(
         pull.values([msg]),

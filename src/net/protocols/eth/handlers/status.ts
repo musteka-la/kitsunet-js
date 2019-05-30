@@ -16,13 +16,13 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   }
 
   async handle<T> (status: T[] & [number, number, Buffer, Buffer, Buffer, number]): Promise<any> {
-    return {
+    this.networkProvider.status = {
       protocolVersion: status[0],
       networkId: status[1],
       td: new BN(status[2]),
-      bestHash: new BN(status[3]),
-      genesisHash: new BN(status[4]),
-      number: status[5]
+      bestHash: status[3],
+      genesisHash: status[4],
+      number: new BN(status[5])
     }
   }
 

@@ -1,15 +1,17 @@
 'use strict'
 
 import * as Handlers from './handlers'
+import Block from 'ethereumjs-block'
 import { BaseProtocol } from '../../base-protocol'
 import { IEthProtocol, BlockBody, Status } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
-import { IBlockchain, EthChain } from '../../../blockchain'
+import { EthChain } from '../../../blockchain'
 import { EthHandler } from './eth-handler'
-import Block from 'ethereumjs-block'
 import { ETH } from 'ethereumjs-devp2p'
-import Common from 'ethereumjs-common'
-import { nextTick } from 'async'
+import Debug from 'debug'
+import { RlpMsgEncoder } from './rlp-encoder'
+
+const debug = Debug(`kitsunet:eth-proto`)
 
 export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
@@ -18,6 +20,10 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
 
   get status (): Status {
     return this._status!
+  }
+
+  set status (status) {
+    this._status = status
   }
 
   /**
@@ -32,19 +38,8 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
                networkProvider: INetwork<P>,
                public ethChain: EthChain,
                encoder: IEncoder) {
-    super(peer, networkProvider, encoder)
+    super(peer, networkProvider, new RlpMsgEncoder())
     this.protocolVersion = Math.max.apply(Math, this.versions.map(v => Number(v)))
-
-    // needs to be async
-    nextTick(async () => {
-      this._status = {
-        networkId: this.ethChain.common.networkId(),
-        td: await this.ethChain.getBlocksTD(),
-        genesisHash: this.ethChain.common.genesis().hash,
-        bestHash: (await this.ethChain.getBestBlock() as any).hash,
-        protocolVersion: this.protocolVersion
-      }
-    })
 
     this.handlers = {}
     Object.keys(Handlers).forEach((handler) => {
@@ -64,8 +59,8 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     ]
   }
 
-  async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U | U[]> {
-    for await (const msg of super.receive<Buffer, U[]>(readable)) {
+  async *receive<Buffer, U> (readable: AsyncIterable<Buffer[]>): AsyncIterable<U | U[]> {
+    for await (const msg of super.receive<Buffer[], U[]>(readable)) {
       const code: ETH.MESSAGE_CODES = msg.shift() as unknown as ETH.MESSAGE_CODES
       // tslint:disable-next-line: strict-type-predicates
       if (typeof code !== 'undefined') {
@@ -94,6 +89,12 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   async handshake (): Promise<void> {
-    return this.handlers[ETH.MESSAGE_CODES.STATUS].request(this.status)
+    return this.handlers[ETH.MESSAGE_CODES.STATUS].request({
+      networkId: this.ethChain.common.networkId(),
+      td: await this.ethChain.getBlocksTD(),
+      genesisHash: this.ethChain.common.genesis().hash,
+      bestHash: (await this.ethChain.getBestBlock() as any).hash(),
+      protocolVersion: this.protocolVersion
+    })
   }
 }

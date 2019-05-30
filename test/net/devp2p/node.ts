@@ -17,8 +17,7 @@ import {
   genPrivateKey,
   ETH
 } from 'ethereumjs-devp2p'
-import { rlp } from 'ethereumjs-util'
-import Common from 'ethereumjs-blockchain/node_modules/ethereumjs-common'
+import Common from 'ethereumjs-common'
 
 describe('simple test RLPx Node', () => {
   const capabilities = [ETH.eth63, ETH.eth62]
@@ -43,7 +42,6 @@ describe('simple test RLPx Node', () => {
   rlpx.listen(tcpPort)
 
   const peerInfo: PeerInfo = { id: rlpx._clientId, tcpPort, udpPort }
-
   const protoRegistry: IProtocolDescriptor<Devp2pPeer>[] = [
     {
       constructor: (EthProtocol as any).constructor,
