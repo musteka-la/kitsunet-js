@@ -7,7 +7,7 @@
     "build": "npm run clean && tsc --pretty -p tsconfig-prod.json",
     "watch": "npm run clean && tsc --watch --pretty",
     "clean": "rm -rf dist/",
-    "test": "npm run build && mocha -r source-map-support/register dist/test/**/*.js",
+    "test": "npm run build && mocha -r source-map-support/register dist/test/**/**/*.js",
     "lint": "tslint --project tsconfig.json",
     "lint:fix": "tslint --project tsconfig.json --fix"
   },

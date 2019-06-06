@@ -12,7 +12,7 @@ import Block from 'ethereumjs-block'
 
 import { NodeManager } from './net'
 
-import { Libp2pPeer } from './net/libp2p/libp2p-peer'
+import { Libp2pPeer } from './net/stacks/libp2p/libp2p-peer'
 import { NetworkPeer } from './net/peer'
 import { EthChain } from './blockchain'
 

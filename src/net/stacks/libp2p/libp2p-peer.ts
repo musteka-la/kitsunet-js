@@ -2,10 +2,11 @@
 
 import PeerInfo from 'peer-info'
 import { register } from 'opium-decorators'
-import { NetworkPeer } from '../peer'
+import { NetworkPeer } from '../../peer'
 
 @register()
 export class Libp2pPeer extends NetworkPeer<PeerInfo, Libp2pPeer> {
+  used: boolean = false
   peer: PeerInfo
   get id (): string {
     return this.peer.id.toB58String()

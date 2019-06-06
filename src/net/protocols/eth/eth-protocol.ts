@@ -10,10 +10,11 @@ import { EthHandler } from './eth-handler'
 import { ETH } from 'ethereumjs-devp2p'
 import Debug from 'debug'
 import { RlpMsgEncoder } from './rlp-encoder'
+import { PeerTypes } from '../..//helper-types'
 
 const debug = Debug(`kitsunet:eth-proto`)
 
-export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IEthProtocol {
+export class EthProtocol<P extends IPeerDescriptor<PeerTypes>> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
   handlers: { [key: number]: EthHandler<P> }
   private _status: Status | undefined

@@ -1,7 +1,7 @@
 'use strict'
 
 import * as Handlers from './handlers'
-import debug from 'debug'
+import Debug from 'debug'
 import { BaseProtocol } from '../../base-protocol'
 import { INetwork, IPeerDescriptor } from '../../interfaces'
 import { KitsunetHandler } from './kitsunet-handler'
@@ -15,12 +15,13 @@ import {
   Identify,
   NodeType} from './interfaces'
 import { SliceId } from '../../../slice'
+import { PeerTypes } from '../../helper-types'
 
-const log = debug('kitsunet:kitsunet-proto')
+const debug = Debug('kitsunet:kitsunet-proto')
 
 const VERSION = '1.0.0'
 
-export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IKsnProtocol {
+export class KsnProtocol<P extends IPeerDescriptor<PeerTypes>> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
   handlers: { [key: string]: KitsunetHandler<P> }
