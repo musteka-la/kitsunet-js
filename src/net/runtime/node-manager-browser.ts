@@ -4,7 +4,7 @@ import { Node } from '../node'
 import { register } from 'opium-decorators'
 import { EventEmitter } from 'events'
 import { IPeerDescriptor } from '../interfaces'
-import { Libp2pNode } from '../libp2p'
+import { Libp2pNode } from '../stacks/libp2p'
 import { KsnProtocol, EthProtocol } from '../protocols'
 
 /**

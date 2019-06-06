@@ -4,8 +4,9 @@ import { Node } from './node'
 import { register } from 'opium-decorators'
 import { EventEmitter } from 'events'
 import { IPeerDescriptor } from './interfaces'
-import { Libp2pNode } from './libp2p'
-import { Devp2pNode } from './devp2p'
+import { Libp2pNode } from './stacks/libp2p'
+import { Devp2pNode } from './stacks/devp2p'
+
 import {
   KsnProtocol,
   EthProtocol
@@ -37,8 +38,8 @@ export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
         id: 'ksn',
         versions: ['1.0.0']
       }
-// tslint:disable-next-line: align
-    },{
+    // tslint:disable-next-line: align
+    }, {
       constructor: EthProtocol,
       cap: {
         id: 'eth',

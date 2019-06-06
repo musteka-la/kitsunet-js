@@ -9,7 +9,7 @@ import pushable from 'pull-pushable'
 import lp from 'pull-length-prefixed'
 import * as semver from 'semver'
 import { register } from 'opium-decorators'
-import { Node } from '../node'
+import { Node } from '../../node'
 import { Libp2pPeer } from './libp2p-peer'
 
 import {
@@ -17,9 +17,9 @@ import {
   NetworkType,
   IProtocolDescriptor,
   ICapability
-} from '../interfaces'
+} from '../../interfaces'
 import { Libp2pDialer } from './libp2p-dialer'
-import { EthChain, IBlockchain } from '../../blockchain'
+import { EthChain, IBlockchain } from '../../../blockchain'
 
 /**
  * Libp2p node

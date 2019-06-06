@@ -9,6 +9,7 @@ import {
 } from './interfaces'
 
 import Debug from 'debug'
+import { PeerTypes } from './helper-types'
 const debug = Debug('kitsunet:net:base-protocol')
 
 const passthroughEncoder: IEncoder = {
@@ -16,7 +17,7 @@ const passthroughEncoder: IEncoder = {
   decode: async function* <T, U>(msg) { yield msg }
 }
 
-export abstract class BaseProtocol<P extends IPeerDescriptor<any>> extends EE implements IProtocol<P> {
+export abstract class BaseProtocol<P extends IPeerDescriptor<PeerTypes>> extends EE implements IProtocol<P> {
   abstract get id (): string
   abstract get versions (): string[]
 

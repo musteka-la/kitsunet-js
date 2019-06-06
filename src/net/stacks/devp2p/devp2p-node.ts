@@ -1,7 +1,7 @@
 'use strict'
 
 import Debug, { Debugger } from 'debug'
-import { Node } from '../node'
+import { Node } from '../../node'
 import { Devp2pPeer } from './devp2p-peer'
 import { register } from 'opium-decorators'
 
@@ -21,9 +21,9 @@ import {
   IProtocol,
   IProtocolDescriptor,
   ICapability
-} from '../interfaces'
+} from '../../interfaces'
 
-import { EthChain, IBlockchain } from '../../blockchain'
+import { EthChain, IBlockchain } from '../../../blockchain'
 import Common from 'ethereumjs-common'
 
 const ignoredErrors = new RegExp([
@@ -138,6 +138,11 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
   }
 
+  /**
+   * Get the rlpx protocol for this proto
+   *
+   * @param {IProtocol} proto - the protocol to resolve
+   */
   private getRlpxProto (proto: IProtocol<Devp2pPeer>): ETH | LES | undefined {
     return proto.peer.peer.getProtocols()
       .find((p) => p
@@ -164,6 +169,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
               }
             }
 
+            // read from remote
             for await (const msg of proto.receive(source)) {
               return msg
             }

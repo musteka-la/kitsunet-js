@@ -12,15 +12,6 @@ export const MAX_BLOCKS_DOWNLOAD: number = 128
  * @fires headers - an event with the latest fetched headers
  */
 export abstract class Downloader extends EE {
-  public startBlocs: number = 0
-  public maxBlocks: number = MAX_BLOCKS_DOWNLOAD
-
-  constructor (start: number, max: number) {
-    super()
-    this.startBlocs = start || 0
-    this.maxBlocks = max || MAX_BLOCKS_DOWNLOAD
-  }
-
   /**
    * Get blocks from remote
    *
@@ -38,32 +29,4 @@ export abstract class Downloader extends EE {
    * @returns {Promise<Array<Header>>}
    */
   abstract async getHeaders (from: BN | number, max: BN | number): Promise<Array<any>>
-
-  /**
-   * Create a stream that will deliver blocks
-   *
-   * @param {Number} from - get headers from block number/hash
-   * @param {Number} max - max number of headers to download
-   * @return {AsyncIterator<Block>}
-   */
-  abstract getBlocksStream (from: number, max: number): AsyncIterator<any>
-
-  /**
-   * Create a stream that will deliver blocks
-   *
-   * @param {Number} from - get headers from block number/hash
-   * @param {Number} max - max number of headers to download
-   * @returns {AsyncIterator<Header>}
-   */
-  abstract getHeadersStream (from: number, max: number): AsyncIterator<any>
-
-  /**
-   * Start sync
-   */
-  abstract async start (): Promise<boolean>
-
-  /**
-   * Stop sync
-   */
-  abstract async stop (): Promise<boolean>
 }
