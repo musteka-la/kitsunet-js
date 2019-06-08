@@ -29,7 +29,8 @@ export class EthChain extends EE implements IBlockchain {
   }
 
   @register(Common)
-  static common (@register('options') options: any): Common {
+  static common (@register('options')
+                 options: any): Common {
     return new Common(options.ethNetwork)
   }
 
@@ -162,7 +163,7 @@ export class EthChain extends EE implements IBlockchain {
   }
 
   getNetworkId (): number {
-    throw new Error('Method not implemented.')
+    return this.common.networkId()
   }
 
   genesis (): any {

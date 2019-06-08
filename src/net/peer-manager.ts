@@ -4,10 +4,13 @@ import { EventEmitter as EE } from 'events'
 import { NodeManager } from './node-manager'
 import { ICapability } from './interfaces'
 import { Peer } from './helper-types'
+import { register } from 'opium-decorators'
 
+@register('peer-manager')
 export class PeerManager extends EE {
   peers: Map<string, Peer> = new Map()
-  constructor (public nodeManager: NodeManager<Peer>) {
+  constructor (@register('node-manager')
+               public nodeManager: NodeManager<Peer>) {
     super()
     this.nodeManager.on('kitsunet:peer:connected', (peer: Peer) => {
       this.peers.set(peer.id, peer)

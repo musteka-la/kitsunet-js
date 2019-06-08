@@ -10,11 +10,13 @@ import { Slice } from './slice'
 import KistunetBlockTracker from 'kitsunet-block-tracker'
 import Block from 'ethereumjs-block'
 
-import { NodeManager } from './net'
-
-import { Libp2pPeer } from './net/stacks/libp2p/libp2p-peer'
-import { NetworkPeer } from './net/peer'
-import { EthChain } from './blockchain'
+import {
+  NodeManager,
+  Devp2pPeer,
+  Libp2pPeer,
+  NetworkPeer
+} from './net'
+import { DownloadManager, EthChain } from './blockchain'
 
 const debug = Debug('kitsunet:kitsunet-driver')
 
@@ -28,10 +30,14 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   constructor (@register('options')
                public isBridge: any,
                public discovery: Discovery,
+               @register('node-manager')
                public nodeManager: NodeManager<T>,
+               @register('download-manager')
+               public downloadManager: DownloadManager,
                public blockTracker: KistunetBlockTracker,
                public ethChain: EthChain,
-               public libp2pPeer: Libp2pPeer) {
+               public libp2pPeer: Libp2pPeer,
+               public devp2pPeer: Devp2pPeer) {
     super()
 
     this.isBridge = Boolean(isBridge.bridge)
@@ -44,7 +50,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   }
 
   get clientPeers (): T[] {
-    return [this.libp2pPeer] as T[]
+    return [this.libp2pPeer, this.devp2pPeer] as T[]
   }
 
   /**
@@ -183,12 +189,14 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
 
     await this.nodeManager.start()
     await this.blockTracker.start()
+    await this.downloadManager.start()
   }
 
   /**
    * Stop the driver
    */
   async stop () {
+    await this.downloadManager.stop()
     await this.nodeManager.stop()
     await this.blockTracker.stop()
   }
