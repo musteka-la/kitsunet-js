@@ -16,12 +16,13 @@ import {
   NodeType} from './interfaces'
 import { SliceId } from '../../../slice'
 import { PeerTypes } from '../../helper-types'
+import { Libp2pPeer, Devp2pPeer } from '../../stacks'
 
 const debug = Debug('kitsunet:kitsunet-proto')
 
 const VERSION = '1.0.0'
 
-export class KsnProtocol<P extends IPeerDescriptor<PeerTypes>> extends BaseProtocol<P> implements IKsnProtocol {
+export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
   handlers: { [key: string]: KitsunetHandler<P> }
