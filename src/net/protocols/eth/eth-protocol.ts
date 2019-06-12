@@ -10,20 +10,33 @@ import { EthHandler } from './eth-handler'
 import { ETH } from 'ethereumjs-devp2p'
 import Debug from 'debug'
 import { RlpMsgEncoder } from './rlp-encoder'
+import BN from 'bn.js'
 
 const debug = Debug(`kitsunet:eth-proto`)
+
+export class Deferred<T> {
+  promise: Promise<T>
+  resolve: (...args: any[]) => any = Function
+  reject: (...args: any[]) => any = Function
+  constructor () {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve
+      this.reject = reject
+    })
+  }
+}
 
 export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IEthProtocol {
   protocolVersion: number
   handlers: { [key: number]: EthHandler<P> }
-  private _status: Status | undefined
+  private _status: Deferred<Status> = new Deferred<Status>()
 
-  get status (): Status {
-    return this._status!
+  async getStatus (): Promise<Status> {
+    return this._status.promise
   }
 
-  set status (status) {
-    this._status = status
+  async setStatus (status: Status): Promise<void> {
+    this._status.resolve(status)
   }
 
   /**
@@ -73,11 +86,16 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return super.send(msg, this)
   }
 
-  async *getBlockHeaders (block: number,
+  async *getBlockHeaders (block: number | Buffer | BN,
                           max: number,
                           skip?: number,
                           reverse?: boolean): AsyncIterable<Block[]> {
-    return this.handlers[ETH.MESSAGE_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
+    await this.handlers[ETH.MESSAGE_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
+    yield new Promise<Block[]>((resolve) => {
+      this.handlers[ETH.MESSAGE_CODES.BLOCK_HEADERS].on('message', (headers) => {
+        resolve(headers)
+      })
+    })
   }
 
   async *getBlockBodies (hashes: string[] | Buffer[]): AsyncIterable<BlockBody[]> {

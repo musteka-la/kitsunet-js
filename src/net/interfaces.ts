@@ -96,4 +96,5 @@ export interface IHandler<P> {
   request<T, U> (msg: T | T[]): Promise<U>
   request<T, U> (msg: T | T[]): Promise<U[]>
   request<T, U> (msg: T | T[]): Promise<U | U[]>
+  request<T> (msg: T | T[]): Promise<void>
 }

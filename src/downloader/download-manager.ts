@@ -1,24 +1,26 @@
 'use strict'
 
-import Block from 'ethereumjs-block'
+import Block, { Header } from 'ethereumjs-block'
 import { register } from 'opium-decorators'
 import { EthChain } from '../blockchain/eth-chain'
 import { EventEmitter as EE } from 'events'
 import { PeerManager, Peer, EthProtocol } from '../net'
 import { IBlockchain } from '../blockchain'
 
+import Debug from 'debug'
+const debug = Debug('kitsunet:downloader:download-manager')
+
 const MAX_PEERS: number = 25
 const MAX_HEADERS: number = 256
-const DEFAUL_DOWNLOAD_INTERVAL: number = 1000
+const DEFAUL_DOWNLOAD_INTERVAL: number = 1000 * 5
 
 @register('download-manager')
 export class DownloadManager extends EE {
-  peers: Peer[] = []
+  peers: Map<string, Peer> = new Map()
   syncInterval: NodeJS.Timeout | undefined
   maxPeers: number = MAX_PEERS
   downloadInterval: number = DEFAUL_DOWNLOAD_INTERVAL
 
-  // TODO: implement downloader
   constructor (@register('peer-manager')
                public peerManager: PeerManager,
                @register(EthChain)
@@ -26,15 +28,43 @@ export class DownloadManager extends EE {
     super()
   }
 
+  async latest (ethProto: EthProtocol<any>): Promise<Header | undefined> {
+    return new Promise(async (resolve) => {
+      const status = await ethProto.getStatus()
+      for await (const header of ethProto.getBlockHeaders(status.bestHash, 1)) {
+        debug(`got header ${(header as unknown as Header).hash()}`)
+        return resolve(header as unknown as Header)
+      }
+      debug('no header resolved')
+      resolve()
+    })
+  }
+
   async download (peer: Peer): Promise<void> {
-    if (this.peers.length <= this.maxPeers) {
-      const ethProto: EthProtocol<any> = peer.protocols['eth']
+    if (!this.peers.has(peer.id) && this.peers.size <= this.maxPeers) {
+      this.peers.set(peer.id, peer)
+      const ethProto: EthProtocol<any> | undefined = peer.protocols.get('eth') as EthProtocol<any>
       if (ethProto) {
-        const block: Block = await this.chain.getLatestBlock()
-        if (ethProto.status.number!.gt(block.header.number)) {
-          for await (const header of ethProto.getBlockHeaders(block.header.number, MAX_HEADERS)) {
-            await this.chain.putHeaders(header)
+        let blockNumber: number = 0
+        const block: Block | undefined = await this.chain.getLatestBlock()
+        if (block) {
+          blockNumber = block.header.number
+        }
+
+        try {
+          const remoteHeader: Header | undefined = await this.latest(ethProto)
+          if (remoteHeader) {
+            while (blockNumber <= remoteHeader.number.toNumber()) {
+              for await (const header of ethProto.getBlockHeaders(remoteHeader.hash(), MAX_HEADERS)) {
+                await this.chain.putHeaders(header)
+                blockNumber++
+              }
+            }
           }
+        } catch (err) {
+          debug(err)
+        } finally {
+          this.peers.delete(peer.id)
         }
       }
     }

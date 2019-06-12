@@ -22,6 +22,7 @@ export abstract class EthHandler<P extends IPeerDescriptor<any>> extends EE impl
    */
   abstract async handle<T, U = T> (msg: T): Promise<U>
   abstract async handle<T, U = T> (msg: T[]): Promise<U[]>
+  abstract async handle<T, U = T> (msg: T[]): Promise<void>
   abstract async handle<T, U = T> (msg: T | T[]): Promise<U[] | U | void>
 
   /**
@@ -32,6 +33,7 @@ export abstract class EthHandler<P extends IPeerDescriptor<any>> extends EE impl
   abstract async request<T, U = T> (msg: T | T[]): Promise<U>
   abstract async request<T, U = T> (msg: T | T[]): Promise<U[]>
   abstract async request<T, U = T> (msg: T | T[]): Promise<U | U[]>
+  abstract async request<T> (msg: T | T[]): Promise<void>
 
   protected async send<T> (msg: any[]): Promise<T>
   protected async send<T> (msg: any[]): Promise<T[]>

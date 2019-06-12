@@ -73,12 +73,12 @@ export abstract class Node<P> extends EE implements INetwork<P> {
 
   // mount a protocol
   mount (protocol: IProtocol<P>): void {
-    throw new Error('Method not implemented')
+    return
   }
 
   // unmount a protocol
   unmount (protocol: IProtocol<P>): void {
-    throw new Error('Method not implemented')
+    return
   }
 
   protected registerProtos (protocolRegistry: IProtocolDescriptor<P>[],
