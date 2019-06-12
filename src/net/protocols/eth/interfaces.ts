@@ -17,11 +17,11 @@ export interface BaseMessage {
 }
 
 export interface Status extends BaseMessage {
-  protocolVersion?: number
+  protocolVersion: number
   networkId: number
   td: BN
   bestHash: Buffer
-  genesisHash: Buffer
+  genesisHash: string
   number?: BN
 }
 
@@ -33,7 +33,8 @@ export interface BlockHeadersMsg extends BaseMessage {
 }
 
 export interface IEthProtocol {
-  status: Status
+  getStatus (): Promise<Status>
+  setStatus (status: Status): Promise<void>
   sendNewHashes (hashes: string[] | Buffer[]): Promise<void>
   getBlockHeaders (block: number, max: number, skip?: number, reverse?: boolean): AsyncIterable<Block[]>
   getBlockBodies (hashes: string[] | Buffer[]): AsyncIterable<BlockBody[]>

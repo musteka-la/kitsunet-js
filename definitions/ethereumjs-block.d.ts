@@ -22,6 +22,8 @@ declare class Block {
 declare namespace Block {
   class Header {
     public raw: any
+    public number: any
+    public hash: any
     constructor(data: any, opts?: any);
   }
 }

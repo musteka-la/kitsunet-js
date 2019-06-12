@@ -9,6 +9,7 @@ import { ETH } from 'ethereumjs-devp2p'
 import fromRpc = require('ethereumjs-block/from-rpc')
 import Block from 'ethereumjs-block'
 import Common from 'ethereumjs-common'
+import { decode } from 'rlp'
 
 import {
   IPeerDescriptor,
@@ -69,19 +70,21 @@ describe('Eth protocol', () => {
     it('should handle Status request', async () => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
-          yield [ETH.MESSAGE_CODES.STATUS, 0, 0, Buffer.from([0]), Buffer.from([0]), Buffer.from([0]), 0]
+          yield [ETH.MESSAGE_CODES.STATUS, 0, 0, new BN(0), Buffer.from([0]), Buffer.from([0]), new BN(0)]
         }
       }
 
-      for await (const msg of ethProtocol.receive(source)) {
-        expect(msg).to.deep.eq({
+      for await (const _ of ethProtocol.receive(source)) {
+        const status = {
           protocolVersion: 0,
           networkId: 0,
-          td: new BN(Buffer.from([0])),
-          bestHash: new BN(Buffer.from([0])),
-          genesisHash: new BN(Buffer.from([0])),
-          number: 0
-        })
+          td: new BN(0),
+          bestHash: Buffer.from([0]),
+          genesisHash: Buffer.from([0]),
+          number: new BN(0)
+        }
+
+        expect(ethProtocol.status).to.eql(status)
       }
     })
 
@@ -199,12 +202,13 @@ describe('Eth protocol', () => {
     })
 
     it('should send Status request', async () => {
-      sendHandler = (msg: [any, any, any, any, any, any, any]) => {
-        const [msgId, protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
+      sendHandler = (msg: [any, any]) => {
+        const [ msgId, request ] = msg
+        const [protocolVersion, networkId, td, bestHash, genesisHash, _number] = decode(request)
         expect(msgId).to.eql(ETH.MESSAGE_CODES.STATUS)
-        expect(protocolVersion).to.eql(0)
-        expect(networkId).to.eql(0)
-        expect(td).to.eql(new BN(0).toArrayLike(Buffer))
+        expect(protocolVersion).to.eql(Buffer.from([0]))
+        expect(networkId).to.eql(Buffer.from([0]))
+        expect(td).to.eql(new BN(Buffer.from([0])).toArrayLike(Buffer))
         expect(bestHash).to.eql(Buffer.from([0]))
         expect(genesisHash).to.eql(Buffer.from([0]))
         expect(_number).to.eql(new BN(0).toArrayLike(Buffer))
@@ -216,7 +220,7 @@ describe('Eth protocol', () => {
         networkId: 0,
         td: new BN(0),
         bestHash: Buffer.from([0]),
-        genesisHash: Buffer.from([0]),
+        genesisHash: '0x0',
         number: new BN(0)
       })
     })

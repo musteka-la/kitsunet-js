@@ -1,13 +1,12 @@
 'use strict'
 
-'use strict'
-
 import BN from 'bn.js'
 import { EthHandler } from '../eth-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { Status as StatusMsg } from '../interfaces'
 import { ETH } from 'ethereumjs-devp2p'
+import { buffer2int, int2buffer } from './utils'
 
 export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
@@ -15,24 +14,24 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
     super('Status', ETH.MESSAGE_CODES.STATUS, networkProvider, peer)
   }
 
-  async handle<T> (status: T[] & [number, number, Buffer, Buffer, Buffer, number]): Promise<any> {
-    this.networkProvider.status = {
-      protocolVersion: status[0],
-      networkId: status[1],
+  async handle<T> (status: T[] & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
+    return this.networkProvider.setStatus({
+      protocolVersion: buffer2int(status[0]),
+      networkId: buffer2int(status[1]),
       td: new BN(status[2]),
       bestHash: status[3],
-      genesisHash: status[4],
+      genesisHash: status[4].toString('hex'),
       number: new BN(status[5])
-    }
+    })
   }
 
-  async request<T> (status: T & StatusMsg): Promise<T[]> {
+  async request<T> (status: T & StatusMsg): Promise<any> {
     return this.send([
-      status.protocolVersion,
-      status.networkId,
+      int2buffer(status.protocolVersion),
+      int2buffer(status.networkId),
       status.td.toArrayLike(Buffer),
       status.bestHash,
-      status.genesisHash,
+      Buffer.from(status.genesisHash, 'hex'),
       status.number ? status.number.toArrayLike(Buffer) : undefined
     ])
   }

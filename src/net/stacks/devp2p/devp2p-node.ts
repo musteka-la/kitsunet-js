@@ -89,18 +89,30 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     const { udpPort, address } = this.peerInfo
     this.dpt.bind(udpPort, address)
-    this.common.bootstrapNodes().map(async (node: any) => {
-      const bootnode: PeerInfo = {
-        address: node.ip,
-        udpPort: node.port,
-        tcpPort: node.port
-      }
-      await this.dpt.bootstrap(bootnode)
-      return
-    })
+    await this.init()
+
+    // this.common.bootstrapNodes().map(async (node: any) => {
+    //   const bootnode: PeerInfo = {
+    //     id: node.id,
+    //     address: node.ip,
+    //     udpPort: node.port,
+    //     tcpPort: node.port
+    //   }
+    //   await this.dpt.bootstrap(bootnode)
+    //   return
+    // })
     this.dpt.on('error', this.error)
 
-    await this.init()
+    try {
+      await this.dpt.addPeer({
+        address: '127.0.0.1',
+        tcpPort: 30303,
+        udpPort: 30303
+      })
+    } catch (e) {
+      debug(e)
+    }
+
     this.started = true
   }
 
@@ -132,7 +144,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
 
     if (peer) {
-      peer.emit('error', error)
+      this.emit('error', error)
     } else {
       throw error
     }
@@ -149,6 +161,23 @@ export class Devp2pNode extends Node<Devp2pPeer> {
         .constructor
         .name
         .toLowerCase() === proto.id)
+  }
+
+  /**
+   *
+   * @param rlpxPeer
+   * @param reason
+   */
+  private disconect (rlpxPeer, reason) {
+    if (rlpxPeer.getId()) {
+      const id = rlpxPeer.getId().toString('hex')
+      const devp2pPeer = this.peers.get(id)
+      if (devp2pPeer) {
+        this.peers.delete(id)
+        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${devp2pPeer.id}`)
+        this.emit('kitsunet:peer:disconnected', devp2pPeer)
+      }
+    }
   }
 
   /**
@@ -184,25 +213,12 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     })
 
     this.rlpx.on('peer:removed', (rlpxPeer, reason) => {
-      const id = rlpxPeer.getId().toString('hex')
-      const devp2pPeer = this.peers.get(id)
-      if (devp2pPeer) {
-        this.peers.delete(rlpxPeer.getId().toString('hex'))
-        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${devp2pPeer.id}`)
-        this.emit('kitsunet:peer:disconnected', devp2pPeer)
-      }
+      this.disconect(rlpxPeer, reason)
     })
 
     this.rlpx.on('peer:error', (rlpxPeer, error) => {
-      const peerId = rlpxPeer && rlpxPeer.getId()
-      if (!peerId) {
-        return this.error(error)
-      }
-      const id = peerId.toString('hex')
-      const peer = this.peers.get(id)
-      if (peer) {
-        this.error(error, peer.peer)
-      }
+      this.disconect(rlpxPeer, error)
+      this.error(error, rlpxPeer)
     })
 
     this.rlpx.on('error', e => this.error(e))
@@ -234,13 +250,5 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
 
     throw new Error('no such protocol!')
-  }
-
-  // tslint:disable-next-line: no-empty
-  mount (protocol: IProtocol<Devp2pPeer>): void {
-  }
-
-  // tslint:disable-next-line: no-empty
-  unmount (protocol: IProtocol<Devp2pPeer>): void {
   }
 }

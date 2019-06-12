@@ -34,12 +34,13 @@ export class RLPxNodeOptions implements RLPxOptions {
   port: number = 30303
   key: Buffer = randomBytes(32)
   bootnodes: string[] = []
-  maxPeers: number = 10
+  maxPeers: number = 1
 }
 
 export class DPTOptions {
   key: Buffer = randomBytes(32)
   refreshInterval: number = 30000
+  timeout: number = 1000 * 10
   endpoint: PeerInfo = {
     address: '0.0.0.0',
     udpPort: 30301,
@@ -52,8 +53,8 @@ export class DevP2PFactory {
   static createPeerInfo (): PeerInfo {
     return {
       address: '0.0.0.0',
-      udpPort: 30301,
-      tcpPort: 30303
+      udpPort: 30353,
+      tcpPort: 30353
     }
   }
 
@@ -64,6 +65,7 @@ export class DevP2PFactory {
                            options: any): DPTOptions {
     const dptOpts = new DPTOptions()
     dptOpts.endpoint = peerInfo
+    dptOpts.timeout = 1000 * 60
     return dptOpts
   }
 

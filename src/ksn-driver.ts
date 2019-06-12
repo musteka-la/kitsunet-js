@@ -12,11 +12,11 @@ import Block from 'ethereumjs-block'
 
 import {
   NodeManager,
-  Devp2pPeer,
   Libp2pPeer,
   NetworkPeer
 } from './net'
-import { DownloadManager, EthChain } from './blockchain'
+import { EthChain } from './blockchain'
+import { DownloadManager } from './downloader';
 
 const debug = Debug('kitsunet:kitsunet-driver')
 
@@ -36,8 +36,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
                public downloadManager: DownloadManager,
                public blockTracker: KistunetBlockTracker,
                public ethChain: EthChain,
-               public libp2pPeer: Libp2pPeer,
-               public devp2pPeer: Devp2pPeer) {
+               public libp2pPeer: Libp2pPeer) {
     super()
 
     this.isBridge = Boolean(isBridge.bridge)
@@ -50,13 +49,13 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   }
 
   get clientPeers (): T[] {
-    return [this.libp2pPeer, this.devp2pPeer] as T[]
+    return [this.libp2pPeer] as T[]
   }
 
   /**
    * Get the latest block
    */
-  async getLatestBlock (): Promise<Block> {
+  async getLatestBlock (): Promise<Block | undefined> {
     return this.ethChain.getLatestBlock()
   }
 
@@ -65,7 +64,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
    * @param {String|Number} blockId - the number/tag of the block to retrieve
    */
   async getBlockByNumber (blockId: number): Promise<Block | undefined> {
-    const block: Block[] = await this.ethChain.getBlocks(blockId, 1)
+    const block: Block[] | undefined = await this.ethChain.getBlocks(blockId, 1)
     if (block && block.length > 0) {
       return block[0]
     }

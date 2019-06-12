@@ -32,14 +32,14 @@ export interface IBlockchain {
    *
    * @returns {Header[]}
    */
-  getLatestHeader<T> (): Promise<T>
+  getLatestHeader<T> (): Promise<T | undefined>
 
   /**
    * Get latest block
    *
    * @returns {Block[]}
    */
-  getLatestBlock<T> (): Promise<T>
+  getLatestBlock<T> (): Promise<T | undefined>
 
   /**
    * Get an array of blocks
@@ -51,7 +51,7 @@ export interface IBlockchain {
   getBlocks<T> (blockId: Buffer | number,
                 maxBlocks?: number,
                 skip?: number,
-                reverse?: boolean): Promise<T[]>
+                reverse?: boolean): Promise<T[] | undefined>
 
   /**
    * Get an array of blocks
@@ -63,12 +63,12 @@ export interface IBlockchain {
   getHeaders<T> (blockId: Buffer | number,
                  maxBlocks?: number,
                  skip?: number,
-                 reverse?: boolean): Promise<T[]>
+                 reverse?: boolean): Promise<T[] | undefined>
 
   /**
    * Get the chains best block
    */
-  getBestBlock<T> (): Promise<T>
+  getBestBlock<T> (): Promise<T | undefined>
 
   /**
    * Put blocks to the blockchain
