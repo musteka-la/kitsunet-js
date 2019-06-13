@@ -37,7 +37,8 @@ const ignoredErrors = new RegExp([
   'Invalid address buffer',
   'Invalid MAC',
   'Invalid timestamp buffer',
-  'Hash verification failed'
+  'Hash verification failed',
+  'should have valid tag:'
 ].join('|'))
 
 /**
@@ -90,7 +91,6 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     const { udpPort, address } = this.peerInfo
     this.dpt.bind(udpPort, address)
     await this.init()
-
     // this.common.bootstrapNodes().map(async (node: any) => {
     //   const bootnode: PeerInfo = {
     //     id: node.id,
@@ -101,18 +101,6 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     //   await this.dpt.bootstrap(bootnode)
     //   return
     // })
-    this.dpt.on('error', this.error)
-
-    try {
-      await this.dpt.addPeer({
-        address: '127.0.0.1',
-        tcpPort: 30303,
-        udpPort: 30303
-      })
-    } catch (e) {
-      debug(e)
-    }
-
     this.started = true
   }
 
@@ -174,7 +162,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
       const devp2pPeer = this.peers.get(id)
       if (devp2pPeer) {
         this.peers.delete(id)
-        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${devp2pPeer.id}`)
+        this.logger(`Peer disconnected (${rlpxPeer.getDisconnectPrefix(reason)}): ${id}`)
         this.emit('kitsunet:peer:disconnected', devp2pPeer)
       }
     }

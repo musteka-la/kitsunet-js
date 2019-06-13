@@ -1,11 +1,11 @@
 'use strict'
 
-import Block from 'ethereumjs-block'
+import { Block } from 'ethereumjs-blockchain'
 import { KsnNodeType } from '../../../constants'
 import { Slice } from '../../../slice'
 
 export { KsnNodeType as NodeType }
-export type BlockHeader = typeof Block.Header
+export type BlockHeader = Block.Header
 
 // tslint:disable: no-multi-spaces
 export enum MsgType {

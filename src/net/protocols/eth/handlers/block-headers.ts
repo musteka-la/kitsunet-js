@@ -1,7 +1,7 @@
 'use strict'
 
 import BN from 'bn.js'
-import Block from 'ethereumjs-block'
+import { Block } from 'ethereumjs-blockchain'
 import { EthHandler } from '../eth-handler'
 import { IPeerDescriptor } from '../../../interfaces'
 import { EthProtocol } from '../eth-protocol'
@@ -44,7 +44,7 @@ export class BlockHeaders<P extends IPeerDescriptor<any>> extends EthHandler<P> 
   }
 
   async handle<T> (headers: T[]): Promise<any> {
-    this.emit('message', () => headers.map(raw => new Block.Header(raw)))
+    this.emit('message', headers.map(raw => new Block.Header(raw)))
   }
 
   async request<T> (headers: T[]): Promise<any> {
