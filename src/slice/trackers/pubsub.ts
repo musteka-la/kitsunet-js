@@ -72,7 +72,7 @@ export class KitsunetPubSub extends BaseTracker {
    * @param {Slice} slice - slice to unsubscribe from
    */
   private unsubscribe (slice) {
-    this.multicast.removeFrwdHooks(this.makeSliceTopic(slice), this.slicesHook)
+    this.multicast.removeFrwdHooks(this.makeSliceTopic(slice), [this.slicesHook])
     this.multicast.unsubscribe(this.makeSliceTopic(slice), this.handleSlice)
   }
 

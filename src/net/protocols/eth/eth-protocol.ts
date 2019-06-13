@@ -76,9 +76,12 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     for await (const msg of super.receive<Buffer[], U[]>(readable)) {
       const code: ETH.MESSAGE_CODES = msg.shift() as unknown as ETH.MESSAGE_CODES
       // tslint:disable-next-line: strict-type-predicates
-      if (typeof code !== 'undefined') {
-        yield this.handlers[code].handle(msg) as any // TODO: investigate type failure
+      if (typeof code === 'undefined' || !this.handlers[code]) {
+        debug(`unsuported method - ${ETH.MESSAGE_CODES[code]}`)
+        return
       }
+
+      yield this.handlers[code].handle(msg) as any // TODO: investigate type failure
     }
   }
 

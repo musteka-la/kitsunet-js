@@ -15,8 +15,8 @@ import {
   Libp2pPeer,
   NetworkPeer
 } from './net'
-import { EthChain } from './blockchain'
-import { DownloadManager } from './downloader';
+import { EthChain, IBlockchain } from './blockchain'
+import { DownloadManager } from './downloader'
 
 const debug = Debug('kitsunet:kitsunet-driver')
 
@@ -35,7 +35,8 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
                @register('download-manager')
                public downloadManager: DownloadManager,
                public blockTracker: KistunetBlockTracker,
-               public ethChain: EthChain,
+               @register(EthChain)
+               public chain: IBlockchain,
                public libp2pPeer: Libp2pPeer) {
     super()
 
@@ -56,7 +57,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
    * Get the latest block
    */
   async getLatestBlock (): Promise<Block | undefined> {
-    return this.ethChain.getLatestBlock()
+    return this.chain.getLatestBlock()
   }
 
   /**
@@ -64,7 +65,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
    * @param {String|Number} blockId - the number/tag of the block to retrieve
    */
   async getBlockByNumber (blockId: number): Promise<Block | undefined> {
-    const block: Block[] | undefined = await this.ethChain.getBlocks(blockId, 1)
+    const block: Block[] | undefined = await this.chain.getBlocks(blockId, 1)
     if (block && block.length > 0) {
       return block[0]
     }
@@ -74,7 +75,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
               maxBlocks: number = 25,
               skip: number = 0,
               reverse: boolean = false) {
-    return this.ethChain.getHeaders(blockId, maxBlocks, skip, reverse)
+    return this.chain.getHeaders(blockId, maxBlocks, skip, reverse)
   }
 
   /**
@@ -189,6 +190,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
     await this.nodeManager.start()
     await this.blockTracker.start()
     await this.downloadManager.start()
+    await this.chain.start()
   }
 
   /**
@@ -198,6 +200,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
     await this.downloadManager.stop()
     await this.nodeManager.stop()
     await this.blockTracker.stop()
+    await this.chain.stop()
   }
 
   getState () {

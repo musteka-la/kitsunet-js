@@ -20,9 +20,9 @@ export abstract class EthHandler<P extends IPeerDescriptor<any>> extends EE impl
    *
    * @param msg - the message to be sent
    */
+  abstract async handle<T, U = T> (msg: T[]): Promise<void>
   abstract async handle<T, U = T> (msg: T): Promise<U>
   abstract async handle<T, U = T> (msg: T[]): Promise<U[]>
-  abstract async handle<T, U = T> (msg: T[]): Promise<void>
   abstract async handle<T, U = T> (msg: T | T[]): Promise<U[] | U | void>
 
   /**

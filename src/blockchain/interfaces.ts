@@ -1,6 +1,7 @@
 'use strict'
 import BN from 'bn.js'
 import Block from 'ethereumjs-block'
+import { start } from 'repl'
 
 export interface IBlockchain {
   /**
@@ -102,4 +103,14 @@ export interface IBlockchain {
    * @param block - the block to use as checkpoint
    */
   putCheckpoint (block: Block): Promise<void>
+
+  /**
+   * Perfom initialization
+   */
+  start (): Promise<void>
+
+  /**
+   * Perform cleanup
+   */
+  stop (): Promise<void>
 }
