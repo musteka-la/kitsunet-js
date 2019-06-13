@@ -22,9 +22,9 @@ export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P>
         status: ResponseStatus.OK,
         payload: {
           identify: {
-            versions: this.networkProvider.versions,
-            userAgent: this.networkProvider.userAgent,
-            nodeType: this.networkProvider.type,
+            versions: this.protocol.versions,
+            userAgent: this.protocol.userAgent,
+            nodeType: this.protocol.type,
             // latestBlock: block ? block.header.number : new BN(0).toArrayLike(Buffer)
             latestBlock: (new BN(0)).toArrayLike(Buffer)
             // sliceIds: this.networkProvider.getSliceIds()

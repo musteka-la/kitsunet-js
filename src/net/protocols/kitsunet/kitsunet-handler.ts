@@ -11,7 +11,7 @@ export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE
   log: debug.Debugger
   constructor (public name: string,
                public id: string,
-               public networkProvider: KsnProtocol<P>,
+               public protocol: KsnProtocol<P>,
                public peer: P) {
     super()
     this.log = debug(`kitsunet:kitsunet-proto:base-handler-${this.name}`)
@@ -37,7 +37,7 @@ export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE
 
   protected async send<T> (msg: T): Promise<KsnResponse> {
     this.log('sending request', msg)
-    const res: KsnResponse = await this.networkProvider.send(msg)
+    const res: KsnResponse = await this.protocol.send(msg)
     if (res && res.status !== ResponseStatus.OK) {
       console.dir(res)
       const err = res.error ? new Error(res.error) : new Error('unknown error!')

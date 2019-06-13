@@ -76,7 +76,7 @@ export interface IProtocol<T> extends INetwork<T>, ICapability, EE {
 export interface IHandler<P> {
   name: string,
   id: string | number,
-  networkProvider: IProtocol<P>,
+  protocol: IProtocol<P>,
   peer: IPeerDescriptor<P>
 
   /**
@@ -87,6 +87,8 @@ export interface IHandler<P> {
   handle<T, U> (msg: T | T[]): Promise<U>
   handle<T, U> (msg: T | T[]): Promise<U[]>
   handle<T, U> (msg: T | T[]): Promise<U | U[]>
+  handle<T> (msg: T | T[]): Promise<void>
+  handle<T, U> (msg: T | T[]): Promise<U | U[] | void>
 
   /**
    * Send a request
@@ -97,4 +99,5 @@ export interface IHandler<P> {
   request<T, U> (msg: T | T[]): Promise<U[]>
   request<T, U> (msg: T | T[]): Promise<U | U[]>
   request<T> (msg: T | T[]): Promise<void>
+  request<T, U> (msg: T | T[]): Promise<U | U[] | void>
 }

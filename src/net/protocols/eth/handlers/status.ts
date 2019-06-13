@@ -8,13 +8,13 @@ import { Status as StatusMsg } from '../interfaces'
 import { ETH, buffer2int, int2buffer } from 'ethereumjs-devp2p'
 
 export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
-  constructor (networkProvider: EthProtocol<P>,
+  constructor (protocol: EthProtocol<P>,
                peer: IPeerDescriptor<P>) {
-    super('Status', ETH.MESSAGE_CODES.STATUS, networkProvider, peer)
+    super('Status', ETH.MESSAGE_CODES.STATUS, protocol, peer)
   }
 
   async handle<T> (status: T[] & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
-    return this.networkProvider.setStatus({
+    return this.protocol.setStatus({
       protocolVersion: buffer2int(status[0]),
       networkId: buffer2int(status[1]),
       td: new BN(status[2]),

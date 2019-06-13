@@ -65,7 +65,7 @@ export class EthChain extends EE implements IBlockchain {
   async getBlocksTD (): Promise<BN> {
     try {
       const block: Block | undefined = await this.getLatestBlock()
-      if (block) return await this.blockchain.getTd(block.header.hash(), block.header.number) as unknown as BN
+      if (block) return await this.blockchain.getTd(block.header.hash(), new BN(block.header.number)) as BN
     } catch (e) {
       debug(e)
     }
@@ -80,7 +80,7 @@ export class EthChain extends EE implements IBlockchain {
   async getHeadersTD (): Promise<BN> {
     try {
       const header: Block.Header | undefined = await this.getLatestHeader()
-      if (header) return await this.blockchain.getTd(header.hash(), header.number) as unknown as BN
+      if (header) return await this.blockchain.getTd(header.hash(), header.number) as BN
     } catch (e) {
       debug(e)
     }
@@ -122,7 +122,7 @@ export class EthChain extends EE implements IBlockchain {
    */
   async getLatestHeader<T> (): Promise<T | undefined> {
     try {
-      return await this.blockchain.getLatestHeader() as unknown as T
+      return await this.blockchain.getLatestHeader() as T
     } catch (e) {
       debug(e)
     }
