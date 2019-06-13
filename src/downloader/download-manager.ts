@@ -5,7 +5,7 @@ import { EthChain } from '../blockchain/eth-chain'
 import { EventEmitter as EE } from 'events'
 import { PeerManager, Peer, EthProtocol } from '../net'
 import { IBlockchain } from '../blockchain'
-import { IDownloader } from './inderfaces'
+import { IDownloader, DownloaderType } from './inderfaces'
 import * as Downloaders from './downloaders'
 
 import Debug from 'debug'
@@ -20,19 +20,42 @@ export class DownloadManager extends EE {
   syncInterval: NodeJS.Timeout | undefined
   maxPeers: number = MAX_PEERS
   downloadInterval: number = DEFAUL_DOWNLOAD_INTERVAL
-  downloaders: IDownloader[] = []
+  downloaders: { [key: number]: IDownloader }
+  syncMode: string = 'fast'
 
   constructor (@register('peer-manager')
                public peerManager: PeerManager,
                @register(EthChain)
-               public chain: IBlockchain) {
+               public chain: IBlockchain,
+               @register('options')
+               options: any) {
     super()
-    this.downloaders = Object.keys(Downloaders).map((d) => Reflect.construct(Downloaders[d]))
+    this.downloaders = {}
+    Object.keys(Downloaders)
+    .forEach((d) => {
+      const downloader = Reflect.construct(Downloaders[d], [this.chain])
+      this.downloaders[downloader.type] = downloader
+    })
+
+    this.syncMode = options.syncMode
   }
 
   async download (peer: Peer): Promise<void> {
     if (!this.peers.has(peer.id) && this.peers.size <= this.maxPeers) {
-
+      this.peers.set(peer.id, peer)
+      try {
+        switch (this.syncMode) {
+          case 'fast': {
+            const protocol = peer.protocols.get('eth') as EthProtocol<any>
+            if (protocol) return this.downloaders[DownloaderType.FAST].download(protocol)
+            break
+          }
+        }
+      } catch (e) {
+        debug(e)
+      } finally {
+        this.peers.delete(peer.id)
+      }
     }
   }
 

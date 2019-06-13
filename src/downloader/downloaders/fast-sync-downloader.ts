@@ -39,7 +39,7 @@ export class FastSyncDownloader extends BaseDownloader {
 
           let bodies: any[] = []
           for await (const b of protocol.getBlockBodies(headers.map(h => h.hash()))) {
-            bodies = bodies.concat(b as any)
+            bodies = bodies.concat(b as any[])
           }
           return this.chain.putBlocks(bodies.map((body, i) => new Block([headers[i]].concat(body))))
         }

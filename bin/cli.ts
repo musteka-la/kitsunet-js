@@ -23,6 +23,14 @@ const cliConfig: any = {
     required: false,
     type: 'array'
   },
+  'sync-mode': {
+    alias: 's',
+    description: 'sync mode',
+    requiresArg: true,
+    required: false,
+    default: 'fast',
+    choices: ['fast', 'ksn']
+  },
   'eth-addrs': {
     alias: 'e',
     description: 'list of Ethereum addresses to track',
