@@ -8,10 +8,11 @@ import { PeerManager, Peer, EthProtocol } from '../net'
 import { IBlockchain } from '../blockchain'
 
 import Debug from 'debug'
+import BN from 'bn.js'
 const debug = Debug('kitsunet:downloader:download-manager')
 
 const MAX_PEERS: number = 25
-const MAX_HEADERS: number = 256
+const MAX_HEADERS: number = 128
 const DEFAUL_DOWNLOAD_INTERVAL: number = 1000 * 5
 
 @register('download-manager')
@@ -29,14 +30,14 @@ export class DownloadManager extends EE {
   }
 
   async latest (ethProto: EthProtocol<any>): Promise<Header | undefined> {
-    return new Promise(async (resolve) => {
+    return new Promise(async (resolve, reject) => {
       const status = await ethProto.getStatus()
-      for await (const header of ethProto.getBlockHeaders(status.bestHash, 1)) {
-        debug(`got header ${(header as unknown as Header).hash()}`)
-        return resolve(header as unknown as Header)
+      for await (const header of ethProto.getHeaders(status.bestHash, 1)) {
+        debug(`got header ${(header[0] as unknown as Header).hash().toString('hex')}`)
+        return resolve(header[0] as unknown as Header)
       }
       debug('no header resolved')
-      resolve()
+      reject('no header resolved')
     })
   }
 
@@ -46,7 +47,7 @@ export class DownloadManager extends EE {
       const ethProto: EthProtocol<any> | undefined = peer.protocols.get('eth') as EthProtocol<any>
       if (ethProto) {
         let blockNumber: number = 0
-        const block: Block | undefined = await this.chain.getLatestBlock()
+        const block: Block | undefined = await this.chain.getLatestHeader()
         if (block) {
           blockNumber = block.header.number
         }
@@ -54,10 +55,14 @@ export class DownloadManager extends EE {
         try {
           const remoteHeader: Header | undefined = await this.latest(ethProto)
           if (remoteHeader) {
-            while (blockNumber <= remoteHeader.number.toNumber()) {
-              for await (const header of ethProto.getBlockHeaders(remoteHeader.hash(), MAX_HEADERS)) {
-                await this.chain.putHeaders(header)
-                blockNumber++
+            const remoteNumber: number = Number(`0x${remoteHeader.number.toString('hex')}`)
+            blockNumber++
+            while (blockNumber <= remoteNumber) {
+              for await (const headers of ethProto.getHeaders(new BN(blockNumber), MAX_HEADERS)) {
+                debug(`got headers: `)
+                debug(headers.forEach(h => debug(h.number.toString('hex'))))
+                await this.chain.putHeaders(headers)
+                blockNumber += headers.length
               }
             }
           }
@@ -76,7 +81,11 @@ export class DownloadManager extends EE {
   async start (): Promise<void> {
     this.syncInterval = setInterval(
       () => {
-        const peer = this.peerManager.getRandomByCapability({ id: 'eth', versions: ['63'] })
+        const peer = this.peerManager.getRandomByCapability({
+          id: 'eth',
+          versions: ['63']
+        })
+
         if (peer) {
           return this.download(peer)
         }

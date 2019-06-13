@@ -30,6 +30,14 @@ const cliConfig: any = {
     required: false,
     type: 'array'
   },
+  'devp2p-port': {
+    alias: 'P',
+    description: 'devp2p port',
+    requiresArg: true,
+    required: false,
+    default: 30303,
+    type: 'number'
+  },
   // TODO: make this required if in bridge mode
   'rpc-url': {
     alias: 'r',

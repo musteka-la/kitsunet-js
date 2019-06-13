@@ -1,7 +1,7 @@
 'use strict'
 
 import { Downloader } from '../inderfaces'
-import Block from 'ethereumjs-block'
+import { Block } from 'ethereumjs-blockchain'
 import { EthProtocol, NetworkPeer } from '../../net'
 
 type Header = Block.Header

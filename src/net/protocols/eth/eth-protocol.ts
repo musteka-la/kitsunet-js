@@ -7,9 +7,9 @@ import { IEthProtocol, BlockBody, Status } from './interfaces'
 import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
 import { EthChain } from '../../../blockchain'
 import { EthHandler } from './eth-handler'
+import { RlpMsgEncoder } from './rlp-encoder'
 import { ETH } from 'ethereumjs-devp2p'
 import Debug from 'debug'
-import { RlpMsgEncoder } from './rlp-encoder'
 import BN from 'bn.js'
 
 const debug = Debug(`kitsunet:eth-proto`)
@@ -86,12 +86,12 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return super.send(msg, this)
   }
 
-  async *getBlockHeaders (block: number | Buffer | BN,
-                          max: number,
-                          skip?: number,
-                          reverse?: boolean): AsyncIterable<Block[]> {
+  async *getHeaders (block: number | Buffer | BN,
+                     max: number,
+                     skip?: number,
+                     reverse?: boolean): AsyncIterable<Block.Header[]> {
     await this.handlers[ETH.MESSAGE_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
-    yield new Promise<Block[]>((resolve) => {
+    yield new Promise<Block.Header[]>((resolve) => {
       this.handlers[ETH.MESSAGE_CODES.BLOCK_HEADERS].on('message', (headers) => {
         resolve(headers)
       })
@@ -110,7 +110,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return this.handlers[ETH.MESSAGE_CODES.STATUS].request({
       networkId: this.ethChain.common.networkId(),
       td: await this.ethChain.getBlocksTD(),
-      genesisHash: this.ethChain.common.genesis().hash,
+      genesisHash: this.ethChain.genesis().hash,
       bestHash: (await this.ethChain.getBestBlock() as any).hash(),
       protocolVersion: this.protocolVersion
     })

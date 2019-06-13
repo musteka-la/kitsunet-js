@@ -1,20 +1,20 @@
 'use strict'
 
-import { EventEmitter as EE } from 'events'
-import { IBlockchain } from './interfaces'
-import { promisify, PromisifyAll } from 'promisify-this'
-import { register } from 'opium-decorators'
-import { LevelUp } from 'levelup'
 import BN from 'bn.js'
-import Block from 'ethereumjs-block'
-import Blockchain from 'ethereumjs-blockchain'
-import level from 'level'
-import Common from 'ethereumjs-common'
 import Debug from 'debug'
+import { Block, Blockchain } from 'ethereumjs-blockchain'
+import Common from 'ethereumjs-common'
+import * as genesisStates from 'ethereumjs-common/dist/genesisStates'
+import { EventEmitter as EE } from 'events'
+import level from 'level'
+import { LevelUp } from 'levelup'
+import { register } from 'opium-decorators'
+import { promisify, PromisifyAll } from 'promisify-this'
+import { IBlockchain } from './interfaces'
 
 const debug = Debug(`kitsunet:blockchain:eth-chain`)
 
-type Header = typeof Block.Header
+type Header = Block.Header
 
 @register()
 export class EthChain extends EE implements IBlockchain {
@@ -35,9 +35,10 @@ export class EthChain extends EE implements IBlockchain {
   }
 
   @register('chain-db')
-  static getChainDb (@register('options')
-  options: any): LevelUp {
-    return level(options.ethChainDb) as LevelUp
+  static async getChainDb (@register('options') options: any): Promise<LevelUp> {
+    const db = level(options.ethChainDb) as LevelUp
+    await db.open()
+    return db
   }
 
   /**
@@ -65,7 +66,7 @@ export class EthChain extends EE implements IBlockchain {
     } catch (e) {
       debug(e)
     }
-    return new BN(0)
+    return new BN(this.common.genesis().difficulty)
   }
 
   /**
@@ -88,7 +89,8 @@ export class EthChain extends EE implements IBlockchain {
    */
   async getBlocksHeight (): Promise<BN> {
     try {
-      return new BN((await this.blockchain.getLatestBlock() as Block).header.number)
+      const block: Block = await this.blockchain.getLatestBlock() as Block
+      if (block) return new BN(block.header.number)
     } catch (e) {
       debug(e)
     }
@@ -101,7 +103,8 @@ export class EthChain extends EE implements IBlockchain {
    */
   async getHeadersHeight (): Promise<BN> {
     try {
-      return new BN((await this.blockchain.getLatestHeader() as any).number)
+      const header: Block.Header = await this.blockchain.getLatestHeader() as Block.Header
+      if (header) return new BN(header.number)
     } catch (e) {
       debug(e)
     }
@@ -194,13 +197,13 @@ export class EthChain extends EE implements IBlockchain {
    *
    * @param {Header} header
    */
-  async putHeaders<T = Header> (header: T[]): Promise<void> {
+  async putHeaders<T> (header: T[]): Promise<void> {
     await this.blockchain.putHeaders(header)
   }
 
   async getBestBlock<T> (): Promise<T> {
     // TODO: calculate best block
-    return new Block() as unknown as T
+    return new Block(genesisStates.genesisStateById(this.common.networkId())) as unknown as T
   }
 
   getNetworkId (): number {

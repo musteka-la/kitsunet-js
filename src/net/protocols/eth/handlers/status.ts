@@ -5,8 +5,7 @@ import { EthHandler } from '../eth-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { Status as StatusMsg } from '../interfaces'
-import { ETH } from 'ethereumjs-devp2p'
-import { buffer2int, int2buffer } from './utils'
+import { ETH, buffer2int, int2buffer } from 'ethereumjs-devp2p'
 
 export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
   constructor (networkProvider: EthProtocol<P>,
@@ -31,8 +30,8 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
       int2buffer(status.networkId),
       status.td.toArrayLike(Buffer),
       status.bestHash,
-      Buffer.from(status.genesisHash, 'hex'),
-      status.number ? status.number.toArrayLike(Buffer) : undefined
+      Buffer.from(status.genesisHash.substr(2), 'hex')
+      // status.number ? status.number.toArrayLike(Buffer) : undefined
     ])
   }
 }

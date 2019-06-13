@@ -39,22 +39,22 @@ export class RLPxNodeOptions implements RLPxOptions {
 
 export class DPTOptions {
   key: Buffer = randomBytes(32)
-  refreshInterval: number = 30000
+  refreshInterval: number = 30000 * 10
   timeout: number = 1000 * 10
   endpoint: PeerInfo = {
     address: '0.0.0.0',
-    udpPort: 30301,
+    udpPort: 30303,
     tcpPort: 30303
   }
 }
 
 export class DevP2PFactory {
   @register('devp2p-peer-info')
-  static createPeerInfo (): PeerInfo {
+  static createPeerInfo (@register('options') options: any): PeerInfo {
     return {
       address: '0.0.0.0',
-      udpPort: 30353,
-      tcpPort: 30353
+      udpPort: options.devp2PPort,
+      tcpPort: options.devp2PPort
     }
   }
 

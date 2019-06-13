@@ -36,6 +36,6 @@ export interface IEthProtocol {
   getStatus (): Promise<Status>
   setStatus (status: Status): Promise<void>
   sendNewHashes (hashes: string[] | Buffer[]): Promise<void>
-  getBlockHeaders (block: number, max: number, skip?: number, reverse?: boolean): AsyncIterable<Block[]>
+  getHeaders (block: number, max: number, skip?: number, reverse?: boolean): AsyncIterable<Block.Header[]>
   getBlockBodies (hashes: string[] | Buffer[]): AsyncIterable<BlockBody[]>
 }
