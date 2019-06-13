@@ -20,6 +20,7 @@ type Header = Block.Header
 export class EthChain extends EE implements IBlockchain {
   private blockchain: PromisifyAll<Blockchain>
   public common: Common
+  public db: LevelUp
 
   @register(Blockchain)
   static blockChain (@register('chain-db')
@@ -36,9 +37,7 @@ export class EthChain extends EE implements IBlockchain {
 
   @register('chain-db')
   static async getChainDb (@register('options') options: any): Promise<LevelUp> {
-    const db = level(options.ethChainDb) as LevelUp
-    await db.open()
-    return db
+    return level(options.ethChainDb) as LevelUp
   }
 
   /**
@@ -48,10 +47,14 @@ export class EthChain extends EE implements IBlockchain {
    * @param {Blockchain} Options.blockchain
    * @param {BaseSync} Options.sync
    */
-  constructor (blockchain: Blockchain, common: Common) {
+  constructor (blockchain: Blockchain,
+               common: Common,
+               @register('chain-db')
+               db: LevelUp) {
     super()
     this.blockchain = blockchain as unknown as PromisifyAll<Blockchain>
     this.common = common
+    this.db = db
   }
 
   /**
@@ -62,7 +65,7 @@ export class EthChain extends EE implements IBlockchain {
   async getBlocksTD (): Promise<BN> {
     try {
       const block: Block | undefined = await this.getLatestBlock()
-      if (block) return await this.blockchain.getTd(block.header.hash, block.header.number) as unknown as BN
+      if (block) return await this.blockchain.getTd(block.header.hash(), block.header.number) as unknown as BN
     } catch (e) {
       debug(e)
     }
@@ -76,8 +79,8 @@ export class EthChain extends EE implements IBlockchain {
    */
   async getHeadersTD (): Promise<BN> {
     try {
-      const header: any = await this.getLatestHeader()
-      return await this.blockchain.getTd(header.hash, header.number) as unknown as BN
+      const header: Block.Header | undefined = await this.getLatestHeader()
+      if (header) return await this.blockchain.getTd(header.hash(), header.number) as unknown as BN
     } catch (e) {
       debug(e)
     }
@@ -188,7 +191,7 @@ export class EthChain extends EE implements IBlockchain {
    *
    * @param {Block} block
    */
-  async putBlocks<T = Block> (block: T[]): Promise<void> {
+  async putBlocks<T> (block: T[]): Promise<void> {
     await this.blockchain.putBlocks(block)
   }
 
@@ -216,5 +219,17 @@ export class EthChain extends EE implements IBlockchain {
 
   async putCheckpoint (block: Block): Promise<void> {
     await this.blockchain.putCheckpoint(block)
+  }
+
+  async start (): Promise<void> {
+    if (this.db.isClosed()) {
+      return this.db.open()
+    }
+  }
+
+  async stop (): Promise<void> {
+    if (!this.db.isClosed()) {
+      return this.db.close()
+    }
   }
 }

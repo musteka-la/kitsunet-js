@@ -4,6 +4,7 @@ import Debug, { Debugger } from 'debug'
 import { Node } from '../../node'
 import { Devp2pPeer } from './devp2p-peer'
 import { register } from 'opium-decorators'
+import { parallel } from 'async'
 
 const debug = Debug('kitsunet:net:devp2p:node')
 
@@ -91,16 +92,16 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     const { udpPort, address } = this.peerInfo
     this.dpt.bind(udpPort, address)
     await this.init()
-    // this.common.bootstrapNodes().map(async (node: any) => {
-    //   const bootnode: PeerInfo = {
-    //     id: node.id,
-    //     address: node.ip,
-    //     udpPort: node.port,
-    //     tcpPort: node.port
-    //   }
-    //   await this.dpt.bootstrap(bootnode)
-    //   return
-    // })
+    this.common.bootstrapNodes().map(async (node: any) => {
+      const bootnode: PeerInfo = {
+        id: node.id,
+        address: node.ip,
+        udpPort: node.port,
+        tcpPort: node.port
+      }
+      await this.dpt.bootstrap(bootnode)
+      return
+    })
     this.started = true
   }
 
@@ -114,9 +115,18 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     if (!this.started) {
       return
     }
-    this.rlpx.destroy()
-    this.dpt.destroy()
-    this.started = false
+    return new Promise((resolve, reject) => {
+      parallel(
+        [
+          (cb) => this.rlpx.destroy(cb),
+          (cb) => this.dpt.destroy(cb)
+        ],
+        (err) => {
+          if (err) return reject(err)
+          this.started = false
+          resolve()
+        })
+    })
   }
 
   /**

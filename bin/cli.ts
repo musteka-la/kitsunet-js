@@ -145,6 +145,16 @@ class KistunetCli {
 
       const kitsunet = await KitsunetFactory.createKitsunet(options)
       await kitsunet.start()
+
+      const cleanup = async () => {
+        console.log(`shutting down client...`)
+        await kitsunet.stop()
+      }
+
+      // listen for graceful termination
+      process.on('SIGTERM', cleanup)
+      process.on('SIGINT', cleanup)
+      process.on('SIGHUP', cleanup)
     })
   }
 }

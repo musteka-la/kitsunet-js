@@ -34,12 +34,12 @@ export class RLPxNodeOptions implements RLPxOptions {
   port: number = 30303
   key: Buffer = randomBytes(32)
   bootnodes: string[] = []
-  maxPeers: number = 1
+  maxPeers: number = 25
 }
 
 export class DPTOptions {
   key: Buffer = randomBytes(32)
-  refreshInterval: number = 30000 * 10
+  refreshInterval: number = 30000
   timeout: number = 1000 * 10
   endpoint: PeerInfo = {
     address: '0.0.0.0',
