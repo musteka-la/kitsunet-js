@@ -216,10 +216,11 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     this.rlpx.on('peer:error', (rlpxPeer, error) => {
       this.disconect(rlpxPeer, error)
-      this.error(error, rlpxPeer)
+      // this.error(error, rlpxPeer)
     })
 
-    this.rlpx.on('error', e => this.error(e))
+    // this.rlpx.on('error', e => this.error(e))
+    this.rlpx.on('error', e => debug(e))
     this.rlpx.on('listening', () => {
       const enode = {
         transport: 'devp2p',
@@ -244,7 +245,11 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     const rlpxProto = this.getRlpxProto(protocol)
     if (rlpxProto) {
-      return rlpxProto._send(msg.shift(), msg.shift())
+      try {
+        return rlpxProto._send(msg.shift(), msg.shift())
+      } catch (e) {
+        debug(e)
+      }
     }
 
     throw new Error('no such protocol!')

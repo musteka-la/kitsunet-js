@@ -1,8 +1,8 @@
 'use strict'
 
 import { DownloaderType } from '../inderfaces'
-import { Block } from 'ethereumjs-blockchain'
-import { NetworkPeer, EthProtocol } from '../../net'
+import Block from 'ethereumjs-block'
+import { NetworkPeer, EthProtocol, BlockBody, IPeerDescriptor } from '../../net'
 import { EthChain } from '../../blockchain'
 
 import BN from 'bn.js'
@@ -13,35 +13,37 @@ const debug = Debug('kitsunet:downloaders:fast-sync')
 
 const MAX_PER_REQUEST: number = 128
 
-export class FastSyncDownloader extends BaseDownloader {
-  constructor (public chain: EthChain) {
-    super(DownloaderType.FAST, chain)
+export class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDownloader<T> {
+  constructor (public protocol: EthProtocol<T>,
+               public peer: IPeerDescriptor<T>,
+               public chain: EthChain) {
+    super(protocol, DownloaderType.FAST, chain)
   }
 
-  async download (protocol: EthProtocol<NetworkPeer<any, any>>): Promise<void> {
-    let blockNumber: number = 0
-    const block: Block.Header | undefined = await this.chain.getLatestHeader()
+  async download (): Promise<void> {
+    let blockNumber: BN = new BN(0)
+    const block: Block | undefined = await this.chain.getLatestBlock()
     if (block) {
-      blockNumber = block.number
+      blockNumber = new BN(block.header.number)
     }
 
     try {
-      const remoteHeader: Block | undefined = await this.latest(protocol)
+      const remoteHeader: Block | undefined = await this.latest()
       if (remoteHeader) {
-        const remoteNumber: number = Number(`0x${remoteHeader.header.number.toString('hex')}`)
-        blockNumber++
-        let headers: Block.Header[] = []
-        while (blockNumber <= remoteNumber) {
-          for await (const h of protocol.getHeaders(new BN(blockNumber), MAX_PER_REQUEST)) {
-            headers = headers.concat(h)
-            blockNumber += h.length
-          }
+        const remoteNumber: BN = new BN(remoteHeader.header.number)
+        blockNumber.addn(1)
+        debug(`latest block is ${blockNumber.toString(10)} remote block is ${remoteNumber.toString(10)}`)
+        while (blockNumber.lte(remoteNumber)) {
+          debug(`requesting ${MAX_PER_REQUEST} blocks from ${this.protocol.peer.id} starting ` +
+          `from ${blockNumber.toString(10)}`)
 
-          let bodies: any[] = []
-          for await (const b of protocol.getBlockBodies(headers.map(h => h.hash()))) {
-            bodies = bodies.concat(b as any[])
-          }
-          return this.chain.putBlocks(bodies.map((body, i) => new Block([headers[i]].concat(body))))
+          let headers: Block.Header[] = await this.getHeaders(blockNumber, MAX_PER_REQUEST)
+          let bodies: BlockBody[] = await this.getBodies(headers.map(h => h.hash()))
+          await this.chain.putBlocks(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
+          blockNumber.addn(headers.length)
+
+          debug(`imported ${bodies.length} blocks - from ${(new BN(headers[0].number)).toString(10)} ` +
+          `to ${(new BN(headers[headers.length - 1].number)).toString('hex')}`)
         }
       }
     } catch (err) {
