@@ -172,7 +172,7 @@ export class EthChain extends EE implements IBlockchain {
    * @param {Number} max - how many blocks to return
    * @returns {Array<Header>} - an array of blocks
    */
-  async getHeaders<T> (blockId: Buffer | number,
+  async getHeaders<T> (blockId: Buffer | BN | number,
                        maxBlocks: number = 25,
                        skip: number = 0,
                        reverse: boolean = false): Promise<T[] | undefined> {

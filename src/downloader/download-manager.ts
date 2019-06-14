@@ -9,6 +9,7 @@ import { IDownloader, DownloaderType } from './inderfaces'
 import * as Downloaders from './downloaders'
 
 import Debug from 'debug'
+import { FastSyncDownloader } from './downloaders'
 const debug = Debug('kitsunet:downloader:download-manager')
 
 const MAX_PEERS: number = 25
@@ -20,23 +21,14 @@ export class DownloadManager extends EE {
   syncInterval: NodeJS.Timeout | undefined
   maxPeers: number = MAX_PEERS
   downloadInterval: number = DEFAUL_DOWNLOAD_INTERVAL
-  downloaders: { [key: number]: IDownloader }
   syncMode: string = 'fast'
 
   constructor (@register('peer-manager')
                public peerManager: PeerManager,
-               @register(EthChain)
-               public chain: IBlockchain,
+               public chain: EthChain,
                @register('options')
                options: any) {
     super()
-    this.downloaders = {}
-    Object.keys(Downloaders)
-    .forEach((d) => {
-      const downloader = Reflect.construct(Downloaders[d], [this.chain])
-      this.downloaders[downloader.type] = downloader
-    })
-
     this.syncMode = options.syncMode
   }
 
@@ -47,7 +39,10 @@ export class DownloadManager extends EE {
         switch (this.syncMode) {
           case 'fast': {
             const protocol = peer.protocols.get('eth') as EthProtocol<any>
-            if (protocol) return this.downloaders[DownloaderType.FAST].download(protocol)
+            if (protocol) {
+              const downloader = new FastSyncDownloader(protocol, peer, this.chain)
+              await downloader.download()
+            }
             break
           }
         }

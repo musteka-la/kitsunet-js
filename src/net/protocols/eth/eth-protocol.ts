@@ -102,7 +102,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
 
   async *getBlockBodies (hashes: Buffer[] | string[]): AsyncIterable<BlockBody[]> {
     yield new Promise<BlockBody[]>(async (resolve) => {
-      this.handlers[MSG_CODES.BLOCK_BODIES].on('message', (headers) => resolve(headers))
+      this.handlers[MSG_CODES.BLOCK_BODIES].on('message', (bodies) => resolve(bodies))
       const bufHashes = (hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))
       await this.handlers[MSG_CODES.GET_BLOCK_BODIES].request(bufHashes)
     })
