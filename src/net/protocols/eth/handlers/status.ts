@@ -12,7 +12,7 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
     super('Status', ETH.MESSAGE_CODES.STATUS, protocol, peer)
   }
 
-  async handle<U extends [any, ...any[]]> (...msg: U & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
+  async handle<U extends any[]> (...msg: U & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
     const [protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
     return this.protocol.setStatus({
       protocolVersion: buffer2int(protocolVersion),
@@ -24,7 +24,7 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
     })
   }
 
-  async request<U extends [any, ...any[]]> (...msg: U & [number, number, BN, Buffer, string]): Promise<any> {
+  async request<U extends any[]> (...msg: U & [number, number, BN, Buffer, string]): Promise<any> {
     const [protocolVersion, networkId, td, bestHash, genesisHash] = msg
     return this.send([
       int2buffer(protocolVersion),

@@ -12,7 +12,7 @@ export class GetBlockBodies<P extends IPeerDescriptor<any>> extends EthHandler<P
     super('GetBlockBodies', ETH.MESSAGE_CODES.GET_BLOCK_BODIES, protocol, peer)
   }
 
-  async handle<U extends [any, ...any[]]> (...msg: U): Promise<any> {
+  async handle<U extends any[]> (...msg: U & [Buffer][]): Promise<any> {
     return this.protocol.handlers[ETH.MESSAGE_CODES.BLOCK_BODIES].request(...msg)
   }
 
@@ -31,7 +31,7 @@ export class BlockBodies <P extends IPeerDescriptor<any>> extends EthHandler<P> 
     this.emit('message', msg)
   }
 
-  async request<U extends any[]> (...msg: U): Promise<any> {
+  async request<U extends any[]> (...msg: U & [Buffer][]): Promise<any> {
     let blocks: Block[] | undefined = (await Promise
       .all(msg.map(async (hash) => {
         const b = await this

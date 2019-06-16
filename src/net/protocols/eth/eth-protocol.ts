@@ -96,7 +96,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
                      reverse?: boolean): AsyncIterable<Block.Header[]> {
     yield new Promise<Block.Header[]>(async (resolve) => {
       this.handlers[MSG_CODES.BLOCK_HEADERS].on('message', (headers) => resolve(headers))
-      await this.handlers[MSG_CODES.GET_BLOCK_HEADERS].request([block, max, skip, reverse])
+      await this.handlers[MSG_CODES.GET_BLOCK_HEADERS].request(block, max, skip, reverse)
     })
   }
 
@@ -114,12 +114,12 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   async handshake (): Promise<void> {
-    return this.handlers[MSG_CODES.STATUS].request([
+    return this.handlers[MSG_CODES.STATUS].request(
+      this.protocolVersion,
       this.ethChain.common.networkId(),
       await this.ethChain.getBlocksTD(),
-      this.ethChain.genesis().hash,
       (await this.ethChain.getBestBlock() as any).hash(),
-      this.protocolVersion
-    ])
+      this.ethChain.genesis().hash
+    )
   }
 }
