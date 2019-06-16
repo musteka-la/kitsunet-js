@@ -133,8 +133,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
       throw new Error('both peer and protocol are required!')
     }
 
-    const conn = await this.node.dialProtocol(peer.peer,
-                                              this.mkCodec(protocol.id, protocol.versions))
+    const conn = await this.node.dialProtocol(peer.peer, this.mkCodec(protocol.id, protocol.versions))
     return new Promise((resolve, reject) => {
       pull(
         pull.values([msg]),

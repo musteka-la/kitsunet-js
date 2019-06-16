@@ -22,22 +22,18 @@ export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE
    *
    * @param msg - the message to be sent
    */
-  abstract handle<T, U> (msg?: T): Promise<U>
-  abstract handle<T, U> (msg?: T): Promise<U[]>
-  abstract handle<T, U> (msg?: T): Promise<U | U[]>
+  abstract handle<U extends any[]> (...msg: U): Promise<any>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
-  abstract async request<T, U> (msg?: T): Promise<U>
-  abstract async request<T, U> (msg?: T): Promise<U[]>
-  abstract async request<T, U> (msg?: T): Promise<U | U[]>
+  abstract async request<U extends any[]> (...msg: U): Promise<any>
 
-  protected async send<T> (msg: T): Promise<KsnResponse> {
+  protected async send<U extends any[]> (...msg: U): Promise<KsnResponse> {
     this.log('sending request', msg)
-    const res: KsnResponse = await this.protocol.send(msg)
+    const res: KsnResponse = await this.protocol.send(msg) as KsnResponse
     if (res && res.status !== ResponseStatus.OK) {
       console.dir(res)
       const err = res.error ? new Error(res.error) : new Error('unknown error!')

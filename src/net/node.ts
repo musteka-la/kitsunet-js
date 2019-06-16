@@ -53,9 +53,7 @@ export abstract class Node<P> extends EE implements INetwork<P> {
    * @param msg - the message to send
    * @param protocol - a protocol object to pass to the network provider
    */
-  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U>
-  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U[]>
-  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<void>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | U[] | void> {
     throw new Error('Method not implemented')
   }
@@ -65,20 +63,19 @@ export abstract class Node<P> extends EE implements INetwork<P> {
    *
    * @param readable - an AsyncIterable to read from
    */
-  receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U >
-  receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U[] >
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U | U[] > {
     throw new Error('Method not implemented')
   }
 
   // mount a protocol
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   mount (protocol: IProtocol<P>): void {
-    return
   }
 
   // unmount a protocol
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   unmount (protocol: IProtocol<P>): void {
-    return
   }
 
   protected registerProtos (protocolRegistry: IProtocolDescriptor<P>[],

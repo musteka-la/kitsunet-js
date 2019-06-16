@@ -2,27 +2,26 @@
 
 import { Block } from 'ethereumjs-blockchain'
 import { KsnNodeType } from '../../../constants'
-import { Slice } from '../../../slice'
 
 export { KsnNodeType as NodeType }
 export type BlockHeader = Block.Header
 
 // tslint:disable: no-multi-spaces
 export enum MsgType {
-  UNKNOWN_MSG   = 0,
-  IDENTIFY      = 1,
-  SLICES        = 2,
-  SLICE_ID      = 3,
-  HEADERS       = 4,
-  LATEST_BLOCK  = 5,
-  NODE_TYPE     = 6,
-  PING          = 7
+  UNKNOWN_MSG = 0,
+  IDENTIFY = 1,
+  SLICES = 2,
+  SLICE_ID = 3,
+  HEADERS = 4,
+  LATEST_BLOCK = 5,
+  NODE_TYPE = 6,
+  PING = 7
 }
 
 export enum ResponseStatus {
   UNKNOWN_ERROR = 0,
-  OK            = 1,
-  ERROR         = 2
+  OK = 1,
+  ERROR = 2
 }
 // tslint:enable: no-multi-spaces
 

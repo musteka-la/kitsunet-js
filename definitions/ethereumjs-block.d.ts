@@ -40,6 +40,16 @@ declare namespace Block {
     number: any
     difficulty: any
     parentHash: any
+    bloom: any
+    coinbase: any
+    extraData: any
+    gasLimit: any
+    gasUsed: any
+    mixHash: any
+    nonce: any
+    receiptTrie: any
+    stateRoot: any
+    timestamp: any
 
     constructor(data?: any, opts?: any)
 

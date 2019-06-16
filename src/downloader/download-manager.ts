@@ -4,12 +4,9 @@ import { register } from 'opium-decorators'
 import { EthChain } from '../blockchain/eth-chain'
 import { EventEmitter as EE } from 'events'
 import { PeerManager, Peer, EthProtocol } from '../net'
-import { IBlockchain } from '../blockchain'
-import { IDownloader, DownloaderType } from './inderfaces'
-import * as Downloaders from './downloaders'
+import { FastSyncDownloader } from './downloaders'
 
 import Debug from 'debug'
-import { FastSyncDownloader } from './downloaders'
 const debug = Debug('kitsunet:downloader:download-manager')
 
 const MAX_PEERS: number = 25
@@ -37,14 +34,14 @@ export class DownloadManager extends EE {
       this.peers.set(peer.id, peer)
       try {
         switch (this.syncMode) {
-          case 'fast': {
-            const protocol = peer.protocols.get('eth') as EthProtocol<any>
-            if (protocol) {
-              const downloader = new FastSyncDownloader(protocol, peer, this.chain)
-              await downloader.download()
+            case 'fast': {
+              const protocol = peer.protocols.get('eth') as EthProtocol<any>
+              if (protocol) {
+                const downloader = new FastSyncDownloader(protocol, peer, this.chain)
+                await downloader.download()
+              }
+              break
             }
-            break
-          }
         }
       } catch (e) {
         debug(e)

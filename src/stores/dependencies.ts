@@ -14,8 +14,7 @@ export class StoresFactory {
   }
 
   @register()
-  createSliceStore (@register('data-store')
-                    dataStore: Datastore): SliceStore {
+  createSliceStore (@register('data-store') dataStore: Datastore): SliceStore {
     return new SliceStore(dataStore)
   }
 }

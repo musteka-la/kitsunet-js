@@ -4,7 +4,6 @@ import BN from 'bn.js'
 import { EthHandler } from '../eth-handler'
 import { EthProtocol } from '../eth-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
-import { Status as StatusMsg } from '../interfaces'
 import { ETH, buffer2int, int2buffer } from 'ethereumjs-devp2p'
 
 export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
@@ -13,25 +12,26 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
     super('Status', ETH.MESSAGE_CODES.STATUS, protocol, peer)
   }
 
-  async handle<T> (status: T[] & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
+  async handle<U extends [any, ...any[]]> (...msg: U & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
+    const [protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
     return this.protocol.setStatus({
-      protocolVersion: buffer2int(status[0]),
-      networkId: buffer2int(status[1]),
-      td: new BN(status[2]),
-      bestHash: status[3],
-      genesisHash: status[4].toString('hex'),
-      number: new BN(status[5])
+      protocolVersion: buffer2int(protocolVersion),
+      networkId: buffer2int(networkId),
+      td: new BN(td),
+      bestHash: bestHash,
+      genesisHash: genesisHash.toString('hex'),
+      number: new BN(_number)
     })
   }
 
-  async request<T> (status: T & StatusMsg): Promise<any> {
+  async request<U extends [any, ...any[]]> (...msg: U & [number, number, BN, Buffer, string]): Promise<any> {
+    const [protocolVersion, networkId, td, bestHash, genesisHash] = msg
     return this.send([
-      int2buffer(status.protocolVersion),
-      int2buffer(status.networkId),
-      status.td.toArrayLike(Buffer),
-      status.bestHash,
-      Buffer.from(status.genesisHash.substr(2), 'hex')
-      // status.number ? status.number.toArrayLike(Buffer) : undefined
+      int2buffer(protocolVersion),
+      int2buffer(networkId),
+      td.toArrayLike(Buffer),
+      bestHash,
+      Buffer.from(genesisHash.substr(2), 'hex')
     ])
   }
 }

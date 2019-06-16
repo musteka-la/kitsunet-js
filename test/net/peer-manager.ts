@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 'use strict'
 
 import 'mocha'
@@ -5,11 +7,11 @@ import { expect } from 'chai'
 
 import { EventEmitter } from 'events'
 import {
-  NodeManager,
   PeerManager,
   NetworkPeer,
-  Peer,
-  INetwork
+  INetwork,
+  NodeManager,
+  Peer
 } from '../../src/net'
 import { BaseProtocol } from '../../src/net/base-protocol'
 

@@ -20,25 +20,16 @@ export abstract class EthHandler<P extends IPeerDescriptor<any>> extends EE impl
    *
    * @param msg - the message to be sent
    */
-  abstract async handle<T> (msg: T[]): Promise<void>
-  abstract async handle<T, U = T> (msg: T): Promise<U>
-  abstract async handle<T, U = T> (msg: T[]): Promise<U[]>
-  abstract async handle<T, U = T> (msg: T | T[]): Promise<U[] | U | void>
+  abstract async handle<U extends [any, ...any[]]> (...msg: U): Promise<any>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
-  abstract async request<T, U = T> (msg: T | T[]): Promise<U>
-  abstract async request<T, U = T> (msg: T | T[]): Promise<U[]>
-  abstract async request<T> (msg: T | T[]): Promise<void>
-  abstract async request<T, U = T> (msg: T | T[]): Promise<U | U[] | void>
+  abstract async request<U extends [any, ...any[]]> (...msg: U): Promise<any>
 
-  protected async send<T> (msg: any[]): Promise<T>
-  protected async send<T> (msg: any[]): Promise<T[]>
-  protected async send<T> (msg: any[]): Promise<void>
-  protected async send<T> (msg: any[]): Promise<T | T[] | void> {
+  protected async send<U extends any[]> (...msg: U): Promise<any> {
     msg.unshift(this.id)
     return this.protocol.send(msg)
   }

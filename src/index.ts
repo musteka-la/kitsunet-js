@@ -47,10 +47,9 @@ export class KitsunetFactory {
   }
 
   @register()
-  static async kitsunetFactory<T extends NetworkPeer<any, any>> (@register('default-slices')
-                                                                 slices: Slice[],
-                                                                 kitsunet: Kitsunet<T>): Promise<Kitsunet<T>> {
-
+  static async kitsunetFactory<T extends NetworkPeer<any, any>> (kitsunet: Kitsunet<T>,
+                                                                 @register('default-slices')
+                                                                 slices: Slice[]): Promise<Kitsunet<T>> {
     kitsunet.on('kitsunet:start', () => {
       debug('kitsunet started')
       return kitsunet.sliceManager.track(new Set(slices))

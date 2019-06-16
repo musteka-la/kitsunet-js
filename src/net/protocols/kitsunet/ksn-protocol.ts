@@ -15,8 +15,6 @@ import {
   Identify,
   NodeType} from './interfaces'
 import { SliceId } from '../../../slice'
-import { PeerTypes } from '../../helper-types'
-import { Libp2pPeer, Devp2pPeer } from '../../stacks'
 
 const debug = Debug('kitsunet:kitsunet-proto')
 
@@ -48,10 +46,10 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     })
   }
 
-  async *receive<Buffer, U> (readable: AsyncIterable<Buffer>): AsyncIterable<U> {
-    for await (const msg of super.receive<Buffer, Message>(readable)) {
+  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+    for await (const msg of super.receive<T, Message>(readable) as AsyncIterable<Message>) {
       if (msg.type !== MsgType.UNKNOWN_MSG) {
-        const res = await this.handlers[MsgType[msg.type]].handle<Message, U>(msg)
+        const res = await this.handlers[MsgType[msg.type]].handle(msg)
         for await (const encoded of this.encoder!.encode(res)) {
           yield encoded
         }
@@ -59,7 +57,7 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     }
   }
 
-  async send<Message, Buffer> (msg: Message): Promise < Buffer > {
+  async send<T, U> (msg: T): Promise <U | U[] | void> {
     return super.send(msg, this)
   }
 

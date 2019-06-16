@@ -52,8 +52,8 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   constructor (peer: P,
                networkProvider: INetwork<P>,
                public ethChain: EthChain,
-               encoder: IEncoder) {
-    super(peer, networkProvider, new RlpMsgEncoder())
+               encoder: IEncoder = new RlpMsgEncoder()) {
+    super(peer, networkProvider, encoder)
     this.protocolVersion = Math.max.apply(Math, this.versions.map(v => Number(v)))
 
     this.handlers = {}
@@ -74,19 +74,19 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     ]
   }
 
-  async *receive<Buffer, U> (readable: AsyncIterable<Buffer[]>): AsyncIterable<U | U[]> {
-    for await (const msg of super.receive<Buffer[], U[]>(readable)) {
-      const code: ETH.MESSAGE_CODES = msg.shift() as unknown as ETH.MESSAGE_CODES
+  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+    for await (const msg of super.receive<T, any[]>(readable)) {
+      const code: ETH.MESSAGE_CODES = msg.shift() as ETH.MESSAGE_CODES
       if (!this.handlers[code]) {
         debug(`unsuported method - ${MSG_CODES[code]}`)
         return
       }
 
-      yield this.handlers[code].handle(msg) as unknown as (U | U[])
+      yield this.handlers[code].handle(...msg)
     }
   }
 
-  async send<Message, Buffer> (msg: Message): Promise<Buffer | Buffer[] | void> {
+  async send<T, U> (msg: T): Promise<U | U[] | void> {
     return super.send(msg, this)
   }
 
@@ -108,17 +108,18 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   sendNewHashes (hashes: string[] | Buffer[]): Promise<void> {
     throw new Error('Method not implemented.')
   }
 
   async handshake (): Promise<void> {
-    return this.handlers[MSG_CODES.STATUS].request({
-      networkId: this.ethChain.common.networkId(),
-      td: await this.ethChain.getBlocksTD(),
-      genesisHash: this.ethChain.genesis().hash,
-      bestHash: (await this.ethChain.getBestBlock() as any).hash(),
-      protocolVersion: this.protocolVersion
-    })
+    return this.handlers[MSG_CODES.STATUS].request([
+      this.ethChain.common.networkId(),
+      await this.ethChain.getBlocksTD(),
+      this.ethChain.genesis().hash,
+      (await this.ethChain.getBestBlock() as any).hash(),
+      this.protocolVersion
+    ])
   }
 }

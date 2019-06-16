@@ -1,7 +1,6 @@
 'use strict'
 import BN from 'bn.js'
 import Block from 'ethereumjs-block'
-import { start } from 'repl'
 
 export interface IBlockchain {
   /**
