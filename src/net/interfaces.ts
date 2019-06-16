@@ -84,12 +84,12 @@ export interface IHandler<P> {
    *
    * @param msg - the message to be sent
    */
-  handle<U extends [any, ...any[]]> (...msg: U): Promise<any>
+  handle<U extends any[]> (...msg: U): Promise<any>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
-  request<U extends [any, ...any[]]> (...msg: U): Promise<any>
+  request<U extends any[]> (...msg: U): Promise<any>
 }

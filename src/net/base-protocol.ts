@@ -58,9 +58,7 @@ export abstract class BaseProtocol<P extends IPeerDescriptor<PeerTypes>> extends
     for await (const chunk of this.encoder.encode(msg)) {
       // protocol might choose to reply
       // we might return something from send
-      const res = await this
-        .networkProvider
-        .send(chunk, protocol, this.peer)
+      const res = await this.networkProvider.send(chunk, protocol, this.peer)
 
       if (res && (res as any).length > 0) {
         for await (const recvd of this.encoder.decode(res)) {

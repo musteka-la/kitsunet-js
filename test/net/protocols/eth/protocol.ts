@@ -57,14 +57,17 @@ describe('Eth protocol', () => {
 
   describe('handlers - handle', () => {
     let ethProtocol: EthProtocol<any>
+    let provider: any = new EE()
+    provider.send = () => []
+
+    const chain: any = {
+      getBlocksTD: () => Buffer.from([0]),
+      getBestBlock: () => block,
+      common: new Common('mainnet')
+    }
+
     beforeEach(() => {
-      ethProtocol = new EthProtocol({} as IPeerDescriptor<any>,
-                                    new EE() as unknown as INetwork<any>, {
-                                      getBlocksTD: () => Buffer.from([0]),
-                                      getBestBlock: () => block,
-                                      common: new Common('mainnet')
-                                    } as any,
-                                    passthroughEncoder)
+      ethProtocol = new EthProtocol({} as IPeerDescriptor<any>, provider, chain, passthroughEncoder)
     })
 
     it('should handle Status request', async () => {
@@ -139,7 +142,6 @@ describe('Eth protocol', () => {
         ])
       } as any
 
-      // tslint:disable-next-line: no-empty
       // eslint-disable-next-line no-unused-vars
       for await (const _ of ethProtocol.receive(source)) {
       }
@@ -237,7 +239,7 @@ describe('Eth protocol', () => {
       }
 
       const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await getBlockHeaders.request(new BN(block.header.number), 20, 0, 0)
+      await getBlockHeaders.request(new BN(block.header.number), 20, 0, false)
     })
 
     it('should send GetBlockHeaders request using block hash', async () => {
@@ -252,7 +254,7 @@ describe('Eth protocol', () => {
       }
 
       const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await getBlockHeaders.request(block.header.hash(), 20, 0, 0)
+      await getBlockHeaders.request(block.header.hash(), 20, 0, false)
     })
 
     it('should send BlockHeaders', async () => {

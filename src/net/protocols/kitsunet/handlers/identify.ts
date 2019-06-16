@@ -3,7 +3,6 @@
 import { KsnProtocol } from '../ksn-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { KitsunetHandler } from '../kitsunet-handler'
-import Block from 'ethereumjs-block'
 
 import { MsgType, ResponseStatus } from '../interfaces'
 import { BN } from 'ethereumjs-util'

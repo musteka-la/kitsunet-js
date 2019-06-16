@@ -7,7 +7,7 @@
     "build": "npm run clean && tsc --pretty -p tsconfig-prod.json",
     "watch": "npm run clean && tsc --watch --pretty",
     "clean": "rm -rf dist/",
-    "test": "npm run build && mocha -r source-map-support/register dist/test/**/**/*.js",
+    "test": "mocha --recursive --extension ts -r node_modules/ts-node/register ./test",
     "lint": "eslint src/*.ts",
     "lint:fix": "eslint src/*.ts --fix"
   },
@@ -120,6 +120,7 @@
     "ts-mocha": "^6.0.0",
     "tslint-jsdoc-rules": "^0.2.0",
     "typescript": "^3.4.5",
+    "why-is-node-running": "^2.1.0",
     "yargs": "^13.2.4"
   }
 }
