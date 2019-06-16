@@ -6,8 +6,6 @@ import { Devp2pPeer } from './devp2p-peer'
 import { register } from 'opium-decorators'
 import { parallel } from 'async'
 
-const debug = Debug('kitsunet:net:devp2p:node')
-
 import {
   Peer,
   DPT,
@@ -26,6 +24,8 @@ import {
 
 import { EthChain, IBlockchain } from '../../../blockchain'
 import Common from 'ethereumjs-common'
+
+const debug = Debug('kitsunet:net:devp2p:node')
 
 const ignoredErrors = new RegExp([
   'EPIPE',
@@ -91,6 +91,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
 
     const { udpPort, address } = this.peerInfo
     this.dpt.bind(udpPort, address)
+    this.dpt.on('error', (e) => debug(e))
     await this.init()
     this.common.bootstrapNodes().map(async (node: any) => {
       const bootnode: PeerInfo = {
@@ -100,7 +101,6 @@ export class Devp2pNode extends Node<Devp2pPeer> {
         tcpPort: node.port
       }
       await this.dpt.bootstrap(bootnode)
-      return
     })
     this.started = true
   }
@@ -236,22 +236,25 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
   }
 
-  send<T, U = T> (msg: T[],
+  send<T, U = T> (msg: T | T[],
                   protocol?: IProtocol<Devp2pPeer>,
-                  peer?: Devp2pPeer): Promise<void | U | U[]> {
+                  peer?: Devp2pPeer): Promise<U | U[]> {
     if (!peer || !protocol) {
       throw new Error('both peer and protocol are required!')
     }
 
     const rlpxProto = this.getRlpxProto(protocol)
-    if (rlpxProto) {
-      try {
-        return rlpxProto._send(msg.shift(), msg.shift())
-      } catch (e) {
-        debug(e)
-      }
+    if (!rlpxProto) {
+      throw new Error('no such protocol!')
     }
 
-    throw new Error('no such protocol!')
+    let res: any
+    try {
+      res = rlpxProto._send((msg as T[]).shift(), (msg as T[]).shift())
+    } catch (e) {
+      debug(e)
+    }
+
+    return res
   }
 }

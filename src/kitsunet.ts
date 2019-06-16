@@ -47,7 +47,6 @@ export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
     return this.ksnDriver.clientPeers.reduce((addrs: any, addr) => {
       addrs.push(addr)
       return addr
-// tslint:disable-next-line: align
     }, [])
   }
 

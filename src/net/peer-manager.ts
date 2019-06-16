@@ -52,6 +52,6 @@ export class PeerManager extends EE {
   }
 
   releasePeers (peers: Peer[]) {
-    peers.forEach(p => p.used = false)
+    peers.forEach(p => { p.used = false })
   }
 }

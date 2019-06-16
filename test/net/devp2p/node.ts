@@ -1,21 +1,23 @@
+/* eslint-env mocha */
+
 'use strict'
 
 import 'mocha'
 import { expect } from 'chai'
 
 import {
-  IProtocolDescriptor,
   EthProtocol,
   Devp2pNode,
+  IProtocolDescriptor,
   Devp2pPeer
 } from '../../../src/net'
 
 import {
   DPT,
   RLPx,
-  PeerInfo,
   genPrivateKey,
-  ETH
+  ETH,
+  PeerInfo
 } from 'ethereumjs-devp2p'
 import Common from 'ethereumjs-common'
 

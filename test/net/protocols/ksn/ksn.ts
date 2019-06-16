@@ -1,13 +1,13 @@
+/* eslint-env mocha */
+
 'use strict'
 
 import 'mocha'
 import { expect } from 'chai'
 import Block from 'ethereumjs-block'
-import fromRpc = require('ethereumjs-block/from-rpc')
 
 import { EthChain } from '../../../../src/blockchain'
 import proto from '../../../../src/net/protocols/kitsunet/proto'
-const { Kitsunet } = proto
 
 import {
   IPeerDescriptor,
@@ -25,6 +25,8 @@ import { Identify as IdentifyHandler } from '../../../../src/net/protocols/kitsu
 
 import * as jsonBlock from '../../../fixtures/block.json'
 import BN from 'bn.js'
+import fromRpc = require('ethereumjs-block/from-rpc')
+const { Kitsunet } = proto
 const block: Block = new Block(fromRpc(jsonBlock.block))
 
 describe('Ksn protocol', () => {
@@ -102,7 +104,7 @@ describe('Ksn protocol', () => {
     let receiveHandler: (msg: any) => AsyncIterable<any> | undefined
 
     const networkProvider: INetwork<any> = {
-      send: async function <T, U>(msg: T, protocol?: IProtocol<any>, peer?: any): Promise<any> {
+      send: async function <T, U> (msg: T, protocol?: IProtocol<any>, peer?: any): Promise<any> {
         return sendHandler ? sendHandler(msg) : msg
       },
       receive: async function* <T, U>(readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
@@ -113,7 +115,7 @@ describe('Ksn protocol', () => {
     let ksnProtocol
     beforeEach(() => {
       ksnProtocol = new KsnProtocol({} as Libp2pPeer,
-                                    networkProvider,
+        networkProvider,
                                     { getLatestBlock: async () => block } as any)
     })
 

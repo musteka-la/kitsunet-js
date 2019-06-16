@@ -34,7 +34,7 @@ export class RLPxNodeOptions implements RLPxOptions {
   port: number = 30303
   key: Buffer = randomBytes(32)
   bootnodes: string[] = []
-  maxPeers: number = 25
+  maxPeers: number = 250
 }
 
 export class DPTOptions {

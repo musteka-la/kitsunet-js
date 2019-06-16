@@ -23,15 +23,14 @@ export class EthChain extends EE implements IBlockchain {
   public db: LevelUp
 
   @register(Blockchain)
-  static blockChain (@register('chain-db')
-                     db: LevelUp,
-                     common: Common): PromisifyAll<Blockchain> {
-    return promisify<Blockchain>(new Blockchain({ db, common, validate: false }))
+  static blockChain (common: Common,
+                     @register('chain-db')
+                     db: LevelUp): PromisifyAll<Blockchain> {
+    return promisify<Blockchain>(new Blockchain({ db, validate: false, common }))
   }
 
   @register(Common)
-  static common (@register('options')
-                 options: any): Common {
+  static common (@register('options') options: any): Common {
     return new Common(options.ethNetwork)
   }
 
@@ -126,8 +125,6 @@ export class EthChain extends EE implements IBlockchain {
     } catch (e) {
       debug(e)
     }
-
-    return
   }
 
   /**
@@ -141,8 +138,6 @@ export class EthChain extends EE implements IBlockchain {
     } catch (e) {
       debug(e)
     }
-
-    return
   }
 
   /**
@@ -161,8 +156,6 @@ export class EthChain extends EE implements IBlockchain {
     } catch (e) {
       debug(e)
     }
-
-    return
   }
 
   /**
@@ -182,8 +175,6 @@ export class EthChain extends EE implements IBlockchain {
     } catch (e) {
       debug(e)
     }
-
-    return
   }
 
   /**

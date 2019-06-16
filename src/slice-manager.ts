@@ -21,7 +21,6 @@ const debug = Debug('kitsches:kitsunet-slice-manager')
 
 @register()
 export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
-
   blockTracker: BlockTracker
   bridgeTracker: KitsunetBridge
   pubsubTracker: KitsunetPubSub
@@ -29,9 +28,9 @@ export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
   ksnDriver: KsnDriver<T>
   isBridge: boolean
 
-  constructor (@register('options') options,
+  constructor (pubsubTracker: KitsunetPubSub,
+               @register('options') options,
                bridgeTracker: KitsunetBridge,
-               pubsubTracker: KitsunetPubSub,
                slicesStore: SliceStore,
                blockTracker: BlockTracker,
                ksnDriver: KsnDriver<T>) {
@@ -134,19 +133,20 @@ export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
    * @param {SliceId} sliceId - the slice to return
    * @return {Slice}
    */
-  async getSlice (sliceId: SliceId) {
+  async getSlice (sliceId: SliceId): Promise<Slice> {
+    let slice
     try {
-      const slice = await this.slicesStore.getById(sliceId)
-      return slice // won't catch if just returned
+      slice = await this.slicesStore.getById(sliceId)
+      if (slice) return slice
     } catch (e) {
       debug(e)
       if (this.isBridge) {
         await this.track(new Set([sliceId]))
         return this.bridgeTracker.getSlice(sliceId)
       }
-
-      return (await this._resolveSlice(sliceId))[0]
     }
+
+    return this._resolveSlice(sliceId)
   }
 
   /**
@@ -177,7 +177,7 @@ export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
     }
   }
 
-  async _resolveSlice (slice: SliceId) {
+  async _resolveSlice (slice: SliceId): Promise<Slice> {
     // track the slice if not tracking already
     if (!await this.isTracking(slice)) {
       // track slice, we might already be subscribed to it

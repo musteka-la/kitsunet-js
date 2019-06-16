@@ -28,7 +28,6 @@ export class SliceStore {
     if (slices.length > 0) {
       return slices.map((s) => new Slice(s))
     }
-    return
   }
 
   static _mkKey (...entries: string[]): string {
@@ -47,7 +46,6 @@ export class SliceStore {
     if (slices.length > 0) {
       return slices.map((s) => new Slice(s))
     }
-    return
   }
 
   /**
@@ -57,7 +55,7 @@ export class SliceStore {
    */
   async getById (sliceId: SliceId): Promise<Slice | undefined> {
     const key: string = SliceStore._mkKey(sliceId.path, String(sliceId.depth), sliceId.root)
-    const raw = await this._store.get(new Key(key))
+    const raw: Buffer = await this._store.get(new Key(key))
     if (raw) {
       return new Slice(raw)
     }

@@ -99,7 +99,6 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
       const _peers = await Promise.all(peers.map((peer) => {
         if (peer.id.toB58String() === this.libp2pPeer.id) {
           debug('cant dial to self, skipping')
-          return
         }
       }))
       return _peers.filter(Boolean)
@@ -127,7 +126,6 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
       if (_peers && _peers.length) {
         return Promise.race(_peers.map(p => p.getSlices(slices)))
       }
-      return
     }
 
     for (const p of peers) {

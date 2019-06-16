@@ -33,8 +33,6 @@ export abstract class BaseProtocol<P extends IPeerDescriptor<PeerTypes>> extends
     this.encoder = encoder
   }
 
-  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U>
-  receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U[]>
   async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
     if (!this.encoder) {
       throw new Error('encoder not set!')
@@ -42,15 +40,12 @@ export abstract class BaseProtocol<P extends IPeerDescriptor<PeerTypes>> extends
 
     debug('reading incoming stream')
     for await (const msg of readable) {
-      for await (const decoded of this.encoder.decode(msg)) {
-        yield decoded as unknown as U
+      for await (const decoded of this.encoder.decode<T>(msg)) {
+        yield decoded as unknown as (U | U[])
       }
     }
   }
 
-  send<T, U> (msg: T, protocol?: IProtocol<P>): Promise<U>
-  send<T, U> (msg: T, protocol?: IProtocol<P>): Promise<U[]>
-  send<T, U> (msg: T, protocol?: IProtocol<P>): Promise<void>
   async send<T, U> (msg: T, protocol?: IProtocol<P>): Promise<U | U[] | void> {
     if (!this.networkProvider) {
       throw new Error('networkProvider not set!')
@@ -64,8 +59,8 @@ export abstract class BaseProtocol<P extends IPeerDescriptor<PeerTypes>> extends
       // protocol might choose to reply
       // we might return something from send
       const res = await this
-      .networkProvider
-      .send(chunk, protocol, this.peer)
+        .networkProvider
+        .send(chunk, protocol, this.peer)
 
       if (res && (res as any).length > 0) {
         for await (const recvd of this.encoder.decode(res)) {

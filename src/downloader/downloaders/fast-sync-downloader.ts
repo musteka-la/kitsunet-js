@@ -2,7 +2,11 @@
 
 import { DownloaderType } from '../inderfaces'
 import Block from 'ethereumjs-block'
-import { NetworkPeer, EthProtocol, BlockBody, IPeerDescriptor } from '../../net'
+import {
+  EthProtocol,
+  BlockBody,
+  IPeerDescriptor
+} from '../../net'
 import { EthChain } from '../../blockchain'
 
 import BN from 'bn.js'
@@ -31,7 +35,7 @@ export class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDown
       const remoteHeader: Block | undefined = await this.latest()
       if (remoteHeader) {
         const remoteNumber: BN = new BN(remoteHeader.header.number)
-        blockNumber.addn(1)
+        blockNumber = blockNumber.addn(1)
         debug(`latest block is ${blockNumber.toString(10)} remote block is ${remoteNumber.toString(10)}`)
         while (blockNumber.lte(remoteNumber)) {
           debug(`requesting ${MAX_PER_REQUEST} blocks from ${this.protocol.peer.id} starting ` +
@@ -40,10 +44,9 @@ export class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDown
           let headers: Block.Header[] = await this.getHeaders(blockNumber, MAX_PER_REQUEST)
           let bodies: BlockBody[] = await this.getBodies(headers.map(h => h.hash()))
           await this.chain.putBlocks(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
-          blockNumber.addn(headers.length)
+          blockNumber = blockNumber.addn(headers.length)
 
-          debug(`imported ${bodies.length} blocks - from ${(new BN(headers[0].number)).toString(10)} ` +
-          `to ${(new BN(headers[headers.length - 1].number)).toString('hex')}`)
+          debug(`imported ${headers.length} blocks`)
         }
       }
     } catch (err) {

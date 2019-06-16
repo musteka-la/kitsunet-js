@@ -84,20 +84,12 @@ export interface IHandler<P> {
    *
    * @param msg - the message to be sent
    */
-  handle<T, U> (msg: T | T[]): Promise<U>
-  handle<T, U> (msg: T | T[]): Promise<U[]>
-  handle<T, U> (msg: T | T[]): Promise<U | U[]>
-  handle<T> (msg: T | T[]): Promise<void>
-  handle<T, U> (msg: T | T[]): Promise<U | U[] | void>
+  handle<U extends [any, ...any[]]> (...msg: U): Promise<any>
 
   /**
    * Send a request
    *
    * @param msg - the message to be sent
    */
-  request<T, U> (msg: T | T[]): Promise<U>
-  request<T, U> (msg: T | T[]): Promise<U[]>
-  request<T, U> (msg: T | T[]): Promise<U | U[]>
-  request<T> (msg: T | T[]): Promise<void>
-  request<T, U> (msg: T | T[]): Promise<U | U[] | void>
+  request<U extends [any, ...any[]]> (...msg: U): Promise<any>
 }

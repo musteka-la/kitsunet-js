@@ -12,14 +12,13 @@ export class GetBlockHeaders<P extends IPeerDescriptor<any>> extends EthHandler<
     super('GetBlockHeaders', MSG_CODES.GET_BLOCK_HEADERS, protocol, peer)
   }
 
-  async handle<T, U> (msg: T[]): Promise<U> {
-    return this.protocol.handlers[MSG_CODES.BLOCK_HEADERS].request(msg)
+  async handle<U extends [any, ...any[]]> (...msg: U): Promise<any> {
+    return this.protocol.handlers[MSG_CODES.BLOCK_HEADERS].request(...msg)
   }
 
-  async request<T> (blockHeaders: T[] & [BN | Buffer | number, number, number, number]): Promise<any> {
-    const [blockId, max, skip, reverse] = blockHeaders
+  async request<U extends [any, ...any[]]> (...msg: U): Promise<any> {
+    const [blockId, max, skip, reverse] = msg
     const block = BN.isBN(blockId) ? blockId.toArrayLike(Buffer) : blockId
-
     return this.send([ block, max, skip || 0, reverse || 0 ])
   }
 }
@@ -30,16 +29,16 @@ export class BlockHeaders<P extends IPeerDescriptor<any>> extends EthHandler<P> 
     super('BlockHeaders', MSG_CODES.BLOCK_HEADERS, protocol, peer)
   }
 
-  async handle<T, U> (headers: T[]): Promise<any> {
-    this.emit('message', headers.map(raw => new Block.Header(raw)))
+  async handle<U extends [any, ...any[]]> (...msg: U): Promise<any> {
+    this.emit('message', msg.map(raw => new Block.Header(raw)))
   }
 
-  async request<T, U> (msg: T[] & [Buffer, number, number, number]): Promise<U | U[]> {
+  async request<U extends [any, ...any[]]> (...msg: U & [number | Buffer | BN, number, number, number]): Promise<any> {
     const [block, max, skip, reverse] = msg
     const headers: Block.Header[] = await this
-    .protocol
-    .ethChain
-    .getHeaders(block, max, skip, Boolean(reverse)) as Block.Header[]
+      .protocol
+      .ethChain
+      .getHeaders(block, max, skip, Boolean(reverse)) as Block.Header[]
     return this.send(headers.map((h: any) => h.raw))
   }
 }
