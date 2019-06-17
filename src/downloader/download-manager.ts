@@ -55,18 +55,17 @@ export class DownloadManager extends EE {
    * Start sync
    */
   async start (): Promise<void> {
-    this.syncInterval = setInterval(
-      () => {
-        const peer = this.peerManager.getRandomByCapability({
-          id: 'eth',
-          versions: ['63']
-        })
+    this.syncInterval = setInterval(() => {
+      const peer = this.peerManager.getRandomByCapability({
+        id: 'eth',
+        versions: ['63']
+      })
 
-        if (peer) {
-          return this.download(peer)
-        }
-      },
-      this.downloadInterval)
+      if (peer) {
+        return this.download(peer)
+      }
+    },
+    this.downloadInterval)
   }
 
   /**
