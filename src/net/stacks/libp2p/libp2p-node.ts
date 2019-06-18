@@ -61,7 +61,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
 
     // a peer has connected, store it
     libp2pDialer.on('peer:dialed', this.handlePeer.bind(this))
-    node.on('peer:connected', this.handlePeer.bind(this))
+    // node.on('peer:connected', this.handlePeer.bind(this))
     node.on('peer:disconnect', (peerInfo: PeerInfo) => {
       // remove disconnected peer
       const libp2pPeer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
@@ -72,15 +72,16 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     })
   }
 
-  async handlePeer (peer: PeerInfo) {
-    const libp2pPeer: Libp2pPeer = new Libp2pPeer(peer)
-    const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
-    for (const proto of protocols) {
-      await proto.handshake()
-    }
-
+  async handlePeer (peer: PeerInfo): Promise<Libp2pPeer> {
+    let libp2pPeer: Libp2pPeer | undefined = await this.peers.get(peer.id.toB58String())
+    if (libp2pPeer) return libp2pPeer
+    libp2pPeer = new Libp2pPeer(peer)
     this.peers.set(libp2pPeer.id, libp2pPeer)
+    const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
+    await Promise.all(protocols.map(p => p.handshake()))
+
     this.emit('kitsunet:peer:connected', libp2pPeer)
+    return libp2pPeer
   }
 
   mount (protocol: IProtocol<Libp2pPeer>): void {
@@ -97,18 +98,14 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   private async handleIncoming (id: string, conn: any) {
     conn.getPeerInfo(async (err: Error, peerInfo: PeerInfo) => {
       if (err) throw err
-      const peer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
-      if (!peer) {
-        return debug(`unknown peer ${peerInfo.id.toB58String()}`)
-      }
-
+      const peer: Libp2pPeer | undefined = await this.handlePeer(peerInfo)
       const protocol: IProtocol<Libp2pPeer> | undefined = peer.protocols.get(id)
       if (protocol) {
         try {
           const stream = pushable()
           pull(stream, lp.encode(), conn)
           for await (const msg of protocol.receive(toIterator(pull(conn, lp.decode())))) {
-            stream.push(msg)
+            if (msg) stream.push(msg)
           }
           stream.end()
         } catch (err) {

@@ -4,18 +4,22 @@ import { KsnProtocol } from '../ksn-protocol'
 import { IPeerDescriptor } from '../../../interfaces'
 import { KitsunetHandler } from '../kitsunet-handler'
 
-import { MsgType, ResponseStatus } from '../interfaces'
-import { BN } from 'ethereumjs-util'
+import {
+  MsgType,
+  ResponseStatus
+} from '../interfaces'
+import BN from 'bn.js'
+import Block from 'ethereumjs-block'
 
 export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P> {
-  constructor (networkProvider: KsnProtocol<P>,
-               peer: P) {
-    super('identify', MsgType[MsgType.IDENTIFY], networkProvider, peer)
+  constructor (networkProvider: KsnProtocol<P>, peer: P) {
+    super('identify', MsgType.IDENTIFY, networkProvider, peer)
   }
 
   async handle (): Promise<any> {
     try {
-      // const block: Block = await this.networkProvider.ethChain.getLatestBlock()
+      const block: Block = await this.protocol.ethChain.getBestBlock()
+      const td: Buffer = (await await this.protocol.ethChain.getBlocksTD()).toArrayLike(Buffer)
       return {
         type: MsgType.IDENTIFY,
         status: ResponseStatus.OK,
@@ -24,9 +28,11 @@ export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P>
             versions: this.protocol.versions,
             userAgent: this.protocol.userAgent,
             nodeType: this.protocol.type,
-            // latestBlock: block ? block.header.number : new BN(0).toArrayLike(Buffer)
-            latestBlock: (new BN(0)).toArrayLike(Buffer)
-            // sliceIds: this.networkProvider.getSliceIds()
+            networkId: this.protocol.ethChain.common.networkId(),
+            td,
+            bestHash: block.header.hash(),
+            genesisHash: Buffer.from(this.protocol.ethChain.genesis().hash.substring(2), 'hex'),
+            number: new BN(block.header.number).toArrayLike(Buffer)
           }
         }
       }

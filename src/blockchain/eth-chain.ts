@@ -196,7 +196,8 @@ export class EthChain extends EE implements IBlockchain {
   }
 
   async getBestBlock<T> (): Promise<T> {
-    // TODO: calculate best block
+    const block: Block | undefined = await this.getLatestBlock()
+    if (block) return block as unknown as T
     return new Block(genesisStates.genesisStateById(this.common.networkId())) as unknown as T
   }
 
