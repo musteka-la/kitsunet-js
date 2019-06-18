@@ -3,7 +3,7 @@
 import * as Handlers from './handlers'
 import Debug from 'debug'
 import { BaseProtocol } from '../../base-protocol'
-import { INetwork, IPeerDescriptor } from '../../interfaces'
+import { Node, IPeerDescriptor } from '../..'
 import { KitsunetHandler } from './kitsunet-handler'
 import { KsnEncoder } from './ksn-encoder'
 import { EthChain } from '../../../blockchain'
@@ -24,7 +24,7 @@ const VERSION = '1.0.0'
 export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P> implements IKsnProtocol {
   sliceIds: Set<any>
   type: NodeType
-  handlers: { [key: string]: KitsunetHandler<P> }
+  handlers: { [key: number]: KitsunetHandler<P> }
   versions: string[] = [VERSION]
   userAgent: string = 'ksn-client'
   latestBlock: number | null = null
@@ -34,7 +34,7 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   constructor (public peer: P,
-               public networkProvider: INetwork<P>,
+               public networkProvider: Node<P>,
                public ethChain: EthChain) {
     super(peer, networkProvider, new KsnEncoder())
     this.sliceIds = new Set()
@@ -50,7 +50,7 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
     for await (const msg of super.receive<T, Message>(readable) as AsyncIterable<Message>) {
       if (msg.type !== MsgType.UNKNOWN_MSG) {
-        const res = await this.handlers[MsgType[msg.type]].handle(msg)
+        const res = await this.handlers[msg.type].handle(msg)
         for await (const encoded of this.encoder!.encode(res)) {
           yield encoded
         }
@@ -66,7 +66,7 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * initiate the identify flow
    */
   async handshake (): Promise < void > {
-    const res: Identify = await this.handlers[MsgType[MsgType.IDENTIFY]].send()
+    const res: Identify = await this.handlers[MsgType.IDENTIFY].send()
     this.versions = res.versions
     this.userAgent = res.userAgent
 

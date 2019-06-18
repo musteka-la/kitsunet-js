@@ -4,10 +4,10 @@ import * as Handlers from './handlers'
 import Block from 'ethereumjs-block'
 import { BaseProtocol } from '../../base-protocol'
 import { IEthProtocol, BlockBody, Status } from './interfaces'
-import { IPeerDescriptor, INetwork, IEncoder } from '../../interfaces'
+import { IPeerDescriptor, Node, IEncoder } from '../..'
 import { EthChain } from '../../../blockchain'
 import { EthHandler } from './eth-handler'
-import { RlpMsgEncoder } from './rlp-encoder'
+import { RlpEncoder } from './rlp-encoder'
 import { ETH } from 'ethereumjs-devp2p'
 import Debug from 'debug'
 import BN from 'bn.js'
@@ -50,9 +50,9 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * @param encoder - an encoder to use with the peer
    */
   constructor (peer: P,
-               networkProvider: INetwork<P>,
+               networkProvider: Node<P>,
                public ethChain: EthChain,
-               encoder: IEncoder = new RlpMsgEncoder()) {
+               encoder: IEncoder = new RlpEncoder(networkProvider.type)) {
     super(peer, networkProvider, encoder)
     this.protocolVersion = Math.max.apply(Math, this.versions.map(v => Number(v)))
 

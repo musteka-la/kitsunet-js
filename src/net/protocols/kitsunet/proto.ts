@@ -28,11 +28,16 @@ message Kitsunet {
   }
 
   message Identify {
-    repeated string   versions     = 1; // e.g. kitsunet-js/0.0.1
-    optional string   userAgent    = 2; // e.g. kitsunet-js/0.0.1
-    optional NodeType nodeType     = 3; // the node type - bridge, edge, normal
-    optional bytes    latestBlock  = 4; // block number
-    repeated bytes    sliceIds     = 5; // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
+    repeated string   versions     = 1;  // e.g. kitsunet-js/0.0.1
+    optional string   userAgent    = 2;  // e.g. kitsunet-js/0.0.1
+    optional NodeType nodeType     = 3;  // the node type - bridge, edge, normal
+    optional bytes    latestBlock  = 4;  // block number
+    repeated bytes    sliceIds     = 5;  // a list of slice name 0xXXXX-XX that this peer tracks, can be incomplete
+    optional uint32   networkId    = 6;  // the eth network id
+    optional bytes    td           = 7;  // total difficulty
+    optional bytes    bestHash     = 8;  // best hash
+    optional bytes    genesis      = 9;  // genesis
+    optional bytes    number       = 10; // the block number
   }
 
   message Data {

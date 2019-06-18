@@ -9,7 +9,7 @@ import { KsnResponse, ResponseStatus } from './interfaces'
 export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE implements IHandler<P> {
   log: debug.Debugger
   constructor (public name: string,
-               public id: string,
+               public id: number,
                public protocol: KsnProtocol<P>,
                public peer: P) {
     super()
@@ -32,9 +32,8 @@ export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE
 
   protected async _send<U extends any[]> (...msg: U): Promise<KsnResponse> {
     this.log('sending request', msg)
-    const res: KsnResponse = await this.protocol.send(msg) as KsnResponse
+    const res: KsnResponse = await this.protocol.send(msg.shift()) as KsnResponse
     if (res && res.status !== ResponseStatus.OK) {
-      console.dir(res)
       const err = res.error ? new Error(res.error) : new Error('unknown error!')
       this.log(err)
       throw err
