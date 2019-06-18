@@ -14,7 +14,8 @@ import { ETH } from 'ethereumjs-devp2p'
 import {
   IPeerDescriptor,
   INetwork,
-  IEncoder
+  IEncoder,
+  Node
 } from '../../../../src/net'
 
 import {
@@ -38,7 +39,7 @@ describe('Eth protocol', () => {
     let ethProtocol
     beforeEach(() => {
       ethProtocol = new EthProtocol({} as IPeerDescriptor<any>,
-                                    new EE() as unknown as INetwork<any>, {
+                                    new EE() as unknown as Node<any>, {
                                       getBlocksTD: () => Buffer.from([0]),
                                       getBestBlock: () => block,
                                       common: new Common('mainnet')
@@ -191,7 +192,7 @@ describe('Eth protocol', () => {
   describe('handles - request', () => {
     let sendHandler: Function | undefined
     let receiveHandler: (msg: any) => AsyncIterable<any> | undefined
-    const networkProvider: INetwork<any> = {
+    const networkProvider: any = {
       send: async function <T, U> (msg: T): Promise<any> {
         return sendHandler ? sendHandler(msg) : msg
       },

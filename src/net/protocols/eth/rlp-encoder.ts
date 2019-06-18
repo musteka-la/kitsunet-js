@@ -13,18 +13,18 @@ export class RlpEncoder implements IEncoder {
   async *encode<T, U> (msg: T[] | T): AsyncIterable<U> {
     if (this.type === NetworkType.LIBP2P) {
       yield encode(msg as any) as any
+    } else {
+      yield [(msg as T[]).shift(), encode(msg as any)] as any
     }
-
-    yield [(msg as T[]).shift(), encode(msg as any)] as any
   }
 
   async *decode<T, U> (msg: T[] | T): AsyncIterable<U> {
     if (this.type === NetworkType.LIBP2P) {
       const decoded: any[] = decode(msg as any[]) as any[]
       yield [utils.bufferToInt(decoded.shift()), ...decoded] as any
+    } else {
+      // rlpx already decodes it, so we skip on receive
+      yield msg as any
     }
-
-    // rlpx already decodes it, so we skip on receive
-    yield msg as any
   }
 }

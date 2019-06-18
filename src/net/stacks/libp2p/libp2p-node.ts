@@ -4,7 +4,7 @@ import Libp2p from 'libp2p'
 import PeerInfo from 'peer-info'
 import toIterator from 'pull-stream-to-async-iterator'
 import pull from 'pull-stream'
-import debug from 'debug'
+import Debug from 'debug'
 import pushable from 'pull-pushable'
 import lp from 'pull-length-prefixed'
 import * as semver from 'semver'
@@ -20,6 +20,9 @@ import {
 } from '../../interfaces'
 import { Libp2pDialer } from './libp2p-dialer'
 import { EthChain, IBlockchain } from '../../../blockchain'
+import { reject } from 'async'
+
+const debug = Debug('kitsunet:net:libp2p:node')
 
 /**
  * Libp2p node
@@ -104,10 +107,11 @@ export class Libp2pNode extends Node<Libp2pPeer> {
         try {
           const stream = pushable()
           pull(stream, lp.encode(), conn)
-          for await (const msg of protocol.receive(toIterator(pull(conn, lp.decode())))) {
-            if (msg) stream.push(msg)
+          const inStream = toIterator(pull(conn, lp.decode()))
+          for await (const msg of protocol.receive(inStream)) {
+            if (!msg) return stream.end()
+            stream.push(msg)
           }
-          stream.end()
         } catch (err) {
           debug(err)
         }
@@ -139,9 +143,16 @@ export class Libp2pNode extends Node<Libp2pPeer> {
         lp.encode(),
         conn,
         lp.decode(),
-        pull.collect((err: Error, values: U) => {
-          if (err) return reject(err)
-          resolve(values[0])
+        pull.collect((err: Error, values: U[]) => {
+          if (err) {
+            // ignore generic stream ended message
+            const re = new RegExp('stream ended with:0 but wanted:1')
+            if (!re.test(err.message)) {
+              debug('an error occurred sending message ', err)
+              return reject(err)
+            }
+          }
+          resolve(...values)
         }))
     })
   }

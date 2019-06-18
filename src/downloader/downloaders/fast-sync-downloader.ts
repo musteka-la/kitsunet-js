@@ -43,10 +43,10 @@ export class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDown
           `from ${blockNumber.toString(10)}`)
 
           let headers: Block.Header[] = await this.getHeaders(blockNumber, MAX_PER_REQUEST)
+          if (!headers.length) return
           let bodies: BlockBody[] = await this.getBodies(headers.map(h => h.hash()))
           await this.chain.putBlocks(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
           blockNumber = blockNumber.addn(headers.length)
-
           debug(`imported ${headers.length} blocks`)
         }
       }

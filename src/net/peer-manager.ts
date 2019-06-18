@@ -30,9 +30,8 @@ export class PeerManager extends EE {
   getByCapability (cap: ICapability): Peer[] {
     return [...this.peers.values()].filter((p) => !p.used &&
       p.protocols.has(cap.id) &&
-      cap.versions.length > 0 && p.protocols.get(cap.id)!
-        .versions.some(v => cap.versions.indexOf(v) > -1) &&
-        (p.used = true))
+      cap.versions.length > 0 &&
+      p.protocols.get(cap.id)!.versions.some(v => cap.versions.indexOf(v) > -1) && (p.used = true))
   }
 
   getRandomByCapability (cap: ICapability): Peer | undefined {

@@ -103,7 +103,7 @@ describe('Ksn protocol', () => {
     let sendHandler: Function | undefined
     let receiveHandler: (msg: any) => AsyncIterable<any> | undefined
 
-    const networkProvider: INetwork<any> = {
+    const networkProvider: any = {
       send: async function <T, U> (msg: T, protocol?: IProtocol<any>, peer?: any): Promise<any> {
         return sendHandler ? sendHandler(msg) : msg
       },
@@ -114,9 +114,7 @@ describe('Ksn protocol', () => {
 
     let ksnProtocol
     beforeEach(() => {
-      ksnProtocol = new KsnProtocol({} as Libp2pPeer,
-        networkProvider,
-                                    { getLatestBlock: async () => block } as any)
+      ksnProtocol = new KsnProtocol({} as Libp2pPeer, networkProvider, { getLatestBlock: async () => block } as any)
     })
 
     it('should send Identify request', async () => {

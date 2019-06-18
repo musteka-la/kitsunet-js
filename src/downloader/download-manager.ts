@@ -10,14 +10,14 @@ import Debug from 'debug'
 const debug = Debug('kitsunet:downloader:download-manager')
 
 const MAX_PEERS: number = 25
-const DEFAUL_DOWNLOAD_INTERVAL: number = 1000 * 5
+const DEFAULT_DOWNLOAD_INTERVAL: number = 1000 * 5
 
 @register('download-manager')
 export class DownloadManager extends EE {
   peers: Map<string, Peer> = new Map()
   syncInterval: NodeJS.Timeout | undefined
   maxPeers: number = MAX_PEERS
-  downloadInterval: number = DEFAUL_DOWNLOAD_INTERVAL
+  downloadInterval: number = DEFAULT_DOWNLOAD_INTERVAL
   syncMode: string = 'fast'
 
   constructor (@register('peer-manager')
@@ -47,6 +47,7 @@ export class DownloadManager extends EE {
         debug(e)
       } finally {
         this.peers.delete(peer.id)
+        this.peerManager.releasePeers([peer])
       }
     }
   }

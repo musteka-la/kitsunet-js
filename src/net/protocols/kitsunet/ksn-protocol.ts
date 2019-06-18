@@ -47,10 +47,11 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     })
   }
 
-  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[] | null> {
     for await (const msg of super.receive<T, Message>(readable) as AsyncIterable<Message>) {
-      if (msg.type !== MsgType.UNKNOWN_MSG) {
+      if (msg && msg.type !== MsgType.UNKNOWN_MSG) {
         const res = await this.handlers[msg.type].handle(msg)
+        if (!res) yield null
         for await (const encoded of this.encoder!.encode(res)) {
           yield encoded
         }
@@ -58,14 +59,14 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     }
   }
 
-  async send<T, U> (msg: T): Promise <U | U[] | void> {
+  async send<T, U> (msg: T): Promise <U | U[] | void | null> {
     return super.send(msg, this)
   }
 
   /**
    * initiate the identify flow
    */
-  async handshake (): Promise < void > {
+  async handshake (): Promise <void> {
     const res: Identify = await this.handlers[MsgType.IDENTIFY].send()
     this.versions = res.versions
     this.userAgent = res.userAgent
