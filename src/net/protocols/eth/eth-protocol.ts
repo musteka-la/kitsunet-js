@@ -78,7 +78,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     for await (const msg of super.receive<T, any[]>(readable)) {
       const code: ETH.MESSAGE_CODES = msg.shift() as ETH.MESSAGE_CODES
       if (!this.handlers[code]) {
-        debug(`unsuported method - ${MSG_CODES[code]}`)
+        debug(`unsupported method - ${MSG_CODES[code]}`)
         return
       }
 
@@ -95,16 +95,20 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
                      skip?: number,
                      reverse?: boolean): AsyncIterable<Block.Header[]> {
     yield new Promise<Block.Header[]>(async (resolve) => {
-      this.handlers[MSG_CODES.BLOCK_HEADERS].on('message', (headers) => resolve(headers))
-      await this.handlers[MSG_CODES.GET_BLOCK_HEADERS].request(block, max, skip, reverse)
+      this.handlers[MSG_CODES.BLOCK_HEADERS].on('message', (headers) => {
+        resolve(headers)
+      })
+      await this.handlers[MSG_CODES.GET_BLOCK_HEADERS].send(block, max, skip, reverse)
     })
   }
 
   async *getBlockBodies (hashes: Buffer[] | string[]): AsyncIterable<BlockBody[]> {
     yield new Promise<BlockBody[]>(async (resolve) => {
-      this.handlers[MSG_CODES.BLOCK_BODIES].on('message', (bodies) => resolve(bodies))
+      this.handlers[MSG_CODES.BLOCK_BODIES].on('message', (bodies) => {
+        resolve(bodies)
+      })
       const bufHashes = (hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))
-      await this.handlers[MSG_CODES.GET_BLOCK_BODIES].request(bufHashes)
+      await this.handlers[MSG_CODES.GET_BLOCK_BODIES].send(bufHashes)
     })
   }
 
@@ -114,7 +118,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   async handshake (): Promise<void> {
-    return this.handlers[MSG_CODES.STATUS].request(
+    return this.handlers[MSG_CODES.STATUS].send(
       this.protocolVersion,
       this.ethChain.common.networkId(),
       await this.ethChain.getBlocksTD(),

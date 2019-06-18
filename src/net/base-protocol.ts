@@ -38,8 +38,9 @@ export abstract class BaseProtocol<P extends IPeerDescriptor<PeerTypes>> extends
       throw new Error('encoder not set!')
     }
 
-    debug('reading incoming stream')
+    debug(`reading incoming stream from ${this.peer.id}`)
     for await (const msg of readable) {
+      debug('read message ', msg)
       for await (const decoded of this.encoder.decode<T>(msg)) {
         yield decoded as unknown as (U | U[])
       }

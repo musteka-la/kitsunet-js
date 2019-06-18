@@ -19,8 +19,8 @@ export class NewBlockHashes<P extends IPeerDescriptor<any>> extends EthHandler<P
     return announced
   }
 
-  async request<U extends any[]> (...hashes: U & [[Buffer, BN][]]): Promise<any> {
-    return this.send(hashes.map(hn => {
+  async send<U extends any[]> (...hashes: U & [[Buffer, BN][]]): Promise<any> {
+    return this._send(hashes.map(hn => {
       return [hn[0], hn[1].toArrayLike(Buffer)]
     }))
   }

@@ -5,7 +5,6 @@ import debug from 'debug'
 import { KsnProtocol } from './ksn-protocol'
 import { IPeerDescriptor, IHandler } from '../../interfaces'
 import { KsnResponse, ResponseStatus } from './interfaces'
-import { reject } from 'async'
 
 export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE implements IHandler<P> {
   log: debug.Debugger
@@ -29,9 +28,9 @@ export abstract class KitsunetHandler<P extends IPeerDescriptor<any>> extends EE
    *
    * @param msg - the message to be sent
    */
-  abstract async request<U extends any[]> (...msg: U): Promise<any>
+  abstract async send<U extends any[]> (...msg: U): Promise<any>
 
-  protected async send<U extends any[]> (...msg: U): Promise<KsnResponse> {
+  protected async _send<U extends any[]> (...msg: U): Promise<KsnResponse> {
     this.log('sending request', msg)
     const res: KsnResponse = await this.protocol.send(msg) as KsnResponse
     if (res && res.status !== ResponseStatus.OK) {

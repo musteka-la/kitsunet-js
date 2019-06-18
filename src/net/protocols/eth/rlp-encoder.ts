@@ -1,7 +1,7 @@
 'use strict'
 
 import { IEncoder } from '../../interfaces'
-import { encode, Input } from 'rlp'
+import { encode } from 'rlp'
 
 export class RlpMsgEncoder implements IEncoder {
   async *encode<T, U> (msg: T[] | T): AsyncIterable<U> {

@@ -46,6 +46,14 @@ const cliConfig: any = {
     default: 30303,
     type: 'number'
   },
+  'stacks': {
+    alias: 'S',
+    description: 'stacks',
+    requiresArg: true,
+    required: false,
+    default: ['devp2p', 'libp2p'],
+    choices: ['devp2p', 'libp2p']
+  },
   // TODO: make this required if in bridge mode
   'rpc-url': {
     alias: 'r',

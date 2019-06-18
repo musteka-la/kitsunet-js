@@ -91,5 +91,5 @@ export interface IHandler<P> {
    *
    * @param msg - the message to be sent
    */
-  request<U extends any[]> (...msg: U): Promise<any>
+  send<U extends any[]> (...msg: U): Promise<any>
 }

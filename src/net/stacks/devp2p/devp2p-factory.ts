@@ -59,10 +59,7 @@ export class DevP2PFactory {
   }
 
   @register()
-  static createDptOptions (@register('devp2p-peer-info')
-                           peerInfo: PeerInfo,
-                           @register('options')
-                           options: any): DPTOptions {
+  static createDptOptions (@register('devp2p-peer-info') peerInfo: PeerInfo): DPTOptions {
     const dptOpts = new DPTOptions()
     dptOpts.endpoint = peerInfo
     dptOpts.timeout = 1000 * 60
@@ -94,7 +91,7 @@ export class DevP2PFactory {
   }
 
   @register()
-  createRLPx (options: RLPxNodeOptions, common: Common): RLPx {
+  createRLPx (options: RLPxNodeOptions): RLPx {
     return new RLPx(options.key, options)
   }
 }

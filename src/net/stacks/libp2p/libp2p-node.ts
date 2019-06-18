@@ -60,17 +60,8 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     this.registerProtos(protocolRegistry, this.peer)
 
     // a peer has connected, store it
-    node.on('peer:connect', async (peer: PeerInfo) => {
-      const libp2pPeer: Libp2pPeer = new Libp2pPeer(peer)
-      const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
-      for (const proto of protocols) {
-        await proto.handshake()
-      }
-
-      this.peers.set(libp2pPeer.id, libp2pPeer)
-      this.emit('kitsunet:peer:connected', libp2pPeer)
-    })
-
+    libp2pDialer.on('peer:dialed', this.handlePeer.bind(this))
+    node.on('peer:connected', this.handlePeer.bind(this))
     node.on('peer:disconnect', (peerInfo: PeerInfo) => {
       // remove disconnected peer
       const libp2pPeer: Libp2pPeer | undefined = this.peers.get(peerInfo.id.toB58String())
@@ -79,6 +70,17 @@ export class Libp2pNode extends Node<Libp2pPeer> {
         this.emit('kitsunet:peer:disconnected', libp2pPeer)
       }
     })
+  }
+
+  async handlePeer (peer: PeerInfo) {
+    const libp2pPeer: Libp2pPeer = new Libp2pPeer(peer)
+    const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
+    for (const proto of protocols) {
+      await proto.handshake()
+    }
+
+    this.peers.set(libp2pPeer.id, libp2pPeer)
+    this.emit('kitsunet:peer:connected', libp2pPeer)
   }
 
   mount (protocol: IProtocol<Libp2pPeer>): void {

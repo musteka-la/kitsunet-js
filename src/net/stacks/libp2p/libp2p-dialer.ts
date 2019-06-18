@@ -86,6 +86,7 @@ export class Libp2pDialer extends EE {
       this.dialing.set(id, true)
       conn = await this.node.dialProtocol(peerInfo, protocol)
       this.connected.set(id, peerInfo)
+      this.emit('peer:dialed', peerInfo)
     } catch (err) {
       log(err)
       throw err

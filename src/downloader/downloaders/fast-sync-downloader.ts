@@ -1,6 +1,6 @@
 'use strict'
 
-import { DownloaderType } from '../inderfaces'
+import { DownloaderType } from '../interfaces'
 import Block from 'ethereumjs-block'
 import {
   EthProtocol,
@@ -32,6 +32,7 @@ export class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDown
     }
 
     try {
+      debug(`trying to sync with ${this.protocol.peer.id}`)
       const remoteHeader: Block | undefined = await this.latest()
       if (remoteHeader) {
         const remoteNumber: BN = new BN(remoteHeader.header.number)

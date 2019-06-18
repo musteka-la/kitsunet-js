@@ -13,7 +13,8 @@ import {
   MsgType,
   IKsnProtocol,
   Identify,
-  NodeType} from './interfaces'
+  NodeType
+} from './interfaces'
 import { SliceId } from '../../../slice'
 
 const debug = Debug('kitsunet:kitsunet-proto')
@@ -65,7 +66,7 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * initiate the identify flow
    */
   async handshake (): Promise < void > {
-    const res: Identify = await this.handlers[MsgType[MsgType.IDENTIFY]].request()
+    const res: Identify = await this.handlers[MsgType[MsgType.IDENTIFY]].send()
     this.versions = res.versions
     this.userAgent = res.userAgent
 
