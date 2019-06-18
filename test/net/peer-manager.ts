@@ -9,7 +9,7 @@ import { EventEmitter } from 'events'
 import {
   PeerManager,
   NetworkPeer,
-  INetwork,
+  Node,
   NodeManager,
   Peer
 } from '../../src/net'
@@ -39,7 +39,7 @@ class FakeProto extends BaseProtocol<FakePeer> {
   versions: string[]
 
   constructor (id: string, versions: string[], peer: FakePeer) {
-    super(peer, {} as INetwork<FakePeer>)
+    super(peer, {} as Node<FakePeer>)
     this.id = id
     this.versions = versions
   }

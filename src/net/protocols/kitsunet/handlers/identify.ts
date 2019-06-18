@@ -44,6 +44,6 @@ export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P>
 
   async send (): Promise<any> {
     const res = await this._send({ type: MsgType.IDENTIFY })
-    return res.payload.identify
+    if (res) return res.payload.identify
   }
 }

@@ -18,7 +18,8 @@ export interface INetwork<P> {
   send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U>
   send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U[]>
   send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<void>
-  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | U[] | void>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<null>
+  send<T, U = T> (msg: T, protocol?: IProtocol<P>, peer?: P): Promise<U | U[] | void | null>
 
   /**
    * handle incoming messages
@@ -27,7 +28,9 @@ export interface INetwork<P> {
    */
   receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U>
   receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U[]>
-  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[]>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<void>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<null>
+  receive<T, U = T> (readable: AsyncIterable<T>): AsyncIterable<U | U[] | void | null>
 }
 
 export interface IEncoder {

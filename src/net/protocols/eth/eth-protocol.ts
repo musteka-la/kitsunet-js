@@ -38,7 +38,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   async setStatus (status: Status): Promise<void> {
-    this._status.resolve(status)
+    return this._status.resolve(status)
   }
 
   /**
@@ -74,19 +74,24 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     ]
   }
 
-  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[]> {
+  async *receive<T, U> (readable: AsyncIterable<T>): AsyncIterable<U | U[] | null> {
     for await (const msg of super.receive<T, any[]>(readable)) {
+      if (!msg) return
       const code: ETH.MESSAGE_CODES = msg.shift() as ETH.MESSAGE_CODES
       if (!this.handlers[code]) {
         debug(`unsupported method - ${MSG_CODES[code]}`)
         return
       }
 
-      yield this.handlers[code].handle(...msg)
+      const res = await this.handlers[code].handle(...msg)
+      if (!res) yield null
+      for await (const encoded of this.encoder!.encode(res)) {
+        yield encoded
+      }
     }
   }
 
-  async send<T, U> (msg: T): Promise<U | U[] | void> {
+  async send<T, U> (msg: T): Promise<U | U[] | void | null> {
     return super.send(msg, this)
   }
 
