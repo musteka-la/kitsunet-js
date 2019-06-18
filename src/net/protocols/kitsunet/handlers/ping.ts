@@ -19,7 +19,7 @@ export class Ping<P extends IPeerDescriptor<any>> extends KitsunetHandler<P> {
     }
   }
 
-  async request (): Promise<any> {
-    return this.send({ type: MsgType.PING })
+  async send (): Promise<any> {
+    return this._send({ type: MsgType.PING })
   }
 }

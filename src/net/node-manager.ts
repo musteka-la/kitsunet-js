@@ -23,8 +23,12 @@ import {
 export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
   @register('nodes')
   static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode,
-                                           devp2pNode: Devp2pNode): Node<U>[] {
-    return [libp2pNode, devp2pNode] as unknown as Node<U>[]
+                                           devp2pNode: Devp2pNode,
+                                           @register('options') options: any): Node<U>[] {
+    const stacks: Node<any>[] = []
+    if (options.stacks.indexOf('libp2p') > -1) stacks.push(libp2pNode)
+    if (options.stacks.indexOf('devp2p') > -1) stacks.push(devp2pNode)
+    return stacks as unknown as Node<U>[]
   }
 
   /**

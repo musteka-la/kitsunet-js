@@ -24,11 +24,11 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
     })
   }
 
-  async request<U extends any[]> (...msg: U & [number, number, BN, Buffer, string]): Promise<any> {
+  async send<U extends any[]> (...msg: U & [number, number, BN, Buffer, string]): Promise<any> {
     const [protocolVersion, networkId, td, bestHash, genesisHash] = msg
-    return this.send([
-      int2buffer(protocolVersion),
-      int2buffer(networkId),
+    return this._send([
+      protocolVersion,
+      networkId,
       td.toArrayLike(Buffer),
       bestHash,
       Buffer.from(genesisHash.substr(2), 'hex')

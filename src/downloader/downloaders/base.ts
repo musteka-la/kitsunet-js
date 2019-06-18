@@ -1,7 +1,7 @@
 'use strict'
 
 import Block from 'ethereumjs-block'
-import { IDownloader, DownloaderType } from '../inderfaces'
+import { IDownloader, DownloaderType } from '../interfaces'
 import { EthProtocol, BlockBody, IPeerDescriptor } from '../../net'
 import BN from 'bn.js'
 
@@ -10,19 +10,30 @@ import { EthChain } from '../../blockchain'
 const debug = Debug('kitsunet:downloader:download-manager')
 
 export abstract class BaseDownloader<T extends IPeerDescriptor<any>> implements IDownloader {
-  constructor (public protocol: EthProtocol<T>,
-               public type: DownloaderType,
-               public chain: EthChain) {
+  public protocol: EthProtocol<T>
+  public type: DownloaderType
+  public chain: EthChain
+
+  constructor (protocol: EthProtocol<T>,
+               type: DownloaderType,
+               chain: EthChain) {
+    this.protocol = protocol
+    this.type = type
+    this.chain = chain
   }
 
   async latest (): Promise<Block | undefined> {
     return new Promise(async (resolve, reject) => {
       const status = await this.protocol.getStatus()
       for await (const header of this.protocol.getHeaders(status.bestHash, 1)) {
-        debug(`got peers ${this.protocol.peer.id} latest header - ${(header[0]).hash().toString('hex')}`)
+        if (header[0]) {
+          debug(`got peers ${this.protocol.peer.id} latest header - ${(header[0]).hash().toString('hex')}`)
+        } else {
+          debug(`got empty header from ${this.protocol.peer.id}!`)
+        }
         return resolve(new Block(header[0], { common: this.chain.common }))
       }
-      reject('no header resolved')
+      return reject(new Error('no header resolved'))
     })
   }
 

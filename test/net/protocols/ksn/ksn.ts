@@ -141,7 +141,7 @@ describe('Ksn protocol', () => {
       }
 
       const identify = new IdentifyHandler(ksnProtocol, {} as IPeerDescriptor<any>)
-      const res = await identify.request()
+      const res = await identify.send()
       expect(res).to.eql(identifyMsg.payload.identify)
     })
   })

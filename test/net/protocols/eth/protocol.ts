@@ -224,7 +224,7 @@ describe('Eth protocol', () => {
       }
 
       const status: Status<any> = new Status(ethProtocol, {} as IPeerDescriptor<any>)
-      await status.request(0, 0, new BN(0), Buffer.from([0]), '0x0')
+      await status.send(0, 0, new BN(0), Buffer.from([0]), '0x0')
     })
 
     it('should send GetBlockHeaders request using block number', async () => {
@@ -239,7 +239,7 @@ describe('Eth protocol', () => {
       }
 
       const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await getBlockHeaders.request(new BN(block.header.number), 20, 0, false)
+      await getBlockHeaders.send(new BN(block.header.number), 20, 0, false)
     })
 
     it('should send GetBlockHeaders request using block hash', async () => {
@@ -254,7 +254,7 @@ describe('Eth protocol', () => {
       }
 
       const getBlockHeaders: GetBlockHeaders<any> = new GetBlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await getBlockHeaders.request(block.header.hash(), 20, 0, false)
+      await getBlockHeaders.send(block.header.hash(), 20, 0, false)
     })
 
     it('should send BlockHeaders', async () => {
@@ -265,7 +265,7 @@ describe('Eth protocol', () => {
 
       ethProtocol.ethChain.getHeaders = async () => [fromRpc(jsonBlock.block).header]
       const blockHeaders: BlockHeaders<any> = new BlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await blockHeaders.request(fromRpc(jsonBlock.block).header, 0, 1, 0)
+      await blockHeaders.send(fromRpc(jsonBlock.block).header, 0, 1, 0)
     })
 
     it('should send NewBlockHashes', async () => {
@@ -278,7 +278,7 @@ describe('Eth protocol', () => {
       }
 
       const newBlockHashes: NewBlockHashes<any> = new NewBlockHashes(ethProtocol, {} as IPeerDescriptor<any>)
-      await newBlockHashes.request([
+      await newBlockHashes.send([
         fromRpc(jsonBlock.block).header.hash(),
         new BN(fromRpc(jsonBlock.block).header.number)
       ])
