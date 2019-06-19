@@ -5,6 +5,7 @@ import { EthChain } from '../blockchain/eth-chain'
 import { EventEmitter as EE } from 'events'
 import { PeerManager, Peer, EthProtocol } from '../net'
 import { FastSyncDownloader } from './downloaders'
+import LRUCache from 'lru-cache'
 
 import Debug from 'debug'
 const debug = Debug('kitsunet:downloader:download-manager')
@@ -14,7 +15,7 @@ const DEFAULT_DOWNLOAD_INTERVAL: number = 1000 * 5
 
 @register('download-manager')
 export class DownloadManager extends EE {
-  peers: Map<string, Peer> = new Map()
+  peers: LRUCache<string, Peer> = new LRUCache({ max: MAX_PEERS, maxAge: 1000 * 1000 * 5 })
   syncInterval: NodeJS.Timeout | undefined
   maxPeers: number = MAX_PEERS
   downloadInterval: number = DEFAULT_DOWNLOAD_INTERVAL
@@ -30,7 +31,7 @@ export class DownloadManager extends EE {
   }
 
   async download (peer: Peer): Promise<void> {
-    if (!this.peers.has(peer.id) && this.peers.size <= this.maxPeers) {
+    if (!this.peers.has(peer.id) && this.peers.length <= this.maxPeers) {
       this.peers.set(peer.id, peer)
       try {
         switch (this.syncMode) {
@@ -46,7 +47,7 @@ export class DownloadManager extends EE {
       } catch (e) {
         debug(e)
       } finally {
-        this.peers.delete(peer.id)
+        this.peers.del(peer.id)
         this.peerManager.releasePeers([peer])
       }
     }
@@ -56,14 +57,23 @@ export class DownloadManager extends EE {
    * Start sync
    */
   async start (): Promise<void> {
-    this.syncInterval = setInterval(() => {
-      const peer = this.peerManager.getRandomByCapability({
+    const td = await this.chain.getBlocksTD()
+    this.syncInterval = setInterval(async () => {
+      const peers: Peer[] = this.peerManager.getByCapability({
         id: 'eth',
         versions: ['63']
       })
 
-      if (peer) {
-        return this.download(peer)
+      if (!peers.length) return
+      const status = await Promise.all(peers.map((p) => (p.protocols.get('eth') as EthProtocol<any>)!.getStatus()))
+      let bestPeer: any = null
+      status.forEach((s, i) => {
+        if (s.td.gt(td)) bestPeer = peers[i]
+      })
+
+      if (bestPeer) {
+        this.peerManager.reserve([bestPeer])
+        this.download(bestPeer)
       }
     },
     this.downloadInterval)

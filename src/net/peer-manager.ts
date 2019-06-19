@@ -5,10 +5,11 @@ import { NodeManager } from './node-manager'
 import { ICapability } from './interfaces'
 import { Peer } from './helper-types'
 import { register } from 'opium-decorators'
+import LRUCache from 'lru-cache'
 
 @register('peer-manager')
 export class PeerManager extends EE {
-  peers: Map<string, Peer> = new Map()
+  peers: LRUCache<string, Peer> = new LRUCache({ max: 25, maxAge: 1000 * 30 })
   constructor (@register('node-manager')
                public nodeManager: NodeManager<Peer>) {
     super()
@@ -17,13 +18,12 @@ export class PeerManager extends EE {
     })
 
     this.nodeManager.on('kitsunet:peer:disconnected', (peer: Peer) => {
-      this.peers.delete(peer.id)
+      this.peers.del(peer.id)
     })
   }
 
   getById (id: string): Peer | undefined {
     const peer: Peer | undefined = this.peers.get(id)
-    if (peer) peer.used = true
     return peer
   }
 
@@ -31,7 +31,7 @@ export class PeerManager extends EE {
     return [...this.peers.values()].filter((p) => !p.used &&
       p.protocols.has(cap.id) &&
       cap.versions.length > 0 &&
-      p.protocols.get(cap.id)!.versions.some(v => cap.versions.indexOf(v) > -1) && (p.used = true))
+      p.protocols.get(cap.id)!.versions.some(v => cap.versions.indexOf(v) > -1))
   }
 
   getRandomByCapability (cap: ICapability): Peer | undefined {
@@ -51,6 +51,10 @@ export class PeerManager extends EE {
   }
 
   releasePeers (peers: Peer[]) {
-    peers.forEach(p => { p.used = false })
+    peers.forEach(p => { p && (p.used = false) })
+  }
+
+  reserve (peers: Peer[]) {
+    peers.forEach(p => { p && (p.used = true) })
   }
 }
