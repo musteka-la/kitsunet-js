@@ -36,17 +36,18 @@ export class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDown
       const remoteHeader: Block | undefined = await this.latest()
       if (remoteHeader) {
         const remoteNumber: BN = new BN(remoteHeader.header.number)
-        blockNumber = blockNumber.addn(1)
-        debug(`latest block is ${blockNumber.toString(10)} remote block is ${remoteNumber.toString(10)}`)
+        blockNumber.iaddn(1)
+        const blockNumberStr: string = blockNumber.toString(10)
+        debug(`latest block is ${blockNumberStr} remote block is ${remoteNumber.toString(10)}`)
         while (blockNumber.lte(remoteNumber)) {
           debug(`requesting ${MAX_PER_REQUEST} blocks from ${this.protocol.peer.id} starting ` +
-          `from ${blockNumber.toString(10)}`)
+          `from ${blockNumberStr}`)
 
           let headers: Block.Header[] = await this.getHeaders(blockNumber, MAX_PER_REQUEST)
           if (!headers.length) return
           let bodies: BlockBody[] = await this.getBodies(headers.map(h => h.hash()))
           await this.chain.putBlocks(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
-          blockNumber = blockNumber.addn(headers.length)
+          blockNumber.iaddn(headers.length)
           debug(`imported ${headers.length} blocks`)
         }
       }
