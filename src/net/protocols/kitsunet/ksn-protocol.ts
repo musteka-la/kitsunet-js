@@ -51,8 +51,9 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     for await (const msg of super.receive<T, Message>(readable) as AsyncIterable<Message>) {
       if (msg && msg.type !== MsgType.UNKNOWN_MSG) {
         const res = await this.handlers[msg.type].handle(msg)
-        if (!res) yield null
+        if (!res) return null
         for await (const encoded of this.encoder!.encode(res)) {
+          if (!encoded) return null
           yield encoded
         }
       }
@@ -68,6 +69,8 @@ export class KsnProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    */
   async handshake (): Promise <void> {
     const res: Identify = await this.handlers[MsgType.IDENTIFY].send()
+    if (!res) throw new Error('empty identify message!')
+
     this.versions = res.versions
     this.userAgent = res.userAgent
 

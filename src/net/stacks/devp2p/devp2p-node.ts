@@ -100,8 +100,13 @@ export class Devp2pNode extends Node<Devp2pPeer> {
         udpPort: node.port,
         tcpPort: node.port
       }
-      await this.dpt.bootstrap(bootnode)
+      try {
+        await this.dpt.bootstrap(bootnode)
+      } catch (e) {
+        debug(e)
+      }
     })
+
     this.started = true
   }
 

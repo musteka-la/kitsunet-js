@@ -20,7 +20,6 @@ import {
 } from '../../interfaces'
 import { Libp2pDialer } from './libp2p-dialer'
 import { EthChain, IBlockchain } from '../../../blockchain'
-import { reject } from 'async'
 
 const debug = Debug('kitsunet:net:libp2p:node')
 
@@ -109,9 +108,10 @@ export class Libp2pNode extends Node<Libp2pPeer> {
           pull(stream, lp.encode(), conn)
           const inStream = toIterator(pull(conn, lp.decode()))
           for await (const msg of protocol.receive(inStream)) {
-            if (!msg) return stream.end()
+            if (!msg) break
             stream.push(msg)
           }
+          stream.end()
         } catch (err) {
           debug(err)
         }

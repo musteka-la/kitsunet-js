@@ -19,7 +19,7 @@ export class Identify<P extends IPeerDescriptor<any>> extends KitsunetHandler<P>
   async handle (): Promise<any> {
     try {
       const block: Block = await this.protocol.ethChain.getBestBlock()
-      const td: Buffer = (await await this.protocol.ethChain.getBlocksTD()).toArrayLike(Buffer)
+      const td: Buffer = (await this.protocol.ethChain.getBlocksTD()).toArrayLike(Buffer)
       return {
         type: MsgType.IDENTIFY,
         status: ResponseStatus.OK,

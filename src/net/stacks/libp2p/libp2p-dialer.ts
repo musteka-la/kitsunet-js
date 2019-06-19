@@ -89,7 +89,6 @@ export class Libp2pDialer extends EE {
       this.emit('peer:dialed', peerInfo)
     } catch (err) {
       log(err)
-      throw err
     } finally {
       this.dialing.delete(id)
     }
