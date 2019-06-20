@@ -9,7 +9,7 @@ import LRUCache from 'lru-cache'
 
 @register('peer-manager')
 export class PeerManager extends EE {
-  peers: LRUCache<string, Peer> = new LRUCache({ max: 25, maxAge: 1000 * 30 })
+  peers: LRUCache<string, Peer> = new LRUCache({ max: 5, maxAge: 1000 * 30 })
   constructor (@register('node-manager')
                public nodeManager: NodeManager<Peer>) {
     super()

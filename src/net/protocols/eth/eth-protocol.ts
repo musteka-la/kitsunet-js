@@ -123,12 +123,15 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   async handshake (): Promise<void> {
-    return this.handlers[MSG_CODES.STATUS].send(
+    this.handlers[MSG_CODES.STATUS].send(
       this.protocolVersion,
       this.ethChain.common.networkId(),
       await this.ethChain.getBlocksTD(),
       (await this.ethChain.getBestBlock() as any).hash(),
       this.ethChain.genesis().hash
     )
+
+    // wait for status to get resolved
+    await this.getStatus()
   }
 }

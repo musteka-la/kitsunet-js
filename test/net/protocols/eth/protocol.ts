@@ -13,7 +13,6 @@ import { ETH } from 'ethereumjs-devp2p'
 
 import {
   IPeerDescriptor,
-  INetwork,
   IEncoder,
   Node
 } from '../../../../src/net'
