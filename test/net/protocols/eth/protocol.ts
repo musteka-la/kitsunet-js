@@ -266,7 +266,7 @@ describe('Eth protocol', () => {
 
       ethProtocol.ethChain.getHeaders = async () => [fromRpc(jsonBlock.block).header]
       const blockHeaders: BlockHeaders<any> = new BlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await blockHeaders.send(fromRpc(jsonBlock.block).header, 0, 1, 0)
+      await blockHeaders.send(fromRpc(jsonBlock.block).header, 0, 1, false)
     })
 
     it('should send NewBlockHashes', async () => {
