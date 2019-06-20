@@ -91,6 +91,7 @@ Temporary Items
 
 .vscode/
 .history/
-
+misc/*
+dist/*
 
 # End of https://www.gitignore.io/api/osx,node
