@@ -10,12 +10,12 @@ import LRUCache from 'lru-cache'
 import Debug from 'debug'
 const debug = Debug('kitsunet:downloader:download-manager')
 
-const MAX_PEERS: number = 25
-const DEFAULT_DOWNLOAD_INTERVAL: number = 1000 * 5
+const MAX_PEERS: number = 5
+const DEFAULT_DOWNLOAD_INTERVAL: number = 1000 * 20
 
 @register('download-manager')
 export class DownloadManager extends EE {
-  peers: LRUCache<string, Peer> = new LRUCache({ max: MAX_PEERS, maxAge: 1000 * 1000 * 5 })
+  peers: LRUCache<string, Peer> = new LRUCache({ max: MAX_PEERS, maxAge: 1000 * 60 })
   syncInterval: NodeJS.Timeout | undefined
   maxPeers: number = MAX_PEERS
   downloadInterval: number = DEFAULT_DOWNLOAD_INTERVAL
@@ -66,9 +66,9 @@ export class DownloadManager extends EE {
 
       if (!peers.length) return
       const status = await Promise.all(peers.map((p) => (p.protocols.get('eth') as EthProtocol<any>)!.getStatus()))
-      let bestPeer: any = null
+      let bestPeer: any = td
       status.forEach((s, i) => {
-        if (s.td.gt(td)) bestPeer = peers[i]
+        if (s.td.gt(bestPeer)) bestPeer = peers[i]
       })
 
       if (bestPeer) {
