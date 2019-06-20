@@ -1,0 +1,1 @@
+{"version":3,"file":"browser.d.ts","sourceRoot":"","sources":["../../../../../../src/net/stacks/libp2p/config/browser.ts"],"names":[],"mappings":"AAKA,OAAO,QAAQ,MAAM,WAAW,CAAA;AAEhC,qBAAa,YAAY;IACvB;;;;;;OAMG;WACU,SAAS,CAAE,QAAQ,EAAE,QAAQ,EAClB,KAAK,CAAC,EAAE,MAAM,EAAE,EAChB,SAAS,CAAC,EAAE,MAAM,EAAE,GAAG,OAAO,CAAC,GAAG,CAAC;CA0B5D"}

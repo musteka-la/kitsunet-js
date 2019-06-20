@@ -1,0 +1,7 @@
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+var DownloaderType;
+(function (DownloaderType) {
+    DownloaderType[DownloaderType["FAST"] = 0] = "FAST";
+})(DownloaderType = exports.DownloaderType || (exports.DownloaderType = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW50ZXJmYWNlcy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NyYy9kb3dubG9hZGVyL2ludGVyZmFjZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWSxDQUFBOztBQUlaLElBQVksY0FFWDtBQUZELFdBQVksY0FBYztJQUN4QixtREFBSSxDQUFBO0FBQ04sQ0FBQyxFQUZXLGNBQWMsR0FBZCxzQkFBYyxLQUFkLHNCQUFjLFFBRXpCIiwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBzdHJpY3QnXG5cbmltcG9ydCB7IEV0aFByb3RvY29sIH0gZnJvbSAnLi4vbmV0J1xuXG5leHBvcnQgZW51bSBEb3dubG9hZGVyVHlwZSB7XG4gIEZBU1Rcbn1cblxuLyoqXG4gKiBJbnRlcmZhY2UgZm9yIGRvd25sb2FkZXJzXG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgSURvd25sb2FkZXIge1xuICB0eXBlOiBEb3dubG9hZGVyVHlwZVxuICBkb3dubG9hZCAocHJvdG9jb2w6IEV0aFByb3RvY29sPGFueT4pOiBQcm9taXNlPHZvaWQ+XG59XG4iXX0=

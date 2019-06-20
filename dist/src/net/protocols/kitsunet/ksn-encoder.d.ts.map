@@ -1,0 +1,1 @@
+{"version":3,"file":"ksn-encoder.d.ts","sourceRoot":"","sources":["../../../../../src/net/protocols/kitsunet/ksn-encoder.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,QAAQ,EAAE,MAAM,kBAAkB,CAAA;AAO3C,qBAAa,UAAW,YAAW,QAAQ;IAClC,MAAM,CAAC,CAAC,EAAE,CAAC,EAAG,GAAG,EAAE,CAAC,GAAG,aAAa,CAAC,CAAC,CAAC;IAQvC,MAAM,CAAC,CAAC,EAAE,CAAC,EAAG,GAAG,EAAE,CAAC,GAAG,aAAa,CAAC,CAAC,CAAC;CAO/C"}

@@ -1,0 +1,12 @@
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+const events_1 = require("events");
+class NetworkPeer extends events_1.EventEmitter {
+    constructor() {
+        super(...arguments);
+        this.used = false;
+        this.protocols = new Map(); // a set of protocols that this peer supports
+    }
+}
+exports.NetworkPeer = NetworkPeer;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGVlci5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uLy4uL3NyYy9uZXQvcGVlci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxZQUFZLENBQUE7O0FBR1osbUNBQTJDO0FBRTNDLE1BQXNCLFdBQWtCLFNBQVEscUJBQUU7SUFBbEQ7O1FBSVcsU0FBSSxHQUFZLEtBQUssQ0FBQTtRQUM5QixjQUFTLEdBQThCLElBQUksR0FBRyxFQUFFLENBQUEsQ0FBQyw2Q0FBNkM7SUFDaEcsQ0FBQztDQUFBO0FBTkQsa0NBTUMiLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIHN0cmljdCdcblxuaW1wb3J0IHsgSVBlZXJEZXNjcmlwdG9yLCBJUHJvdG9jb2wgfSBmcm9tICcuL2ludGVyZmFjZXMnXG5pbXBvcnQgeyBFdmVudEVtaXR0ZXIgYXMgRUUgfSBmcm9tICdldmVudHMnXG5cbmV4cG9ydCBhYnN0cmFjdCBjbGFzcyBOZXR3b3JrUGVlcjxULCBVPiBleHRlbmRzIEVFIGltcGxlbWVudHMgSVBlZXJEZXNjcmlwdG9yPFQ+IHtcbiAgYWJzdHJhY3QgcGVlcjogVFxuICBhYnN0cmFjdCBpZDogc3RyaW5nXG4gIGFic3RyYWN0IGFkZHJzOiBTZXQ8c3RyaW5nPlxuICBhYnN0cmFjdCB1c2VkOiBib29sZWFuID0gZmFsc2VcbiAgcHJvdG9jb2xzOiBNYXA8c3RyaW5nLCBJUHJvdG9jb2w8VT4+ID0gbmV3IE1hcCgpIC8vIGEgc2V0IG9mIHByb3RvY29scyB0aGF0IHRoaXMgcGVlciBzdXBwb3J0c1xufVxuIl19

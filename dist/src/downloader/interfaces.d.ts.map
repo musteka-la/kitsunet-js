@@ -1,0 +1,1 @@
+{"version":3,"file":"interfaces.d.ts","sourceRoot":"","sources":["../../../src/downloader/interfaces.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,WAAW,EAAE,MAAM,QAAQ,CAAA;AAEpC,oBAAY,cAAc;IACxB,IAAI,IAAA;CACL;AAED;;GAEG;AACH,MAAM,WAAW,WAAW;IAC1B,IAAI,EAAE,cAAc,CAAA;IACpB,QAAQ,CAAE,QAAQ,EAAE,WAAW,CAAC,GAAG,CAAC,GAAG,OAAO,CAAC,IAAI,CAAC,CAAA;CACrD"}
