@@ -134,44 +134,42 @@ const cliConfig: any = {
 
 class KistunetCli {
   static async run () {
-    return new Promise(async (resolve) => {
-      const options = require('yargs')
-        .usage(`Kitsunet cmd client`)
-        .options(cliConfig)
-        .help('help')
-        .alias('help', 'h')
-        .argv
+    const options = require('yargs')
+      .usage(`Kitsunet cmd client`)
+      .options(cliConfig)
+      .help('help')
+      .alias('help', 'h')
+      .argv
 
-      let config: any = {}
-      if (options.config) {
-        config = options.config
-      }
+    let config: any = {}
+    if (options.config) {
+      config = options.config
+    }
 
-      options.NODE_ENV = process.env.NODE_ENV || 'prod'
-      options.identity = options.identity ? await import(options.identity) : config.identity
-      options.libp2pAddrs = options.libp2pAddrs || options.libp2PAddrs || config.libp2pAddrs
-      options.chainDb = path.resolve(options.ethChainDb)
+    options.NODE_ENV = process.env.NODE_ENV || 'prod'
+    options.identity = options.identity ? await import(options.identity) : config.identity
+    options.libp2pAddrs = options.libp2pAddrs || options.libp2PAddrs || config.libp2pAddrs
+    options.chainDb = path.resolve(options.ethChainDb)
 
-      if (!fs.existsSync(options.chainDb)) {
-        fs.mkdirSync(options.chainDb, {
-          recursive: true,
-          mode: 0o755
-        })
-      }
+    if (!fs.existsSync(options.chainDb)) {
+      fs.mkdirSync(options.chainDb, {
+        recursive: true,
+        mode: 0o755
+      })
+    }
 
-      const kitsunet = await KitsunetFactory.createKitsunet(options)
-      await kitsunet.start()
+    const kitsunet = await KitsunetFactory.createKitsunet(options)
+    await kitsunet.start()
 
-      const cleanup = async () => {
-        console.log(`shutting down client...`)
-        await kitsunet.stop()
-      }
+    const cleanup = async () => {
+      console.log(`shutting down client...`)
+      await kitsunet.stop()
+    }
 
-      // listen for graceful termination
-      process.on('SIGTERM', cleanup)
-      process.on('SIGINT', cleanup)
-      process.on('SIGHUP', cleanup)
-    })
+    // listen for graceful termination
+    process.on('SIGTERM', cleanup)
+    process.on('SIGINT', cleanup)
+    process.on('SIGHUP', cleanup)
   }
 }
 

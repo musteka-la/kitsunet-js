@@ -9,12 +9,12 @@ import { KsnProtocol, EthProtocol } from '../protocols'
 
 /**
  * A node manager to start/stop nodes as well
- * as subscribet to discovery events
+ * as subscribed to discovery events
  *
  * @fires NodeManager#kitsunet:peer:connected - fires on new connected peer
  * @fires NodeManager#kitsunet:peer:disconnected - fires when a peer disconnects
  */
-@register()
+@register('node-manager')
 export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
   @register('nodes')
   static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode): Node<U>[] {

@@ -3,13 +3,14 @@
 import { Node } from './node'
 import { register } from 'opium-decorators'
 import { EventEmitter } from 'events'
-import { IPeerDescriptor } from './interfaces'
+import { IPeerDescriptor, NetworkType } from './interfaces'
 import { Libp2pNode } from './stacks/libp2p'
 import { Devp2pNode } from './stacks/devp2p'
 
 import {
   KsnProtocol,
-  EthProtocol
+  EthProtocol,
+  NodeType
 } from './protocols'
 
 /**

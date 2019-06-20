@@ -16,7 +16,7 @@ export class PeerManager extends EE {
       this.peers.set(peer.id, peer)
     })
 
-    this.nodeManager.on('kitsunet:peer:disconected', (peer: Peer) => {
+    this.nodeManager.on('kitsunet:peer:disconnected', (peer: Peer) => {
       this.peers.delete(peer.id)
     })
   }

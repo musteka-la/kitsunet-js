@@ -4,7 +4,8 @@
   "description": "Kitsunet mesh node",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "npm run clean && tsc --pretty -p tsconfig-prod.json",
+    "build:prod": "npm run clean && tsc --pretty -p tsconfig-prod.json",
+    "build": "npm run clean && tsc --pretty",
     "watch": "npm run clean && tsc --watch --pretty",
     "clean": "rm -rf dist/",
     "test": "mocha --recursive --extension ts -r node_modules/ts-node/register ./test",
@@ -15,7 +16,7 @@
     "kitsunet": "dist/bin/cli.js"
   },
   "browser": {
-    "./dist/src/net/libp2p/config/index.js": "./dist/src/net/libp2p/config/browser.js",
+    "./dist/src/net/stacks/libp2p/config/index.js": "./dist/src/net/stacks/libp2p/config/browser.js",
     "./dist/src/net/node-manager.js": "./dist/src/net/runtime/node-manager-browser.js"
   },
   "author": "Dmitriy Ryajov <dryajov@gmail.com>",

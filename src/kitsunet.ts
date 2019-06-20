@@ -9,8 +9,7 @@ import { KsnDriver } from './ksn-driver'
 import { DEFAULT_DEPTH } from './constants'
 import { NetworkPeer } from './net/peer'
 import Block from 'ethereumjs-block'
-
-const DEFUALT_DEPTH: number = 10
+import { Node } from './net'
 
 @register()
 export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
@@ -18,15 +17,15 @@ export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
   ksnDriver: KsnDriver<T>
   depth: number
 
-  @register('default-depth')
-  static getDefaultDepth (): number {
-    return DEFAULT_DEPTH
+  @register('slice-depth')
+  static getDefaultDepth (@register('options') options: any): number {
+    return options.depth || DEFAULT_DEPTH
   }
 
   constructor (sliceManager: SliceManager<T>,
                ksnDriver: KsnDriver<T>,
-               @register('default-depth')
-               depth: number = DEFUALT_DEPTH) {
+               @register('slice-depth')
+               depth: number = DEFAULT_DEPTH) {
     super()
 
     this.sliceManager = sliceManager
@@ -48,6 +47,10 @@ export class Kitsunet<T extends NetworkPeer<any, any>> extends EE {
       addrs.push(addr)
       return addr
     }, [])
+  }
+
+  get networkNodes (): Node<T>[] {
+    return this.ksnDriver.nodeManager.nodes
   }
 
   get peers () {

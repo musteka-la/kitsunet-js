@@ -15,6 +15,7 @@ import {
   Libp2pPeer,
   NetworkPeer
 } from './net'
+
 import { EthChain, IBlockchain } from './blockchain'
 import { DownloadManager } from './downloader'
 
