@@ -195,13 +195,11 @@ export class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
         times: 10,
         interval: 3000
       },
-      // tslint:disable-next-line: align
       async () => {
         const _slice = await this.ksnDriver.resolveSlices([slice])
         if (_slice) return _slice
         throw new Error(`no slice retrieved, retrying ${++times}!`)
       },
-      // tslint:disable-next-line: align
       (err, res) => {
         if (err) return reject(err)
         resolve(res)

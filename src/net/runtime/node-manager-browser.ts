@@ -32,7 +32,6 @@ export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
         id: 'ksn',
         versions: ['1.0.0']
       }
-      // tslint:disable-next-line: align
     }, {
       constructor: EthProtocol,
       cap: {

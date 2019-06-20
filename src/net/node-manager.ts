@@ -14,7 +14,7 @@ import {
 
 /**
  * A node manager to start/stop nodes as well
- * as subscribet to discovery events
+ * as subscribed to discovery events
  *
  * @fires NodeManager#kitsunet:peer:connected - fires on new connected peer
  * @fires NodeManager#kitsunet:peer:disconnected - fires when a peer disconnects
@@ -24,7 +24,8 @@ export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
   @register('nodes')
   static createNodes<U extends Node<any>> (libp2pNode: Libp2pNode,
                                            devp2pNode: Devp2pNode,
-                                           @register('options') options: any): Node<U>[] {
+                                           @register('options')
+                                           options: any): Node<U>[] {
     const stacks: Node<any>[] = []
     if (options.stacks.indexOf('libp2p') > -1) stacks.push(libp2pNode)
     if (options.stacks.indexOf('devp2p') > -1) stacks.push(devp2pNode)
@@ -42,7 +43,6 @@ export class NodeManager<T extends IPeerDescriptor<any>> extends EventEmitter {
         id: 'ksn',
         versions: ['1.0.0']
       }
-    // tslint:disable-next-line: align
     }, {
       constructor: EthProtocol,
       cap: {

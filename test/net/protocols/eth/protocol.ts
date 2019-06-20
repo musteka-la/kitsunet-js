@@ -164,7 +164,6 @@ describe('Eth protocol', () => {
         ])
       } as any
 
-      // tslint:disable-next-line: no-empty
       // eslint-disable-next-line no-unused-vars
       for await (const _ of ethProtocol.receive(source)) {
       }

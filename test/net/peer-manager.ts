@@ -31,7 +31,6 @@ class FakePeer extends NetworkPeer<any, any> {
 }
 
 class FakeProto extends BaseProtocol<FakePeer> {
-// tslint:disable-next-line: no-empty
   async handshake (): Promise<void> {
   }
 
