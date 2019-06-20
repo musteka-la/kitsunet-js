@@ -3,3 +3,6 @@ src/*
 misc/*
 .history/*
 .vscode/*
+.DS_Store
+architecture.md
+Dockerfile
