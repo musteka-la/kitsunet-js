@@ -60,7 +60,7 @@ export class KitsunetFactory {
 
   static async createKitsunet (options: any) {
     options.ethNetwork = options.ethNetwork || 'mainnet'
-    options.chainDb = options.chainDb || 'kitsunet'
+    options.ethChainDb = options.ethChainDb || 'kitsunet'
     KitsunetFactory.options = options
 
     const injectable = injectableFactory()(KitsunetFactory, 'kitsunetFactory')

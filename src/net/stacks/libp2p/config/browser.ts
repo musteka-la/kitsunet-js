@@ -10,13 +10,10 @@ export class Libp2pConfig {
    * Return a libp2p config
    *
    * @param peerInfo {PeerInfo} - the peerInfo for this peer
-   * @param addrs {string[]} - the addrs array
    * @param bootstrap {string[]} - the bootstraps addrs array
    */
   static async getConfig (peerInfo: PeerInfo,
-                          addrs?: string[],
                           bootstrap?: string[]): Promise<any> {
-
     bootstrap = bootstrap || []
     const wstar = new WStar()
     return {

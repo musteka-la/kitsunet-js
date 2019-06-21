@@ -76,7 +76,7 @@ export class LibP2PFactory {
       }
     }
 
-    const config = await Libp2pConfig.getConfig(peerInfo, options.addrs, options.bootstrap)
+    const config = await Libp2pConfig.getConfig(peerInfo, options.bootstrap)
     const node: Libp2pPromisified = new Libp2p(defaultsDeep(defaults, config)) as Libp2pPromisified
 
     node.start = promisify(node.start.bind(node))
