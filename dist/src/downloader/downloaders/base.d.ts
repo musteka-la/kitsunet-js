@@ -12,6 +12,7 @@ export declare abstract class BaseDownloader<T extends IPeerDescriptor<any>> imp
     latest(): Promise<Block | undefined>;
     getHeaders(block: BN | Buffer | number, max: number, skip?: number, reverse?: boolean): Promise<Block.Header[]>;
     getBodies(hashes: Buffer[]): Promise<BlockBody[]>;
+    store(blocks: Block[]): Promise<void>;
     abstract download(protocol: EthProtocol<any>): Promise<void>;
 }
 //# sourceMappingURL=base.d.ts.map

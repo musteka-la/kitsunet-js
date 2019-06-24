@@ -2,10 +2,11 @@
 import { EthChain } from '../blockchain/eth-chain';
 import { EventEmitter as EE } from 'events';
 import { PeerManager, Peer } from '../net';
+import LRUCache from 'lru-cache';
 export declare class DownloadManager extends EE {
     peerManager: PeerManager;
     chain: EthChain;
-    peers: Map<string, Peer>;
+    peers: LRUCache<string, Peer>;
     syncInterval: NodeJS.Timeout | undefined;
     maxPeers: number;
     downloadInterval: number;

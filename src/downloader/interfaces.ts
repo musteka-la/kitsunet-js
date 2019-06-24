@@ -1,9 +1,17 @@
 'use strict'
 
-import { EthProtocol } from '../net'
+import {
+  Peer,
+  PeerManager
+} from '../net'
+import { IBlockchain } from '../blockchain'
 
 export enum DownloaderType {
   FAST
+}
+
+export interface IDownloaderConstructor {
+  new (chain: IBlockchain, peerManager: PeerManager): IDownloader
 }
 
 /**
@@ -11,5 +19,6 @@ export enum DownloaderType {
  */
 export interface IDownloader {
   type: DownloaderType
-  download (protocol: EthProtocol<any>): Promise<void>
+  download (peer: Peer): Promise<void>
+  best(): Promise<Peer | undefined>
 }
