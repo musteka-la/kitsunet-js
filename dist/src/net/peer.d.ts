@@ -5,7 +5,6 @@ export declare abstract class NetworkPeer<T, U> extends EE implements IPeerDescr
     abstract peer: T;
     abstract id: string;
     abstract addrs: Set<string>;
-    abstract used: boolean;
     protocols: Map<string, IProtocol<U>>;
 }
 //# sourceMappingURL=peer.d.ts.map

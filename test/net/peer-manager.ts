@@ -57,19 +57,20 @@ describe('peer manager', () => {
 
   it('should add peer', () => {
     nodeManager.emit('kitsunet:peer:connected', fakePeer)
-    expect(peerManager.peers).to.have.keys('12345')
-    expect(peerManager.peers.get('12345')).to.eql(fakePeer)
+    expect(peerManager.peers.keys()).to.contain('12345')
+    expect(peerManager.peers.get('12345')!.peer).to.eql(fakePeer)
   })
 
   it('should remove peer', () => {
-    nodeManager.emit('kitsunet:peer:disconected', fakePeer)
+    nodeManager.emit('kitsunet:peer:disconnected', fakePeer)
     expect(peerManager.peers).to.not.have.keys('12345')
   })
 
   it('should retrieve peer by id', () => {
     nodeManager.emit('kitsunet:peer:connected', fakePeer)
     expect(peerManager.getById('12345')).to.eql(fakePeer)
-    expect(fakePeer.used).to.be.eq(true)
+    peerManager.reserve([fakePeer])
+    expect(peerManager.isUsed(fakePeer)).to.be.eq(true)
   })
 
   it('should retrieve unused peers', () => {
@@ -82,7 +83,7 @@ describe('peer manager', () => {
     nodeManager.emit('kitsunet:peer:connected', peer2)
     nodeManager.emit('kitsunet:peer:connected', peer3)
     nodeManager.emit('kitsunet:peer:connected', peer4)
-    peer3.used = true
+    peerManager.reserve([peer3])
     const peers = peerManager.getUnusedPeers()
     expect(peers).to.have.members([peer1, peer2, peer4])
   })

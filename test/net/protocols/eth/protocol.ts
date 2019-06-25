@@ -25,6 +25,7 @@ import {
 } from '../../../../src/net/protocols/eth/handlers'
 
 import * as jsonBlock from '../../../fixtures/block.json'
+import { nextTick } from 'async'
 import fromRpc = require('ethereumjs-block/from-rpc')
 const block: Block = new Block(fromRpc(jsonBlock.block))
 
@@ -168,7 +169,7 @@ describe('Eth protocol', () => {
       }
     })
 
-    it('should handle NewBlockHashes request', async () => {
+    it('should handle NewBlockHashes request', (done) => {
       const source: AsyncIterable<any> = {
         [Symbol.asyncIterator]: async function* () {
           yield [
@@ -179,11 +180,14 @@ describe('Eth protocol', () => {
 
       ethProtocol.on('new-block-hashes', (newBlocks) => {
         expect(newBlocks[0]).to.eql([block.header.hash(), new BN(block.header.number)])
+        done()
       })
 
-      for await (const msg of ethProtocol.receive(source) as any) {
-        expect(msg[0]).to.eql([block.header.hash(), new BN(block.header.number)])
-      }
+      nextTick(async () => {
+      // eslint-disable-next-line no-unused-vars
+        for await (const _ of ethProtocol.receive(source) as any) {
+        }
+      })
     })
   })
 
@@ -264,7 +268,7 @@ describe('Eth protocol', () => {
 
       ethProtocol.ethChain.getHeaders = async () => [fromRpc(jsonBlock.block).header]
       const blockHeaders: BlockHeaders<any> = new BlockHeaders(ethProtocol, {} as IPeerDescriptor<any>)
-      await blockHeaders.send(fromRpc(jsonBlock.block).header, 0, 1, false)
+      await blockHeaders.send(fromRpc(jsonBlock.block).header.hash(), 0, 1, false)
     })
 
     it('should send NewBlockHashes', async () => {

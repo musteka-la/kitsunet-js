@@ -95,6 +95,14 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return super.send(msg, this)
   }
 
+  /**
+   * Get block headers
+   *
+   * @param block {number | Buffer | BN} - the block for which to get the header
+   * @param max {number} - max number of headers to download from peer
+   * @param skip {number} - skip a number of headers
+   * @param reverse {boolean} - in reverse order
+   */
   async *getHeaders (block: number | Buffer | BN,
                      max: number,
                      skip?: number,
@@ -107,6 +115,11 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     })
   }
 
+  /**
+   * Get block bodies for block hashes
+   *
+   * @param hashes {Buffer[] | string[]} - block hashes for which to get the bodies
+   */
   async *getBlockBodies (hashes: Buffer[] | string[]): AsyncIterable<BlockBody[]> {
     yield new Promise<BlockBody[]>(async (resolve) => {
       this.handlers[MSG_CODES.BLOCK_BODIES].on('message', (bodies) => {
@@ -117,11 +130,19 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /**
+   * Notify remote peer of new hashes
+   *
+   * @param hashes {Buffer[] | string[]} - array of new hashes to notify the peer
+   */
   sendNewHashes (hashes: string[] | Buffer[]): Promise<void> {
-    throw new Error('Method not implemented.')
+    return this.handlers[MSG_CODES.NEW_BLOCK_HASHES].send(hashes)
   }
 
+  /**
+   * Perform protocol handshake. In the case of ETH protocol,
+   * it sends the `Status` message.
+   */
   async handshake (): Promise<void> {
     this.handlers[MSG_CODES.STATUS].send(
       this.protocolVersion,

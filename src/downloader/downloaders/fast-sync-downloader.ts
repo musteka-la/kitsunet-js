@@ -21,57 +21,43 @@ const debug = Debug('kitsunet:downloaders:fast-sync')
 const MAX_PER_REQUEST: number = 128
 const CONCCURENT_REQUESTS: number = 5
 
-async function task (this: FastSyncDownloader, peer: Peer) {
-  const protocol = peer.protocols.get('eth')
-  if (!protocol) throw new Error('fast sync requires the ETH capability!')
-
-  let blockNumber: BN = new BN(0)
-  const block: Block | undefined = await this.chain.getLatestBlock()
-  if (block) {
-    blockNumber = new BN(block.header.number)
-  }
-
-  try {
-    debug(`trying to sync with ${protocol.peer.id}`)
-    const remoteHeader: Block | undefined = await this.latest(protocol as unknown as IEthProtocol, peer)
-    if (remoteHeader) {
-      const remoteNumber: BN = new BN(remoteHeader.header.number)
-      const blockNumberStr: string = blockNumber.toString(10)
-      debug(`latest block is ${blockNumberStr} remote block is ${remoteNumber.toString(10)}`)
-
-      // increment current block to set as start
-      blockNumber.iaddn(1)
-      while (blockNumber.lte(remoteNumber)) {
-        debug(`requesting ${MAX_PER_REQUEST} blocks from ${protocol.peer.id} starting ` +
-          `from ${blockNumberStr}`)
-
-        let headers: Block.Header[] = await this.getHeaders(protocol as unknown as IEthProtocol,
-          blockNumber, MAX_PER_REQUEST)
-
-        if (!headers.length) return
-
-        let bodies: BlockBody[] = await this.getBodies(protocol as unknown as IEthProtocol,
-          headers.map(h => h.hash()))
-
-        await this.store(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
-
-        blockNumber.iaddn(headers.length)
-        debug(`imported ${headers.length} blocks`)
-      }
-    }
-  } catch (err) {
-    debug(err)
-  }
+interface TaskPayload {
+  blockNumber: BN
+  protocol: IEthProtocol
 }
 
 export class FastSyncDownloader extends BaseDownloader {
   type: DownloaderType
-  queue: AsyncQueue<Peer>
+  queue: AsyncQueue<TaskPayload>
+  highestBlock: BN = new BN(0)
 
   constructor (public chain: EthChain, peerManager: PeerManager) {
     super(chain, peerManager)
     this.type = DownloaderType.FAST
-    this.queue = queue(task.bind(this), CONCCURENT_REQUESTS)
+    this.queue = queue(this.task.bind(this), CONCCURENT_REQUESTS)
+  }
+
+  protected async task ({ blockNumber, protocol }) {
+    try {
+      const blockNumberStr: string = blockNumber.toString(10)
+
+      // increment current block to set as start
+      debug(`requesting ${MAX_PER_REQUEST} blocks ` +
+      `from ${protocol.peer.id} starting from ${blockNumberStr}`)
+
+      let headers: Block.Header[] = await this.getHeaders(protocol as unknown as IEthProtocol,
+        blockNumber, MAX_PER_REQUEST)
+
+      if (!headers.length) return
+
+      let bodies: BlockBody[] = await this.getBodies(protocol as unknown as IEthProtocol,
+        headers.map(h => h.hash()))
+
+      await this.store(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
+      debug(`imported ${headers.length} blocks`)
+    } catch (err) {
+      debug(err)
+    }
   }
 
   async best (): Promise<Peer | undefined> {
@@ -81,8 +67,9 @@ export class FastSyncDownloader extends BaseDownloader {
     })
 
     if (!peers.length) return
-    const status = await Promise.all(peers.map((p) =>
-        (p.protocols.get('eth') as EthProtocol<any>)!.getStatus()))
+    const status = await Promise.all(peers.map((p) => {
+      return (p.protocols.get('eth') as EthProtocol<any>)!.getStatus()
+    }))
 
     let bestPeer: Peer | undefined
     let bestPeerTd: BN = await this.chain.getBlocksTD()
@@ -98,6 +85,34 @@ export class FastSyncDownloader extends BaseDownloader {
   }
 
   async download (peer: Peer): Promise<void> {
-    return this.queue.push(peer)
+    let blockNumber: BN = new BN(0)
+    const block: Block | undefined = await this.chain.getLatestBlock()
+    if (block) {
+      blockNumber = new BN(block.header.number)
+    }
+
+    const protocol = peer.protocols.get('eth') as unknown as IEthProtocol
+    if (!protocol) {
+      throw new Error('fast sync requires the ETH capability!')
+    }
+
+    const remoteHeader: Block | undefined = await this.latest(protocol, peer)
+    if (!remoteHeader) {
+      debug(`unable to get remote header from ${peer.id}!`)
+      return
+    }
+
+    const remoteNumber: BN = new BN(remoteHeader.header.number)
+    const blockNumberStr: string = blockNumber.toString(10)
+    debug(`latest block is ${blockNumberStr} remote block is ${remoteNumber.toString(10)}`)
+    blockNumber.iaddn(1)
+    while (blockNumber.lte(remoteNumber)) {
+      this.queue.push({ blockNumber, protocol })
+      blockNumber.addn(MAX_PER_REQUEST).gt(remoteNumber)
+        ? remoteNumber.isub(blockNumber)
+        : blockNumber.iaddn(MAX_PER_REQUEST)
+      this.highestBlock = blockNumber
+    }
+    await this.queue.drain()
   }
 }

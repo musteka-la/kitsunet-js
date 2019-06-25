@@ -5,13 +5,13 @@ import { EthChain } from '../blockchain/eth-chain'
 import { EventEmitter as EE } from 'events'
 import { PeerManager, Peer } from '../net'
 import { FastSyncDownloader } from './downloaders'
+import { IDownloader } from './interfaces'
 import LRUCache from 'lru-cache'
 
 import Debug from 'debug'
-import { IDownloader } from './interfaces'
+import { MAX_PEERS } from '../constants'
 const debug = Debug('kitsunet:downloader:download-manager')
 
-const MAX_PEERS: number = 5
 const DEFAULT_DOWNLOAD_INTERVAL: number = 1000 * 20
 
 @register('download-manager')
@@ -38,9 +38,9 @@ export class DownloadManager extends EE {
     }
   }
 
-  constructor (@register('peer-manager')
+  constructor (public chain: EthChain,
+               @register('peer-manager')
                public peerManager: PeerManager,
-               public chain: EthChain,
                @register('options')
                options: any,
                @register('downloader')
@@ -49,10 +49,11 @@ export class DownloadManager extends EE {
     this.syncMode = options.syncMode
   }
 
-  async download (peer: Peer): Promise<void> {
+  private async download (peer: Peer): Promise<void> {
     if (!this.peers.has(peer.id) && this.peers.length <= this.maxPeers) {
       this.peers.set(peer.id, peer)
       try {
+        this.peerManager.reserve([peer])
         return this.downloader.download(peer)
       } catch (e) {
         debug(e)
@@ -70,7 +71,6 @@ export class DownloadManager extends EE {
     this.syncInterval = setInterval(async () => {
       const bestPeer = await this.downloader.best()
       if (bestPeer) {
-        this.peerManager.reserve([bestPeer])
         this.download(bestPeer)
       }
     },
