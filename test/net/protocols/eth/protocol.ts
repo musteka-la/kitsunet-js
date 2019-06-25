@@ -23,9 +23,9 @@ import {
   NewBlockHashes,
   Status
 } from '../../../../src/net/protocols/eth/handlers'
+import { nextTick } from 'async'
 
 import * as jsonBlock from '../../../fixtures/block.json'
-import { nextTick } from 'async'
 import fromRpc = require('ethereumjs-block/from-rpc')
 const block: Block = new Block(fromRpc(jsonBlock.block))
 

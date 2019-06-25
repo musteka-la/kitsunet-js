@@ -22,8 +22,11 @@ const MAX_PER_REQUEST: number = 128
 const CONCCURENT_REQUESTS: number = 5
 
 interface TaskPayload {
-  blockNumber: BN
+  number: BN
   protocol: IEthProtocol
+  max?: number
+  reverse?: boolean
+  skip?: number
 }
 
 export class FastSyncDownloader extends BaseDownloader {
@@ -37,16 +40,16 @@ export class FastSyncDownloader extends BaseDownloader {
     this.queue = queue(this.task.bind(this), CONCCURENT_REQUESTS)
   }
 
-  protected async task ({ blockNumber, protocol }) {
+  protected async task ({ number, protocol, max, skip, reverse }) {
     try {
-      const blockNumberStr: string = blockNumber.toString(10)
+      const blockNumberStr: string = number.toString(10)
 
       // increment current block to set as start
       debug(`requesting ${MAX_PER_REQUEST} blocks ` +
       `from ${protocol.peer.id} starting from ${blockNumberStr}`)
 
       let headers: Block.Header[] = await this.getHeaders(protocol as unknown as IEthProtocol,
-        blockNumber, MAX_PER_REQUEST)
+        number, max, skip, reverse)
 
       if (!headers.length) return
 
@@ -105,14 +108,19 @@ export class FastSyncDownloader extends BaseDownloader {
     const remoteNumber: BN = new BN(remoteHeader.header.number)
     const blockNumberStr: string = blockNumber.toString(10)
     debug(`latest block is ${blockNumberStr} remote block is ${remoteNumber.toString(10)}`)
+
     blockNumber.iaddn(1)
     while (blockNumber.lte(remoteNumber)) {
-      this.queue.push({ blockNumber, protocol })
-      blockNumber.addn(MAX_PER_REQUEST).gt(remoteNumber)
-        ? remoteNumber.isub(blockNumber)
-        : blockNumber.iaddn(MAX_PER_REQUEST)
+      let max: number = MAX_PER_REQUEST
+      if (remoteNumber.lt(blockNumber.addn(max))) {
+        max = (remoteNumber.sub(blockNumber).toNumber()) || 1
+      }
+
+      this.queue.push({ number: blockNumber.clone(), protocol, max })
       this.highestBlock = blockNumber
+      blockNumber.iaddn(max)
     }
-    await this.queue.drain()
+
+    return this.queue.drain()
   }
 }
