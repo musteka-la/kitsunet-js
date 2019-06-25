@@ -1,11 +1,25 @@
-import { EthProtocol, IPeerDescriptor } from '../../net';
+import BN from 'bn.js';
+import { DownloaderType } from '../interfaces';
+import { Peer, IEthProtocol, PeerManager } from '../../net';
 import { EthChain } from '../../blockchain';
 import { BaseDownloader } from './base';
-export declare class FastSyncDownloader<T extends IPeerDescriptor<any>> extends BaseDownloader<T> {
-    protocol: EthProtocol<T>;
-    peer: IPeerDescriptor<T>;
-    chain: EthChain;
-    constructor(protocol: EthProtocol<T>, peer: IPeerDescriptor<T>, chain: EthChain);
-    download(): Promise<void>;
+import { AsyncQueue } from 'async';
+interface TaskPayload {
+    blockNumber: BN;
+    protocol: IEthProtocol;
 }
+export declare class FastSyncDownloader extends BaseDownloader {
+    chain: EthChain;
+    type: DownloaderType;
+    queue: AsyncQueue<TaskPayload>;
+    highestBlock: BN;
+    constructor(chain: EthChain, peerManager: PeerManager);
+    protected task({ blockNumber, protocol }: {
+        blockNumber: any;
+        protocol: any;
+    }): Promise<void>;
+    best(): Promise<Peer | undefined>;
+    download(peer: Peer): Promise<void>;
+}
+export {};
 //# sourceMappingURL=fast-sync-downloader.d.ts.map

@@ -15,7 +15,7 @@ export class NewBlockHashes<P extends IPeerDescriptor<any>> extends EthHandler<P
   async handle<U extends any[]> (...msg: U): Promise<any> {
     // emit on the provider
     const announced = msg.map(hn => [hn[0], new BN(hn[1])])
-    this.protocol.emit('message', announced)
+    this.protocol.emit('new-block-hashes', announced)
   }
 
   async send<U extends any[]> (...hashes: U & [[Buffer, BN][]]): Promise<any> {

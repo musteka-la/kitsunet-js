@@ -36,9 +36,31 @@ export declare class EthProtocol<P extends IPeerDescriptor<any>> extends BasePro
     readonly versions: string[];
     receive<T, U>(readable: AsyncIterable<T>): AsyncIterable<U | U[] | null>;
     send<T, U>(msg: T): Promise<U | U[] | void | null>;
+    /**
+     * Get block headers
+     *
+     * @param block {number | Buffer | BN} - the block for which to get the header
+     * @param max {number} - max number of headers to download from peer
+     * @param skip {number} - skip a number of headers
+     * @param reverse {boolean} - in reverse order
+     */
     getHeaders(block: number | Buffer | BN, max: number, skip?: number, reverse?: boolean): AsyncIterable<Block.Header[]>;
+    /**
+     * Get block bodies for block hashes
+     *
+     * @param hashes {Buffer[] | string[]} - block hashes for which to get the bodies
+     */
     getBlockBodies(hashes: Buffer[] | string[]): AsyncIterable<BlockBody[]>;
+    /**
+     * Notify remote peer of new hashes
+     *
+     * @param hashes {Buffer[] | string[]} - array of new hashes to notify the peer
+     */
     sendNewHashes(hashes: string[] | Buffer[]): Promise<void>;
+    /**
+     * Perform protocol handshake. In the case of ETH protocol,
+     * it sends the `Status` message.
+     */
     handshake(): Promise<void>;
 }
 //# sourceMappingURL=eth-protocol.d.ts.map

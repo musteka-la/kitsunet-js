@@ -27,14 +27,19 @@ const identifyMsg = {
       userAgent: 'ksn-client',
       nodeType: NodeType.NODE,
       latestBlock: Buffer.from([0]),
-      sliceIds: []
+      sliceIds: [],
+      networkId: 0,
+      number: null,
+      td: null,
+      bestHash: null,
+      genesis: null
       // sliceIds: this.networkProvider.getSliceIds()
     }
   }
 }
 
-const hexEncoded = '08011001221a0a180a05312e302e30120a6b736e2d636c69656e741801220100'
-const hexEncodedLp = '2008011001221a0a180a05312e302e30120a6b736e2d636c69656e741801220100'
+const hexEncoded = '08011001221c0a1a0a05312e302e30120a6b736e2d636c69656e7418012201003000'
+const hexEncodedLp = '2208011001221c0a1a0a05312e302e30120a6b736e2d636c69656e7418012201003000'
 
 describe('ksn encoder', () => {
   const encoder = new KsnEncoder()
@@ -78,7 +83,12 @@ describe('ksn encoder', () => {
     const stream = pushable()
     pull(stream, pull.collect((err, data) => {
       if (err) done(err)
-      expect(data[0].toString('hex')).to.eq(hexEncoded)
+
+      try {
+        expect(data[0].toString('hex')).to.eq(hexEncoded)
+      } catch (e) {
+        done(e)
+      }
       done()
     }))
 
@@ -102,7 +112,11 @@ describe('ksn encoder', () => {
     const stream = pushable()
     pull(stream, pull.collect((err, data) => {
       if (err) done(err)
-      expect(data[0].payload.identify).to.eql(identifyMsg.payload.identify)
+      try {
+        expect(data[0].payload.identify).to.eql(identifyMsg.payload.identify)
+      } catch (e) {
+        done(e)
+      }
       done()
     }))
 
@@ -126,7 +140,12 @@ describe('ksn encoder', () => {
     const stream = pushable()
     pull(stream, lp.encode(), pull.collect((err, data) => {
       if (err) done(err)
-      expect(data[0].toString('hex')).to.eq(hexEncodedLp)
+
+      try {
+        expect(data[0].toString('hex')).to.eq(hexEncodedLp)
+      } catch (e) {
+        done(e)
+      }
       done()
     }))
 
