@@ -6,7 +6,6 @@ import { register } from 'opium-decorators'
 
 @register()
 export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
-  used: boolean = false
   peer: Peer
   addrs: Set<string> = new Set() // use multiaddr for internal representation
 

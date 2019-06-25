@@ -6,7 +6,6 @@ import { NetworkPeer } from '../../peer'
 
 @register()
 export class Libp2pPeer extends NetworkPeer<PeerInfo, Libp2pPeer> {
-  used: boolean = false
   peer: PeerInfo
   get id (): string {
     return this.peer.id.toB58String()
