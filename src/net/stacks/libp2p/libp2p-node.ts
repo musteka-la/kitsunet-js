@@ -74,13 +74,19 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     })
   }
 
-  async handlePeer (peer: PeerInfo): Promise<Libp2pPeer> {
+  async handlePeer (peer: PeerInfo): Promise<Libp2pPeer | undefined> {
     let libp2pPeer: Libp2pPeer | undefined = await this.peers.get(peer.id.toB58String())
     if (libp2pPeer) return libp2pPeer
     libp2pPeer = new Libp2pPeer(peer)
     this.peers.set(libp2pPeer.id, libp2pPeer)
     const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
-    await Promise.all(protocols.map(p => p.handshake()))
+    try {
+      await Promise.all(protocols.map(p => p.handshake()))
+    } catch (e) {
+      debug(e)
+      this.libp2pDialer.banPeer(peer, 60 * 1000)
+      return
+    }
 
     this.emit('kitsunet:peer:connected', libp2pPeer)
     return libp2pPeer
@@ -101,19 +107,21 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     conn.getPeerInfo(async (err: Error, peerInfo: PeerInfo) => {
       if (err) throw err
       const peer: Libp2pPeer | undefined = await this.handlePeer(peerInfo)
-      const protocol: IProtocol<Libp2pPeer> | undefined = peer.protocols.get(id)
-      if (protocol) {
-        try {
-          const stream = pushable()
-          pull(stream, lp.encode(), conn)
-          const inStream = toIterator(pull(conn, lp.decode()))
-          for await (const msg of protocol.receive(inStream)) {
-            if (!msg) break
-            stream.push(msg)
+      if (peer) {
+        const protocol: IProtocol<Libp2pPeer> | undefined = peer.protocols.get(id)
+        if (protocol) {
+          try {
+            const stream = pushable()
+            pull(stream, lp.encode(), conn)
+            const inStream = toIterator(pull(conn, lp.decode()))
+            for await (const msg of protocol.receive(inStream)) {
+              if (!msg) break
+              stream.push(msg)
+            }
+            stream.end()
+          } catch (err) {
+            debug(err)
           }
-          stream.end()
-        } catch (err) {
-          debug(err)
         }
       }
     })

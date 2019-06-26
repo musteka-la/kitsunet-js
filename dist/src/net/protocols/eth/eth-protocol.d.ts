@@ -36,6 +36,7 @@ export declare class EthProtocol<P extends IPeerDescriptor<any>> extends BasePro
     readonly versions: string[];
     receive<T, U>(readable: AsyncIterable<T>): AsyncIterable<U | U[] | null>;
     send<T, U>(msg: T): Promise<U | U[] | void | null>;
+    protected requestWithTimeout<T>(outId: ETH.MESSAGE_CODES, inId: ETH.MESSAGE_CODES, payload?: any[], timeout?: number): Promise<T>;
     /**
      * Get block headers
      *
