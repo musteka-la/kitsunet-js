@@ -21,7 +21,7 @@ export declare class Libp2pNode extends Node<Libp2pPeer> {
     caps: ICapability[];
     readonly type: NetworkType;
     constructor(node: Libp2p, peer: Libp2pPeer, libp2pDialer: Libp2pDialer, chain: IBlockchain, protocolRegistry: IProtocolDescriptor<Libp2pPeer>[]);
-    handlePeer(peer: PeerInfo): Promise<Libp2pPeer>;
+    handlePeer(peer: PeerInfo): Promise<Libp2pPeer | undefined>;
     mount(protocol: IProtocol<Libp2pPeer>): void;
     unmount(protocol: IProtocol<Libp2pPeer>): void;
     private handleIncoming;

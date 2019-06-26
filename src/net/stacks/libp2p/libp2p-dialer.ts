@@ -26,11 +26,13 @@ export class Libp2pDialer extends EE {
   connected: Map<string, PeerInfo>
   discovered: Map<string, PeerInfo>
   dialing: Map<string, boolean>
+  banned: Map<string, boolean> = new Map()
 
   interval: number = INTERVAL
   maxPeers: number = MAX_PEERS
   constructor (public node: Libp2p,
-               @register('options') options: any) {
+               @register('options')
+               options: any) {
     super()
 
     assert(node, 'node is required')
@@ -43,9 +45,10 @@ export class Libp2pDialer extends EE {
 
     // store discovered peers to dial them later
     node.on('peer:discovery', (peerInfo: PeerInfo) => {
-      if (this.discovered.size > MAX_PEERS_DISCOVERED) return
-      this.discovered.set(peerInfo.id.toB58String(), peerInfo)
-      log(`peer discovered ${peerInfo.id.toB58String()}`)
+      const id = peerInfo.id.toB58String()
+      if (this.discovered.size > MAX_PEERS_DISCOVERED || this.banned.has(id)) return
+      this.discovered.set(id, peerInfo)
+      log(`peer discovered ${id}`)
     })
   }
 
@@ -64,6 +67,16 @@ export class Libp2pDialer extends EE {
     return this.b58Id
   }
 
+  banPeer (peerInfo: PeerInfo, maxAge: number = 60 * 1000) {
+    const id = peerInfo.id.toB58String()
+    this.banned.set(id, true)
+    this.connected.delete(id)
+    this.discovered.delete(id)
+    setTimeout(() => {
+      this.banned.delete(peerInfo.id.toB58String())
+    }, maxAge)
+  }
+
   async tryConnect (): Promise<void> {
     if (this.connected.size <= this.maxPeers) {
       if (this.discovered.size > 0) {
@@ -78,6 +91,11 @@ export class Libp2pDialer extends EE {
     const id = peerInfo.id.toB58String()
     if (this.dialing.has(id)) {
       log(`dial already in progress for ${id}`)
+      return
+    }
+
+    if (this.banned.has(id)) {
+      log(`peer ${id} banned, skipping dial`)
       return
     }
 

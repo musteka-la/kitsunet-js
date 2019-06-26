@@ -208,7 +208,13 @@ export class Devp2pNode extends Node<Devp2pPeer> {
           })
         }
 
-        await proto.handshake()
+        try {
+          await proto.handshake()
+        } catch (e) {
+          debug(e)
+          this.dpt.banPeer(rlpxPeer.getId(), 1000 * 60)
+          return
+        }
       }
 
       this.peers.set(devp2pPeer.id, devp2pPeer)
