@@ -13,13 +13,13 @@ import {
 } from '../../net'
 import { EthChain } from '../../blockchain'
 import { BaseDownloader } from './base'
-import { queue, AsyncQueue } from 'async'
+import { queue, AsyncQueue, asyncify } from 'async'
 
 import Debug from 'debug'
 const debug = Debug('kitsunet:downloaders:fast-sync')
 
 const MAX_PER_REQUEST: number = 128
-const CONCCURENT_REQUESTS: number = 5
+const CONCCURENT_REQUESTS: number = 15
 
 interface TaskPayload {
   number: BN
@@ -37,7 +37,7 @@ export class FastSyncDownloader extends BaseDownloader {
   constructor (public chain: EthChain, peerManager: PeerManager) {
     super(chain, peerManager)
     this.type = DownloaderType.FAST
-    this.queue = queue(this.task.bind(this), CONCCURENT_REQUESTS)
+    this.queue = queue(asyncify(this.task.bind(this)), CONCCURENT_REQUESTS)
   }
 
   protected async task ({ number, protocol, max, skip, reverse }) {
@@ -110,17 +110,18 @@ export class FastSyncDownloader extends BaseDownloader {
     debug(`latest block is ${blockNumberStr} remote block is ${remoteNumber.toString(10)}`)
 
     blockNumber.iaddn(1)
+    const tasks: TaskPayload[] = []
     while (blockNumber.lte(remoteNumber)) {
       let max: number = MAX_PER_REQUEST
       if (remoteNumber.lt(blockNumber.addn(max))) {
         max = (remoteNumber.sub(blockNumber).toNumber()) || 1
       }
 
-      this.queue.push({ number: blockNumber.clone(), protocol, max })
+      tasks.push({ number: blockNumber.clone(), protocol, max })
       this.highestBlock = blockNumber
       blockNumber.iaddn(max)
     }
 
-    return this.queue.drain()
+    this.queue.push(tasks)
   }
 }

@@ -95,6 +95,22 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return super.send(msg, this)
   }
 
+  protected async requestWithTimeout<T> (outId: ETH.MESSAGE_CODES,
+                                         inId: ETH.MESSAGE_CODES,
+                                         payload: any[] = [],
+                                         timeout: number = 5000): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
+      const tm = setTimeout(() => {
+        return reject(new Error(`request for message ${MSG_CODES[outId]} timed out`))
+      }, timeout)
+      this.handlers[inId].on('message', (headers) => {
+        clearTimeout(tm)
+        resolve(headers)
+      })
+      await this.handlers[outId].send(...payload)
+    })
+  }
+
   /**
    * Get block headers
    *
@@ -107,12 +123,10 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
                      max: number,
                      skip?: number,
                      reverse?: boolean): AsyncIterable<Block.Header[]> {
-    yield new Promise<Block.Header[]>(async (resolve) => {
-      this.handlers[MSG_CODES.BLOCK_HEADERS].on('message', (headers) => {
-        resolve(headers)
-      })
-      await this.handlers[MSG_CODES.GET_BLOCK_HEADERS].send(block, max, skip, reverse)
-    })
+    yield this.requestWithTimeout<Block.Header[]>(
+      MSG_CODES.GET_BLOCK_HEADERS,
+      MSG_CODES.BLOCK_HEADERS,
+      [block, max, skip, reverse])
   }
 
   /**
@@ -121,13 +135,11 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * @param hashes {Buffer[] | string[]} - block hashes for which to get the bodies
    */
   async *getBlockBodies (hashes: Buffer[] | string[]): AsyncIterable<BlockBody[]> {
-    yield new Promise<BlockBody[]>(async (resolve) => {
-      this.handlers[MSG_CODES.BLOCK_BODIES].on('message', (bodies) => {
-        resolve(bodies)
-      })
-      const bufHashes = (hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))
-      await this.handlers[MSG_CODES.GET_BLOCK_BODIES].send(bufHashes)
-    })
+    const bufHashes = (hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))
+    yield this.requestWithTimeout<BlockBody[]>(
+      MSG_CODES.GET_BLOCK_BODIES,
+      MSG_CODES.BLOCK_BODIES,
+      bufHashes)
   }
 
   /**
@@ -144,15 +156,15 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * it sends the `Status` message.
    */
   async handshake (): Promise<void> {
-    this.handlers[MSG_CODES.STATUS].send(
-      this.protocolVersion,
-      this.ethChain.common.networkId(),
-      await this.ethChain.getBlocksTD(),
-      (await this.ethChain.getBestBlock() as any).hash(),
-      this.ethChain.genesis().hash
-    )
-
-    // wait for status to get resolved
-    await this.getStatus()
+    const status = await this.requestWithTimeout<Status>(
+      MSG_CODES.STATUS,
+      MSG_CODES.STATUS, [
+        this.protocolVersion,
+        this.ethChain.common.networkId(),
+        await this.ethChain.getBlocksTD(),
+        (await this.ethChain.getBestBlock() as any).hash(),
+        this.ethChain.genesis().hash
+      ])
+    this.setStatus(status)
   }
 }

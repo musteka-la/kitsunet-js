@@ -162,7 +162,8 @@ class KistunetCli {
     await kitsunet.start()
 
     const cleanup = async () => {
-      console.log(`shutting down client...`)
+      console.log(`\nshutting down client...`)
+      setTimeout(() => process.exit(0), 5000)
       await kitsunet.stop()
     }
 
