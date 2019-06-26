@@ -63,5 +63,7 @@ export declare class Devp2pNode extends Node<Devp2pPeer> {
      */
     private init;
     send<T, U = T>(msg: T | T[], protocol?: IProtocol<Devp2pPeer>, peer?: Devp2pPeer): Promise<U | U[]>;
+    disconnectPeer(peer: Devp2pPeer, reason?: any): Promise<void>;
+    banPeer(peer: Devp2pPeer, maxAge?: number, reason?: any): Promise<void>;
 }
 //# sourceMappingURL=devp2p-node.d.ts.map

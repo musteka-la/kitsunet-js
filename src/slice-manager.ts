@@ -16,7 +16,7 @@ import {
 } from './slice/trackers'
 
 import Debug from 'debug'
-import { NetworkPeer } from './net/peer'
+import { NetworkPeer } from './net/network-peer'
 const debug = Debug('kitsches:kitsunet-slice-manager')
 
 @register()

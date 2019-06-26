@@ -20,13 +20,23 @@ class FakePeer extends NetworkPeer<any, any> {
   peer: any
   id: string = '12345'
   addrs: Set<string> = new Set('/ip4/127.0.0.1/tcp/5000')
+  node: Node<any>
 
   constructor (id: string = '12345',
-               addrs: Set<string> = new Set(['/ip4/127.0.0.1/tcp/5000'])) {
+               addrs: Set<string> = new Set(['/ip4/127.0.0.1/tcp/5000']), node?: any) {
     super()
 
     this.id = id
     this.addrs = addrs
+    this.node = node
+  }
+
+  ban<R extends any> (reason?: R | undefined): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+
+  disconnect<R extends any> (reason?: R | undefined): Promise<void> {
+    throw new Error('Method not implemented.')
   }
 }
 

@@ -5,9 +5,9 @@ import { EthChain } from '../../blockchain';
 import { BaseDownloader } from './base';
 import { AsyncQueue } from 'async';
 interface TaskPayload {
-    number: BN;
     protocol: IEthProtocol;
-    max?: number;
+    from: BN;
+    to: BN;
     reverse?: boolean;
     skip?: number;
 }
@@ -17,10 +17,10 @@ export declare class FastSyncDownloader extends BaseDownloader {
     queue: AsyncQueue<TaskPayload>;
     highestBlock: BN;
     constructor(chain: EthChain, peerManager: PeerManager);
-    protected task({ number, protocol, max, skip, reverse }: {
-        number: any;
+    protected task({ from, protocol, to, skip, reverse }: {
+        from: any;
         protocol: any;
-        max: any;
+        to: any;
         skip: any;
         reverse: any;
     }): Promise<void>;

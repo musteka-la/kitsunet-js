@@ -2,7 +2,7 @@
 import EE from 'events';
 import { SliceManager } from './slice-manager';
 import { KsnDriver } from './ksn-driver';
-import { NetworkPeer } from './net/peer';
+import { NetworkPeer } from './net/network-peer';
 import Block from 'ethereumjs-block';
 import { Node } from './net';
 export declare class Kitsunet<T extends NetworkPeer<any, any>> extends EE {

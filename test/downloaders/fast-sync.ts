@@ -177,18 +177,16 @@ describe('fast sync', () => {
       reserve: () => true
     }
 
-    let count = 1
     let fastDownloader = new class extends FastSyncDownloader {
       constructor () {
         super(chain, peerManager)
       }
 
-      protected async task ({ number, protocol }): Promise<void> {
-        expect(number).to.eql(new BN(count++))
+      protected async task ({ from, protocol, to }): Promise<void> {
+        expect(from).to.eql(new BN(1))
+        expect(to).to.eql(new BN(2))
         expect(protocol).to.eql(ethProtocol)
-        if (count >= 3) {
-          done()
-        }
+        done()
       }
 
       async latest () {
@@ -202,5 +200,45 @@ describe('fast sync', () => {
     nextTick(async () => {
       await fastDownloader.download(peer as any)
     })
+  })
+
+  it('should execute task correctly', () => {
+    ethProtocol = {
+      getStatus: () => {
+        return { td: new BN(10) }
+      },
+      getBlockHeaders: () => [block.header.raw],
+      getBlockBodies: () => []
+    }
+
+    peer = {
+      id: '12345',
+      addrs: ['/ip4/127.0.0.1/tcp/5000'],
+      protocols: new Map([['eth', ethProtocol]])
+    }
+
+    chain = {
+      getBlocksTD: () => new BN(9),
+      putBlocks: (blocks) => putHandler ? putHandler(blocks) : blocks,
+      getLatestBlock: () => {
+        const block = new Block()
+        block.setGenesisParams()
+        return block
+      }
+    }
+
+    peerManager = {
+      getByCapability: () => {
+        return [{
+          id: '12345',
+          addrs: ['/ip4/127.0.0.1/tcp/5000'],
+          protocols: new Map([['eth', ethProtocol]])
+        }]
+      },
+      reserve: () => true
+    }
+
+    let fastDownloader = new FastSyncDownloader(chain as any, peerManager as any)
+    fastDownloader.download(peer as any)
   })
 })

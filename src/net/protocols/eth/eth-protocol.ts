@@ -15,6 +15,7 @@ import BN from 'bn.js'
 const debug = Debug(`kitsunet:eth-proto`)
 
 export const MSG_CODES = ETH.MESSAGE_CODES
+export const ETH_REQUEST_TIMEOUT: number = 15000
 
 export class Deferred<T> {
   promise: Promise<T>
@@ -95,19 +96,26 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
     return super.send(msg, this)
   }
 
+  /**
+   *
+   * @param outId {ETH.MESSAGE_CODES} - out message id
+   * @param inId {ETH.MESSAGE_CODES} - in message id
+   * @param payload {any[]} - payload for the request
+   * @param timeout {number} - request timeout
+   */
   protected async requestWithTimeout<T> (outId: ETH.MESSAGE_CODES,
                                          inId: ETH.MESSAGE_CODES,
                                          payload: any[] = [],
-                                         timeout: number = 5000): Promise<T> {
+                                         timeout: number = ETH_REQUEST_TIMEOUT): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
-      const tm = setTimeout(() => {
-        return reject(new Error(`request for message ${MSG_CODES[outId]} timed out`))
-      }, timeout)
+      let tm: NodeJS.Timeout | null = null
       this.handlers[inId].on('message', (headers) => {
-        clearTimeout(tm)
+        if (tm) clearTimeout(tm)
         resolve(headers)
       })
       await this.handlers[outId].send(...payload)
+      tm = setTimeout(() =>
+        reject(new Error(`request for message ${MSG_CODES[outId]} timed out for peer ${this.peer.id}`)), timeout)
     })
   }
 
@@ -135,11 +143,10 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
    * @param hashes {Buffer[] | string[]} - block hashes for which to get the bodies
    */
   async *getBlockBodies (hashes: Buffer[] | string[]): AsyncIterable<BlockBody[]> {
-    const bufHashes = (hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))
     yield this.requestWithTimeout<BlockBody[]>(
       MSG_CODES.GET_BLOCK_BODIES,
       MSG_CODES.BLOCK_BODIES,
-      bufHashes)
+      [(hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))])
   }
 
   /**

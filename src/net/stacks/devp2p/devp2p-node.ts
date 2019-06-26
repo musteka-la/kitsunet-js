@@ -24,6 +24,7 @@ import {
 
 import { EthChain, IBlockchain } from '../../../blockchain'
 import Common from 'ethereumjs-common'
+import { NetworkPeer } from '../../network-peer'
 
 const debug = Debug('kitsunet:net:devp2p:node')
 
@@ -189,8 +190,8 @@ export class Devp2pNode extends Node<Devp2pPeer> {
    */
   private async init () {
     this.rlpx.on('peer:added', async (rlpxPeer: Peer) => {
-      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer)
-      const protos = this.registerProtos(this.protocolRegistry, devp2pPeer)
+      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer, this)
+      const protos = this.registerProtos(this.protocolRegistry, devp2pPeer as unknown as NetworkPeer<any, any>)
       for (const proto of protos) {
         const rlpxProto = this.getRlpxProto(proto)
         if (rlpxProto) {
@@ -212,7 +213,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
           await proto.handshake()
         } catch (e) {
           debug(e)
-          this.dpt.banPeer(rlpxPeer.getId(), 1000 * 60)
+          this.banPeer(devp2pPeer)
           return
         }
       }
@@ -267,5 +268,14 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
 
     return res
+  }
+
+  async disconnectPeer (peer: Devp2pPeer, reason?: any): Promise<void> {
+    return peer.peer.disconnect(reason)
+  }
+
+  async banPeer (peer: Devp2pPeer, maxAge: number = 1000 * 6, reason?: any): Promise<void> {
+    this.dpt.banPeer(peer.peer, maxAge)
+    this.disconnectPeer(peer, reason)
   }
 }

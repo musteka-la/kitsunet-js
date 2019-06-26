@@ -2,6 +2,7 @@
 
 import { IBlockchain } from '../blockchain'
 import { EventEmitter as EE } from 'events'
+import { Node } from './node'
 
 export enum NetworkType {
   LIBP2P, DEVP2P
@@ -50,9 +51,12 @@ export interface IEncoder {
 }
 
 export interface IPeerDescriptor<T> {
-  peer: T               // the raw peer
-  id: string            // the string representation of the peers id
-  addrs: Set<string>    // a set of peer addresses
+  peer: T                                   // the raw peer
+  id: string                                // the string representation of the peers id
+  addrs: Set<string>                        // a set of peer addresses
+  node: Node<any>            // the node the peer belongs too
+  ban<R>(reason?: R): Promise<void>         // ban a peer
+  disconnect<R>(reason?: R): Promise<void>  // disconnect peer
 }
 
 export interface ICapability {

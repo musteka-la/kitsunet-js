@@ -8,6 +8,7 @@ import { EthHandler } from './eth-handler';
 import { ETH } from 'ethereumjs-devp2p';
 import BN from 'bn.js';
 export declare const MSG_CODES: typeof ETH.MESSAGE_CODES;
+export declare const ETH_REQUEST_TIMEOUT: number;
 export declare class Deferred<T> {
     promise: Promise<T>;
     resolve: (...args: any[]) => any;
@@ -36,6 +37,13 @@ export declare class EthProtocol<P extends IPeerDescriptor<any>> extends BasePro
     readonly versions: string[];
     receive<T, U>(readable: AsyncIterable<T>): AsyncIterable<U | U[] | null>;
     send<T, U>(msg: T): Promise<U | U[] | void | null>;
+    /**
+     *
+     * @param outId {ETH.MESSAGE_CODES} - out message id
+     * @param inId {ETH.MESSAGE_CODES} - in message id
+     * @param payload {any[]} - payload for the request
+     * @param timeout {number} - request timeout
+     */
     protected requestWithTimeout<T>(outId: ETH.MESSAGE_CODES, inId: ETH.MESSAGE_CODES, payload?: any[], timeout?: number): Promise<T>;
     /**
      * Get block headers
