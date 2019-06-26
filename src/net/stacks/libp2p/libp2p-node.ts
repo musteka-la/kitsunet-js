@@ -77,7 +77,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   async handlePeer (peer: PeerInfo): Promise<Libp2pPeer | undefined> {
     let libp2pPeer: Libp2pPeer | undefined = await this.peers.get(peer.id.toB58String())
     if (libp2pPeer) return libp2pPeer
-    libp2pPeer = new Libp2pPeer(peer)
+    libp2pPeer = new Libp2pPeer(peer, this)
     this.peers.set(libp2pPeer.id, libp2pPeer)
     const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
     try {
@@ -85,6 +85,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     } catch (e) {
       debug(e)
       this.libp2pDialer.banPeer(peer, 60 * 1000)
+      this.libp2pDialer.hangup(peer)
       return
     }
 
@@ -195,5 +196,13 @@ export class Libp2pNode extends Node<Libp2pPeer> {
 
     await this.node.stop()
     return stopper
+  }
+
+  async disconnectPeer (peer: Libp2pPeer): Promise<void> {
+    return this.libp2pDialer.hangup(peer.peer)
+  }
+
+  async banPeer (peer: Libp2pPeer, maxAge?: number | undefined, reason?: any): Promise<void> {
+    throw new Error('Method not implemented.')
   }
 }

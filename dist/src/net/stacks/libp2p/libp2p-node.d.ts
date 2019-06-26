@@ -29,5 +29,7 @@ export declare class Libp2pNode extends Node<Libp2pPeer> {
     send<T, U = T>(msg: T, protocol?: IProtocol<Libp2pPeer>, peer?: Libp2pPeer): Promise<void | U | U[]>;
     start(): Promise<void>;
     stop(): Promise<void>;
+    disconnectPeer(peer: Libp2pPeer): Promise<void>;
+    banPeer(peer: Libp2pPeer, maxAge?: number | undefined, reason?: any): Promise<void>;
 }
 //# sourceMappingURL=libp2p-node.d.ts.map

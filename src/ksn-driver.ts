@@ -51,7 +51,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
   }
 
   get clientPeers (): T[] {
-    return [this.libp2pPeer] as T[]
+    return [this.libp2pPeer] as unknown as T[]
   }
 
   /**

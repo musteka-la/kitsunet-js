@@ -3,7 +3,7 @@ import { SliceId, Slice } from './slice';
 import { SliceStore } from './stores/slice-store';
 import { KsnDriver } from './ksn-driver';
 import { BaseTracker, KitsunetPubSub, KitsunetBridge } from './slice/trackers';
-import { NetworkPeer } from './net/peer';
+import { NetworkPeer } from './net/network-peer';
 export declare class SliceManager<T extends NetworkPeer<any, any>> extends BaseTracker {
     blockTracker: BlockTracker;
     bridgeTracker: KitsunetBridge;

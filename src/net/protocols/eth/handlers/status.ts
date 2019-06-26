@@ -14,7 +14,7 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
 
   async handle<U extends any[]> (...msg: U & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
     const [protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
-    this.protocol.emit('message', {
+    this.emit('message', {
       protocolVersion: buffer2int(protocolVersion),
       networkId: buffer2int(networkId),
       td: new BN(td),

@@ -7,7 +7,7 @@ import { register } from 'opium-decorators'
 import { SliceManager } from './slice-manager'
 import { KsnDriver } from './ksn-driver'
 import { DEFAULT_DEPTH } from './constants'
-import { NetworkPeer } from './net/peer'
+import { NetworkPeer } from './net/network-peer'
 import Block from 'ethereumjs-block'
 import { Node } from './net'
 

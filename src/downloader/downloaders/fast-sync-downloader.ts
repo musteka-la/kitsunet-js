@@ -20,11 +20,12 @@ const debug = Debug('kitsunet:downloaders:fast-sync')
 
 const MAX_PER_REQUEST: number = 128
 const CONCCURENT_REQUESTS: number = 15
+const MAX_REQUEST: number = 128 * 16
 
 interface TaskPayload {
-  number: BN
   protocol: IEthProtocol
-  max?: number
+  from: BN
+  to: BN
   reverse?: boolean
   skip?: number
 }
@@ -40,16 +41,15 @@ export class FastSyncDownloader extends BaseDownloader {
     this.queue = queue(asyncify(this.task.bind(this)), CONCCURENT_REQUESTS)
   }
 
-  protected async task ({ number, protocol, max, skip, reverse }) {
-    try {
-      const blockNumberStr: string = number.toString(10)
+  protected async task ({ from, protocol, to, skip, reverse }) {
+    const blockNumberStr: string = from.toString(10)
 
-      // increment current block to set as start
-      debug(`requesting ${MAX_PER_REQUEST} blocks ` +
+    // increment current block to set as start
+    debug(`requesting ${MAX_PER_REQUEST} blocks ` +
       `from ${protocol.peer.id} starting from ${blockNumberStr}`)
-
+    while (from.lte(to)) {
       let headers: Block.Header[] = await this.getHeaders(protocol as unknown as IEthProtocol,
-        number, max, skip, reverse)
+        from, MAX_PER_REQUEST, skip, reverse)
 
       if (!headers.length) return
 
@@ -57,9 +57,8 @@ export class FastSyncDownloader extends BaseDownloader {
         headers.map(h => h.hash()))
 
       await this.store(bodies.map((body, i) => new Block([headers[i].raw].concat(body))))
+      from.iaddn(headers.length)
       debug(`imported ${headers.length} blocks`)
-    } catch (err) {
-      debug(err)
     }
   }
 
@@ -110,18 +109,7 @@ export class FastSyncDownloader extends BaseDownloader {
     debug(`latest block is ${blockNumberStr} remote block is ${remoteNumber.toString(10)}`)
 
     blockNumber.iaddn(1)
-    const tasks: TaskPayload[] = []
-    while (blockNumber.lte(remoteNumber)) {
-      let max: number = MAX_PER_REQUEST
-      if (remoteNumber.lt(blockNumber.addn(max))) {
-        max = (remoteNumber.sub(blockNumber).toNumber()) || 1
-      }
-
-      tasks.push({ number: blockNumber.clone(), protocol, max })
-      this.highestBlock = blockNumber
-      blockNumber.iaddn(max)
-    }
-
-    this.queue.push(tasks)
+    const to = remoteNumber.gten(MAX_REQUEST) ? new BN(MAX_REQUEST) : remoteNumber
+    this.queue.push({ from: blockNumber.clone(), protocol, to: to.clone() })
   }
 }

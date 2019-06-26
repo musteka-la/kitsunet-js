@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { IBlockchain } from '../blockchain';
 import { EventEmitter as EE } from 'events';
+import { Node } from './node';
 export declare enum NetworkType {
     LIBP2P = 0,
     DEVP2P = 1
@@ -47,6 +48,9 @@ export interface IPeerDescriptor<T> {
     peer: T;
     id: string;
     addrs: Set<string>;
+    node: Node<any>;
+    ban<R>(reason?: R): Promise<void>;
+    disconnect<R>(reason?: R): Promise<void>;
 }
 export interface ICapability {
     id: string;

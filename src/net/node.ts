@@ -8,10 +8,11 @@ import {
   NetworkType,
   ICapability,
   IProtocolDescriptor,
-  IProtocolConstructor
+  IProtocolConstructor,
+  IPeerDescriptor
 } from './interfaces'
 import { IBlockchain } from '../blockchain'
-import { NetworkPeer } from './peer'
+import { NetworkPeer } from './network-peer'
 
 /**
  * Abstract Node
@@ -64,7 +65,7 @@ export abstract class Node<P> extends EE implements INetwork<P> {
    * @param readable - an AsyncIterable to read from
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  receive < T, U = T > (readable: AsyncIterable<T>): AsyncIterable < U | U[] > {
+  receive <T, U = T> (readable: AsyncIterable<T>): AsyncIterable <U | U[]> {
     throw new Error('Method not implemented')
   }
 
@@ -93,6 +94,8 @@ export abstract class Node<P> extends EE implements INetwork<P> {
     }).filter(Boolean) as any
   }
 
+  abstract disconnectPeer(peer: P, reason?: any): Promise<void>
+  abstract banPeer(peer: P, maxAge?: number, reason?: any): Promise<void>
   abstract start (): Promise <void>
   abstract stop (): Promise<void>
 }

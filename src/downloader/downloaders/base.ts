@@ -25,18 +25,15 @@ export abstract class BaseDownloader implements IDownloader {
   }
 
   async latest (protocol: IEthProtocol, peer: Peer): Promise<Block | undefined> {
-    return new Promise(async (resolve, reject) => {
-      const status = await protocol.getStatus()
-      for await (const header of protocol.getHeaders(status.bestHash, 1)) {
-        if (header[0]) {
-          debug(`got peers ${peer.id} latest header - ${(header[0]).hash().toString('hex')}`)
-        } else {
-          debug(`got empty header from ${peer.id}!`)
-        }
-        return resolve(new Block(header[0], { common: this.chain.common }))
-      }
-      return reject(new Error('no header resolved'))
-    })
+    const status = await protocol.getStatus()
+    const header = await this.getHeaders(protocol, status.bestHash, 1)
+    if (header.length) {
+      debug(`got peers ${peer.id} latest header - ${(header[0]).hash().toString('hex')}`)
+    } else {
+      debug(`got empty header from ${peer.id}!`)
+      return
+    }
+    return new Block(header[0], { common: this.chain.common })
   }
 
   protected async getHeaders (protocol: IEthProtocol,
@@ -45,16 +42,24 @@ export abstract class BaseDownloader implements IDownloader {
                               skip: number = 0,
                               reverse: boolean = false): Promise<Block.Header[]> {
     let headers: Block.Header[] = []
-    for await (const h of protocol.getHeaders(block, max, skip, reverse)) {
-      headers = headers.concat(h)
+    try {
+      for await (const h of protocol.getHeaders(block, max, skip, reverse)) {
+        headers = headers.concat(h)
+      }
+    } catch (e) {
+      debug(e)
     }
     return headers
   }
 
   protected async getBodies (protocol: IEthProtocol, hashes: Buffer[]): Promise<BlockBody[]> {
     let bodies: BlockBody[] = []
-    for await (const b of protocol.getBlockBodies(hashes)) {
-      bodies = bodies.concat(b as any[])
+    try {
+      for await (const b of protocol.getBlockBodies(hashes)) {
+        bodies = bodies.concat(b as any[])
+      }
+    } catch (e) {
+      debug(e)
     }
     return bodies
   }

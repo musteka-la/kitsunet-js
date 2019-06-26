@@ -2,7 +2,7 @@
 import { EventEmitter as EE } from 'events';
 import { IProtocol, INetwork, NetworkType, ICapability, IProtocolDescriptor } from './interfaces';
 import { IBlockchain } from '../blockchain';
-import { NetworkPeer } from './peer';
+import { NetworkPeer } from './network-peer';
 /**
  * Abstract Node
  *
@@ -39,6 +39,8 @@ export declare abstract class Node<P> extends EE implements INetwork<P> {
     mount(protocol: IProtocol<P>): void;
     unmount(protocol: IProtocol<P>): void;
     protected registerProtos(protocolRegistry: IProtocolDescriptor<P>[], peer: NetworkPeer<any, any>): IProtocol<P>[];
+    abstract disconnectPeer(peer: P, reason?: any): Promise<void>;
+    abstract banPeer(peer: P, maxAge?: number, reason?: any): Promise<void>;
     abstract start(): Promise<void>;
     abstract stop(): Promise<void>;
 }

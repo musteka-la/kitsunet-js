@@ -1,11 +1,13 @@
 'use strict'
 
 import { PeerInfo, Peer } from 'ethereumjs-devp2p'
-import { NetworkPeer } from '../../peer'
+import { NetworkPeer } from '../../network-peer'
+import { Node } from '../../node'
 import { register } from 'opium-decorators'
 
 @register()
 export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
+  node: Node<Devp2pPeer>
   peer: Peer
   addrs: Set<string> = new Set() // use multiaddr for internal representation
 
@@ -15,8 +17,10 @@ export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
   }
 
   peerInfo: PeerInfo
-  constructor (peer: Peer) {
+  constructor (peer: Peer, node: Node<Devp2pPeer>) {
     super()
+
+    this.node = node
     this.peer = peer
     this.peerInfo = {
       id: peer.getId()!,
@@ -35,5 +39,13 @@ export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
     if (this.peerInfo.udpPort) {
       this.addrs.add(`/ip4/${this.peerInfo.address}/udp/${this.peerInfo.tcpPort}`)
     }
+  }
+
+  async disconnect<R> (reason?: R): Promise<void> {
+    return this.node.disconnectPeer(this, reason)
+  }
+
+  async ban<R extends any> (reason?: R): Promise<void> {
+    throw new Error('Method not implemented.')
   }
 }

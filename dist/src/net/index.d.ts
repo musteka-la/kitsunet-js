@@ -5,7 +5,7 @@ export * from './stacks/devp2p';
 export * from './interfaces';
 export * from './node-manager';
 export * from './peer-manager';
-export * from './peer';
+export * from './network-peer';
 export * from './helper-types';
 export * from './node';
 //# sourceMappingURL=index.d.ts.map
