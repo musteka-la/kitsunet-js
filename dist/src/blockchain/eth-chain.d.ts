@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import BN from 'bn.js';
-import { Block, Blockchain } from 'ethereumjs-blockchain';
+import { Blockchain } from 'ethereumjs-blockchain';
+import Block from 'ethereumjs-block';
 import Common from 'ethereumjs-common';
 import { EventEmitter as EE } from 'events';
 import { LevelUp } from 'levelup';

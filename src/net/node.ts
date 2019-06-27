@@ -8,8 +8,7 @@ import {
   NetworkType,
   ICapability,
   IProtocolDescriptor,
-  IProtocolConstructor,
-  IPeerDescriptor
+  IProtocolConstructor
 } from './interfaces'
 import { IBlockchain } from '../blockchain'
 import { NetworkPeer } from './network-peer'

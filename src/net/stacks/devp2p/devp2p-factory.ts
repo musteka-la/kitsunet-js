@@ -6,11 +6,15 @@ import {
   PeerInfo,
   Capabilities,
   RLPxOptions,
-  ETH
+  ETH,
+  pk2id
 } from 'ethereumjs-devp2p'
+
+import { publicKeyCreate } from 'secp256k1'
 import { randomBytes } from 'crypto'
 import { register } from 'opium-decorators'
 import Common from 'ethereumjs-common'
+import { Devp2pPeer } from './devp2p-peer'
 
 const defaultRemoteClientIdFilter = [
   'go1.5',
@@ -25,9 +29,9 @@ const defaultRemoteClientIdFilter = [
 ]
 
 export class RLPxNodeOptions implements RLPxOptions {
-  clientId?: Buffer | undefined
-  timeout?: number | undefined
-  remoteClientIdFilter?: string[] | undefined = defaultRemoteClientIdFilter
+  clientId?: Buffer
+  timeout?: number
+  remoteClientIdFilter?: string[] = defaultRemoteClientIdFilter
   listenPort!: number | null
   dpt!: DPT
   capabilities!: Capabilities[]
@@ -50,17 +54,28 @@ export class DPTOptions {
 
 export class DevP2PFactory {
   @register('devp2p-peer-info')
-  static createPeerInfo (@register('options') options: any): PeerInfo {
+  static createPeerInfo (@register('options') options: any,
+                         @register('rlpx-key') rlpxKey: Buffer): PeerInfo {
     return {
+      id: pk2id(rlpxKey),
       address: '0.0.0.0',
       udpPort: options.devp2PPort,
       tcpPort: options.devp2PPort
     }
   }
 
+  @register('rlpx-key')
+  static rlpxKey (@register('options') options: any): Buffer {
+    return (options.devp2pIdentity && options.devp2pIdentity.privKey)
+      ? publicKeyCreate(Buffer.from(options.devp2pIdentity.privKey, 'base64'), false)
+      : randomBytes(32)
+  }
+
   @register()
-  static createDptOptions (@register('devp2p-peer-info') peerInfo: PeerInfo): DPTOptions {
+  static createDptOptions (@register('devp2p-peer-info') peerInfo: PeerInfo,
+                           @register('rlpx-key') rlpxKey: Buffer): DPTOptions {
     const dptOpts = new DPTOptions()
+    dptOpts.key = rlpxKey
     dptOpts.endpoint = peerInfo
     dptOpts.timeout = 1000 * 60
     return dptOpts
@@ -68,14 +83,18 @@ export class DevP2PFactory {
 
   @register()
   static createRlpxOptions (common: Common,
+                            dptOptions: DPTOptions,
                             dpt: DPT,
                             @register('devp2p-peer-info')
-                            peerInfo: PeerInfo): RLPxNodeOptions {
+                            peerInfo: PeerInfo,
+                            @register('rlpx-key')
+                            rlpxKey: Buffer): RLPxNodeOptions {
     const rlpx = new RLPxNodeOptions()
     rlpx.dpt = dpt
     rlpx.bootnodes = common.bootstrapNodes()
     rlpx.capabilities = [ETH.eth62, ETH.eth63]
     rlpx.listenPort = peerInfo.tcpPort || 30303
+    rlpx.key = rlpxKey
     return rlpx
   }
 
@@ -93,5 +112,10 @@ export class DevP2PFactory {
   @register()
   createRLPx (options: RLPxNodeOptions): RLPx {
     return new RLPx(options.key, options)
+  }
+
+  @register('devp2p-peer')
+  static async createLibp2pPeer (@register('devp2p-peer-info') peerInfo: PeerInfo): Promise<Devp2pPeer> {
+    return new Devp2pPeer(peerInfo)
   }
 }

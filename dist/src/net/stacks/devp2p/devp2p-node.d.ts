@@ -16,14 +16,14 @@ export declare class Devp2pNode extends Node<Devp2pPeer> {
     rlpx: RLPx;
     chain: IBlockchain;
     peerInfo: PeerInfo;
+    peer: Devp2pPeer;
     common: Common;
     private protocolRegistry;
     started: boolean;
-    peer?: Devp2pPeer;
     logger: Debugger;
     caps: ICapability[];
     readonly type: NetworkType;
-    constructor(dpt: DPT, rlpx: RLPx, chain: IBlockchain, peerInfo: PeerInfo, common: Common, protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]);
+    constructor(dpt: DPT, rlpx: RLPx, chain: IBlockchain, peerInfo: PeerInfo, peer: Devp2pPeer, common: Common, protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]);
     /**
      * Start Devp2p/RLPx server. Returns a promise that
      * resolves once server has been started.

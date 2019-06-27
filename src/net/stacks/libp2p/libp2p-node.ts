@@ -11,6 +11,7 @@ import * as semver from 'semver'
 import { register } from 'opium-decorators'
 import { Node } from '../../node'
 import { Libp2pPeer } from './libp2p-peer'
+import { ExtractFromLibp2pPeer } from '../../helper-types'
 
 import {
   IProtocol,
@@ -50,8 +51,9 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   }
 
   constructor (public node: Libp2p,
-               public peer: Libp2pPeer,
                private libp2pDialer: Libp2pDialer,
+               @register('libp2p-peer')
+               public peer: Libp2pPeer,
                @register(EthChain)
                public chain: IBlockchain,
                @register('protocol-registry')
@@ -77,7 +79,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
   async handlePeer (peer: PeerInfo): Promise<Libp2pPeer | undefined> {
     let libp2pPeer: Libp2pPeer | undefined = await this.peers.get(peer.id.toB58String())
     if (libp2pPeer) return libp2pPeer
-    libp2pPeer = new Libp2pPeer(peer, this)
+    libp2pPeer = new Libp2pPeer(peer, this as unknown as ExtractFromLibp2pPeer)
     this.peers.set(libp2pPeer.id, libp2pPeer)
     const protocols = this.registerProtos(this.protocolRegistry, libp2pPeer)
     try {

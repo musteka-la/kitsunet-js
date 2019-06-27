@@ -5,6 +5,7 @@ import { Node } from '../../node'
 import { Devp2pPeer } from './devp2p-peer'
 import { register } from 'opium-decorators'
 import { parallel } from 'async'
+import { ExtractFromDevp2pPeer } from '../../helper-types'
 
 import {
   Peer,
@@ -52,8 +53,6 @@ const ignoredErrors = new RegExp([
 @register()
 export class Devp2pNode extends Node<Devp2pPeer> {
   started: boolean = false
-  peer?: Devp2pPeer
-
   logger: Debugger = debug
 
   // the protocols that this node supports
@@ -74,6 +73,8 @@ export class Devp2pNode extends Node<Devp2pPeer> {
                public chain: IBlockchain,
                @register('devp2p-peer-info')
                public peerInfo: PeerInfo,
+               @register('devp2p-peer')
+               public peer: Devp2pPeer,
                public common: Common,
                @register('protocol-registry')
                private protocolRegistry: IProtocolDescriptor<Devp2pPeer>[]) {
@@ -190,7 +191,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
    */
   private async init () {
     this.rlpx.on('peer:added', async (rlpxPeer: Peer) => {
-      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer, this)
+      const devp2pPeer: Devp2pPeer = new Devp2pPeer(rlpxPeer, this as unknown as ExtractFromDevp2pPeer)
       const protos = this.registerProtos(this.protocolRegistry, devp2pPeer as unknown as NetworkPeer<any, any>)
       for (const proto of protos) {
         const rlpxProto = this.getRlpxProto(proto)

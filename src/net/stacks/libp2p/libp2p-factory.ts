@@ -14,6 +14,7 @@ import { register } from 'opium-decorators'
 
 import defaultsDeep from '@nodeutils/defaults-deep'
 import createMulticastConditional from 'libp2p-multicast-conditional/src/api'
+import { Libp2pPeer } from './libp2p-peer'
 
 const PPeerInfo: any = promisify(PeerInfo, false)
 const PPeerId: any = promisify(PeerId, false)
@@ -38,7 +39,7 @@ export class LibP2PFactory {
     const opts = new Libp2pOptions()
     opts.addrs = options.libp2pAddrs
     opts.bootstrap = options.libp2pBootstrap
-    opts.identity = options.identity
+    opts.identity = options.libp2pIdentity
     return opts
   }
 
@@ -50,8 +51,9 @@ export class LibP2PFactory {
    * @param bootstrap {string[]} - an array of bootstrap multiaddr strings
    */
   @register(Libp2p)
-  static async createLibP2PNode (peerInfo: PeerInfo,
-                                 options: Libp2pOptions): Promise <Libp2pPromisified> {
+  static async createLibP2PNode (options: Libp2pOptions,
+                                 @register('libp2p-peer-info')
+                                 peerInfo: PeerInfo): Promise <Libp2pPromisified> {
     const defaults = {
       peerInfo,
       modules: {
@@ -96,7 +98,7 @@ export class LibP2PFactory {
    * @param identity {{privKey: string}} - an object with a private key entry
    * @param addrs {string[]} - an array of multiaddrs
    */
-  @register(PeerInfo)
+  @register('libp2p-peer-info')
   static async createPeerInfo (options: Libp2pOptions): Promise<PeerInfo> {
     let id: PeerId
     const privKey = options.identity && options.identity.privKey ? options.identity.privKey : null
@@ -110,5 +112,10 @@ export class LibP2PFactory {
     const addrs = options.addrs || []
     addrs.forEach((a) => peerInfo.multiaddrs.add(a))
     return peerInfo
+  }
+
+  @register('libp2p-peer')
+  static async createLibp2pPeer (@register('libp2p-peer-info') peerInfo: PeerInfo): Promise<Libp2pPeer> {
+    return new Libp2pPeer(peerInfo)
   }
 }

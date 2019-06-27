@@ -1,10 +1,11 @@
 /// <reference types="node" />
 import { DPT, RLPx, PeerInfo, Capabilities, RLPxOptions } from 'ethereumjs-devp2p';
 import Common from 'ethereumjs-common';
+import { Devp2pPeer } from './devp2p-peer';
 export declare class RLPxNodeOptions implements RLPxOptions {
-    clientId?: Buffer | undefined;
-    timeout?: number | undefined;
-    remoteClientIdFilter?: string[] | undefined;
+    clientId?: Buffer;
+    timeout?: number;
+    remoteClientIdFilter?: string[];
     listenPort: number | null;
     dpt: DPT;
     capabilities: Capabilities[];
@@ -20,10 +21,12 @@ export declare class DPTOptions {
     endpoint: PeerInfo;
 }
 export declare class DevP2PFactory {
-    static createPeerInfo(options: any): PeerInfo;
-    static createDptOptions(peerInfo: PeerInfo): DPTOptions;
-    static createRlpxOptions(common: Common, dpt: DPT, peerInfo: PeerInfo): RLPxNodeOptions;
+    static createPeerInfo(options: any, rlpxKey: Buffer): PeerInfo;
+    static rlpxKey(options: any): Buffer;
+    static createDptOptions(peerInfo: PeerInfo, rlpxKey: Buffer): DPTOptions;
+    static createRlpxOptions(common: Common, dptOptions: DPTOptions, dpt: DPT, peerInfo: PeerInfo, rlpxKey: Buffer): RLPxNodeOptions;
     static createDPT(options: DPTOptions): DPT;
     createRLPx(options: RLPxNodeOptions): RLPx;
+    static createLibp2pPeer(peerInfo: PeerInfo): Promise<Devp2pPeer>;
 }
 //# sourceMappingURL=devp2p-factory.d.ts.map

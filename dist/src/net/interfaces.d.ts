@@ -48,7 +48,7 @@ export interface IPeerDescriptor<T> {
     peer: T;
     id: string;
     addrs: Set<string>;
-    node: Node<any>;
+    node?: Node<IPeerDescriptor<T>>;
     ban<R>(reason?: R): Promise<void>;
     disconnect<R>(reason?: R): Promise<void>;
 }

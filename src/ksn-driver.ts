@@ -38,6 +38,7 @@ export class KsnDriver<T extends NetworkPeer<any, any>> extends EE {
                public blockTracker: KistunetBlockTracker,
                @register(EthChain)
                public chain: IBlockchain,
+               @register('libp2p-peer')
                public libp2pPeer: Libp2pPeer) {
     super()
 
