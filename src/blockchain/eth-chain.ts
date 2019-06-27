@@ -2,7 +2,8 @@
 
 import BN from 'bn.js'
 import Debug from 'debug'
-import { Block, Blockchain } from 'ethereumjs-blockchain'
+import { Blockchain } from 'ethereumjs-blockchain'
+import Block from 'ethereumjs-block'
 import Common from 'ethereumjs-common'
 import * as genesisStates from 'ethereumjs-common/dist/genesisStates'
 import { EventEmitter as EE } from 'events'

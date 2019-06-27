@@ -110,9 +110,15 @@ const cliConfig: any = {
     requiresArg: true,
     required: false
   },
-  identity: {
-    alias: 'i',
-    description: 'json peer info file, containing the private and public keys',
+  'libp2-identity': {
+    alias: 'iL',
+    description: 'json file, containing the private and public keys for libp2p',
+    requiresArg: true,
+    required: false
+  },
+  'devp2p-identity': {
+    alias: 'iD',
+    description: 'json file, containing the private and public keys for devp2p',
     requiresArg: true,
     required: false
   },
@@ -147,7 +153,14 @@ class KistunetCli {
     }
 
     options.NODE_ENV = process.env.NODE_ENV || 'prod'
-    options.identity = options.identity ? await import(options.identity) : config.identity
+    options.libp2pIdentity = options.libp2pIdentity
+      ? await import(options.libp2pIdentity)
+      : config.libp2pIdentity
+
+    options.devp2pIdentity = options.devp2pIdentity
+      ? await import(options.libp2pIdentity)
+      : config.libp2pIdentity
+
     options.libp2pAddrs = options.libp2pAddrs || options.libp2PAddrs || config.libp2pAddrs
     options.chainDb = path.resolve(options.ethChainDb)
 

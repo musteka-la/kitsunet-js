@@ -54,7 +54,7 @@ export interface IPeerDescriptor<T> {
   peer: T                                   // the raw peer
   id: string                                // the string representation of the peers id
   addrs: Set<string>                        // a set of peer addresses
-  node: Node<any>            // the node the peer belongs too
+  node?: Node<IPeerDescriptor<T>>           // the node the peer belongs too
   ban<R>(reason?: R): Promise<void>         // ban a peer
   disconnect<R>(reason?: R): Promise<void>  // disconnect peer
 }

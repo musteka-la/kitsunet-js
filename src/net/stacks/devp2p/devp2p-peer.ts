@@ -2,30 +2,37 @@
 
 import { PeerInfo, Peer } from 'ethereumjs-devp2p'
 import { NetworkPeer } from '../../network-peer'
-import { Node } from '../../node'
-import { register } from 'opium-decorators'
+import { ExtractFromDevp2pPeer } from '../../helper-types'
 
-@register()
+function isPeer (p: any): p is Peer {
+  return p instanceof Peer
+}
+
 export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
-  node: Node<Devp2pPeer>
+  node?: ExtractFromDevp2pPeer
   peer: Peer
   addrs: Set<string> = new Set() // use multiaddr for internal representation
+  peerInfo: PeerInfo
 
   private _id: string = ''
   get id (): string {
     return this._id
   }
 
-  peerInfo: PeerInfo
-  constructor (peer: Peer, node: Node<Devp2pPeer>) {
+  constructor (peer: Peer | PeerInfo, node?: ExtractFromDevp2pPeer) {
     super()
 
     this.node = node
-    this.peer = peer
-    this.peerInfo = {
-      id: peer.getId()!,
-      tcpPort: peer._socket.remotePort,
-      address: peer._socket.remoteAddress
+    if (!isPeer(peer)) {
+      this.peerInfo = peer
+      this.peer = {} as Peer // no peer for self
+    } else {
+      this.peer = peer
+      this.peerInfo = {
+        id: peer.getId()!,
+        tcpPort: peer._socket.remotePort,
+        address: peer._socket.remoteAddress
+      }
     }
 
     if (this.peerInfo && this.peerInfo.id) {
@@ -42,10 +49,10 @@ export class Devp2pPeer extends NetworkPeer<Peer, Devp2pPeer> {
   }
 
   async disconnect<R> (reason?: R): Promise<void> {
-    return this.node.disconnectPeer(this, reason)
+    if (this.node) return this.node.disconnectPeer(this, reason)
   }
 
-  async ban<R extends any> (reason?: R): Promise<void> {
-    throw new Error('Method not implemented.')
+  async ban<R extends any> (reason?: R, maxAge?: number): Promise<void> {
+    if (this.node) return this.node.banPeer(this, maxAge, reason)
   }
 }
