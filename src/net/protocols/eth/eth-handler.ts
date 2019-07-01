@@ -31,7 +31,7 @@ export abstract class EthHandler<P extends IPeerDescriptor<any>> extends EE impl
 
   protected async _send<U extends any[]> (msg: U): Promise<any> {
     msg.unshift(this.id)
-    this.log('sending message', msg)
+    // this.log('sending message', msg)
     return this.protocol.send(msg)
   }
 }

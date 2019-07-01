@@ -21,9 +21,7 @@ export declare class PeerManager extends EE {
     releasePeers(peers: Peer[]): void;
     reserve(peers: Peer[]): void;
     ban(peers: Peer[]): void;
-    unBan(peers: Peer[]): void;
     isUsed(peer: Peer): boolean | undefined;
-    isBanned(peer: Peer): boolean | undefined;
 }
 export {};
 //# sourceMappingURL=peer-manager.d.ts.map

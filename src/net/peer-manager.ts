@@ -36,7 +36,8 @@ export class PeerManager extends EE {
 
   getByCapability (cap: ICapability): Peer[] {
     return [...this.peers.values()].filter((p) => {
-      return (!p.used && !p.banned) &&
+      return (this.peers.has(p.peer.id)) &&
+      (!p.used && !p.banned) &&
       p.peer.protocols.has(cap.id) &&
       cap.versions.length > 0 &&
       p.peer.protocols
@@ -79,16 +80,9 @@ export class PeerManager extends EE {
   }
 
   ban (peers: Peer[]) {
-    peers.forEach(p => {
-      p && (this.peers.has(p.id) &&
-      (this.peers.get(p.id)!.banned = true))
-    })
-  }
-
-  unBan (peers: Peer[]) {
-    peers.forEach(p => {
-      p && (this.peers.has(p.id) &&
-      (this.peers.get(p.id)!.banned = false))
+    peers.map(p => {
+      p && (this.peers.has(p.id) && this.peers.del(p.id))
+      p.ban()
     })
   }
 
@@ -98,13 +92,5 @@ export class PeerManager extends EE {
     }
 
     return this.peers.get(peer.id)!.used
-  }
-
-  isBanned (peer: Peer) {
-    if (!this.peers.has(peer.id)) {
-      throw new Error(`Peer with id ${peer.id} not found`)
-    }
-
-    return this.peers.get(peer.id)!.banned
   }
 }

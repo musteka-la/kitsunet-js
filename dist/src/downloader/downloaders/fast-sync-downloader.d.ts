@@ -10,6 +10,7 @@ interface TaskPayload {
     to: BN;
     reverse?: boolean;
     skip?: number;
+    peer: Peer;
 }
 export declare class FastSyncDownloader extends BaseDownloader {
     chain: EthChain;
@@ -17,12 +18,13 @@ export declare class FastSyncDownloader extends BaseDownloader {
     queue: AsyncQueue<TaskPayload>;
     highestBlock: BN;
     constructor(chain: EthChain, peerManager: PeerManager);
-    protected task({ from, protocol, to, skip, reverse }: {
+    protected task({ from, to, skip, reverse, protocol, peer }: {
         from: any;
-        protocol: any;
         to: any;
         skip: any;
         reverse: any;
+        protocol: any;
+        peer: any;
     }): Promise<void>;
     best(): Promise<Peer | undefined>;
     download(peer: Peer): Promise<void>;

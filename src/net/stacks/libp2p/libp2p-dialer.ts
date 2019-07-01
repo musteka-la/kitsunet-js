@@ -115,6 +115,6 @@ export class Libp2pDialer extends EE {
   }
 
   async hangup (peer: PeerInfo) {
-    return this.node.hangUp(this.node, peer)
+    return this.node.hangUp(peer)
   }
 }

@@ -31,7 +31,7 @@ declare class Libp2p {
   eventNames(): any;
   getMaxListeners(): any;
   handle(protocol: string, handlerFunc: Function, matchFunc?: Function): void;
-  hangUp(peer: any, callback: any): void;
+  hangUp(peer: any, callback?: any): void;
   isStarted(): any;
   listenerCount(type: any): any;
   listeners(type: any): any;
