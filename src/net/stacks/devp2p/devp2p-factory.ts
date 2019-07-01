@@ -15,6 +15,7 @@ import { randomBytes } from 'crypto'
 import { register } from 'opium-decorators'
 import Common from 'ethereumjs-common'
 import { Devp2pPeer } from './devp2p-peer'
+import { rlp } from 'ethereumjs-util';
 
 const defaultRemoteClientIdFilter = [
   'go1.5',
@@ -30,7 +31,7 @@ const defaultRemoteClientIdFilter = [
 
 export class RLPxNodeOptions implements RLPxOptions {
   clientId?: Buffer
-  timeout?: number
+  timeout?: number = 1000 * 60 * 60 * 10
   remoteClientIdFilter?: string[] = defaultRemoteClientIdFilter
   listenPort!: number | null
   dpt!: DPT
@@ -43,8 +44,8 @@ export class RLPxNodeOptions implements RLPxOptions {
 
 export class DPTOptions {
   key: Buffer = randomBytes(32)
-  refreshInterval: number = 30000
-  timeout: number = 1000 * 10
+  refreshInterval: number = 30 * 1000
+  timeout: number = 1000 * 60 * 60 * 10
   endpoint: PeerInfo = {
     address: '0.0.0.0',
     udpPort: 30303,
@@ -77,7 +78,6 @@ export class DevP2PFactory {
     const dptOpts = new DPTOptions()
     dptOpts.key = rlpxKey
     dptOpts.endpoint = peerInfo
-    dptOpts.timeout = 1000 * 60
     return dptOpts
   }
 

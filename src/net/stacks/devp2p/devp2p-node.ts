@@ -173,7 +173,7 @@ export class Devp2pNode extends Node<Devp2pPeer> {
    * @param rlpxPeer
    * @param reason
    */
-  private disconnect (rlpxPeer, reason) {
+  private disconnected (rlpxPeer, reason) {
     if (rlpxPeer.getId()) {
       const id = rlpxPeer.getId().toString('hex')
       const devp2pPeer = this.peers.get(id)
@@ -224,11 +224,11 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     })
 
     this.rlpx.on('peer:removed', (rlpxPeer, reason) => {
-      this.disconnect(rlpxPeer, reason)
+      this.disconnected(rlpxPeer, reason)
     })
 
     this.rlpx.on('peer:error', (rlpxPeer, error) => {
-      this.disconnect(rlpxPeer, error)
+      this.disconnected(rlpxPeer, error)
       // this.error(error, rlpxPeer)
     })
 
