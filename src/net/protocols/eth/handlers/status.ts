@@ -14,14 +14,16 @@ export class Status<P extends IPeerDescriptor<any>> extends EthHandler<P> {
 
   async handle<U extends any[]> (...msg: U & [Buffer, Buffer, Buffer, Buffer, Buffer, Buffer]): Promise<any> {
     const [protocolVersion, networkId, td, bestHash, genesisHash, _number] = msg
-    this.emit('message', {
+    const status = {
       protocolVersion: buffer2int(protocolVersion),
       networkId: buffer2int(networkId),
       td: new BN(td),
       bestHash: bestHash,
       genesisHash: genesisHash.toString('hex'),
       number: new BN(_number || 0)
-    })
+    }
+    await this.protocol.setStatus(status)
+    this.emit('message', status)
   }
 
   async send<U extends any[]> (...msg: U & [number, number, BN, Buffer, string]): Promise<any> {

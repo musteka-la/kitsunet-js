@@ -204,7 +204,7 @@ export class Libp2pNode extends Node<Libp2pPeer> {
     return this.libp2pDialer.hangup(peer.peer)
   }
 
-  async banPeer (peer: Libp2pPeer, maxAge?: number | undefined, reason?: any): Promise<void> {
-    throw new Error('Method not implemented.')
+  async banPeer (peer: Libp2pPeer, maxAge?: number | undefined): Promise<void> {
+    this.libp2pDialer.banPeer(peer.peer, maxAge)
   }
 }

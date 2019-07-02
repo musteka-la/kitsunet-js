@@ -56,7 +56,7 @@ export declare class Devp2pNode extends Node<Devp2pPeer> {
      * @param rlpxPeer
      * @param reason
      */
-    private disconnect;
+    private disconnected;
     /**
      * Initializes RLPx instance for peer management
      * @private

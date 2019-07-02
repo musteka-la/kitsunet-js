@@ -7,7 +7,7 @@ import { EthChain } from '../../blockchain';
 export declare const MAX_PER_REQUEST: number;
 export declare const CONCCURENT_REQUESTS: number;
 export declare const MAX_REQUEST: number;
-export declare const MAX_LOOKBACK: number;
+export declare const MAX_LOOK_BACK: number;
 export declare abstract class BaseDownloader implements IDownloader {
     chain: EthChain;
     peerManager: PeerManager;

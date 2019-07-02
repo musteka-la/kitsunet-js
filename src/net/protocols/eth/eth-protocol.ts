@@ -15,7 +15,7 @@ import BN from 'bn.js'
 const debug = Debug(`kitsunet:eth-proto`)
 
 export const MSG_CODES = ETH.MESSAGE_CODES
-export const ETH_REQUEST_TIMEOUT: number = 60 * 60 * 1000
+export const ETH_REQUEST_TIMEOUT: number = 5 * 1000
 
 export class Deferred<T> {
   promise: Promise<T>
@@ -109,9 +109,9 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
                                          timeout: number = ETH_REQUEST_TIMEOUT): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
       let tm: NodeJS.Timeout | null = null
-      this.handlers[inId].on('message', (headers) => {
+      this.handlers[inId].once('message', (data) => {
         if (tm) clearTimeout(tm)
-        resolve(headers)
+        resolve(data)
       })
       await this.handlers[outId].send(...payload)
       tm = setTimeout(() =>
@@ -135,7 +135,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
       MSG_CODES.GET_BLOCK_HEADERS,
       MSG_CODES.BLOCK_HEADERS,
       [block, max, skip, reverse],
-      60 * 60 * 1000)
+      60 * 1000)
   }
 
   /**
@@ -148,7 +148,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
       MSG_CODES.GET_BLOCK_BODIES,
       MSG_CODES.BLOCK_BODIES,
       [(hashes as any).map(h => Buffer.isBuffer(h) ? h : Buffer.from(h))],
-      60 * 60 * 1000)
+      60 * 1000)
   }
 
   /**
