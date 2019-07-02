@@ -12,7 +12,6 @@ import BN from 'bn.js'
 
 import Debug from 'debug'
 import { EthChain } from '../../blockchain'
-import { nextTick } from 'async'
 const debug = Debug('kitsunet:downloader:download-manager')
 
 export const MAX_PER_REQUEST: number = 128

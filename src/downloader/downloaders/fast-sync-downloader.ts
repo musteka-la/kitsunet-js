@@ -13,8 +13,15 @@ import {
   IProtocol,
   ProtocolTypes
 } from '../../net'
+
+import {
+  BaseDownloader,
+  MAX_PER_REQUEST,
+  CONCCURENT_REQUESTS,
+  MAX_REQUEST
+} from './base'
+
 import { EthChain } from '../../blockchain'
-import { BaseDownloader, MAX_PER_REQUEST, CONCCURENT_REQUESTS, MAX_REQUEST } from './base'
 import { queue, AsyncQueue, asyncify } from 'async'
 
 import Debug from 'debug'
@@ -48,7 +55,7 @@ export class FastSyncDownloader extends BaseDownloader {
     debug(`requesting ${MAX_PER_REQUEST} blocks ` +
       `from ${protocol.peer.id} starting from ${fromStr}`)
     while (from.lte(to)) {
-      let headers: Block.Header[] = await this.getHeaders(
+      const headers: Block.Header[] = await this.getHeaders(
         protocol as unknown as IEthProtocol,
         peer,
         from,
@@ -61,7 +68,7 @@ export class FastSyncDownloader extends BaseDownloader {
         return
       }
 
-      let bodies: BlockBody[] = await this.getBodies(
+      const bodies: BlockBody[] = await this.getBodies(
         protocol as unknown as IEthProtocol,
         peer,
         headers.map(h => h.hash()))
@@ -114,6 +121,7 @@ export class FastSyncDownloader extends BaseDownloader {
       return
     }
 
+    // FIXME: do we need this?
     // const ancestor = await this.findAncestor(protocol as unknown as IEthProtocol, peer, from)
     // if (!ancestor) {
     //   debug(new Error(`unable to find common ancestor with peer ${peer.id}`))
@@ -134,9 +142,8 @@ export class FastSyncDownloader extends BaseDownloader {
 
     try {
       const payload: TaskPayload = { from: from.clone(), to: to.clone(), protocol, peer }
-      // debug(`queue contains ${this.queue.length} tasks and ${this.queue.workersList().length} workers`)
-      // await this.queue.push(payload)
-      await this.task(payload)
+      debug(`queue contains ${this.queue.length()} tasks and ${this.queue.workersList().length} workers`)
+      await this.queue.push(payload)
     } catch (err) {
       debug(`an error occurred processing fast sync task `, err)
     }

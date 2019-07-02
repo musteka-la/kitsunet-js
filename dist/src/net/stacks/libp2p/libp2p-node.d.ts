@@ -30,6 +30,6 @@ export declare class Libp2pNode extends Node<Libp2pPeer> {
     start(): Promise<void>;
     stop(): Promise<void>;
     disconnectPeer(peer: Libp2pPeer): Promise<void>;
-    banPeer(peer: Libp2pPeer, maxAge?: number | undefined, reason?: any): Promise<void>;
+    banPeer(peer: Libp2pPeer, maxAge?: number | undefined): Promise<void>;
 }
 //# sourceMappingURL=libp2p-node.d.ts.map

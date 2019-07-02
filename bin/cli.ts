@@ -111,13 +111,14 @@ const cliConfig: any = {
     required: false
   },
   'libp2-identity': {
-    alias: 'iL',
+    alias: 'L',
     description: 'json file, containing the private and public keys for libp2p',
     requiresArg: true,
-    required: false
+    required: false,
+    type: 'string'
   },
   'devp2p-identity': {
-    alias: 'iD',
+    alias: 'I',
     description: 'json file, containing the private and public keys for devp2p',
     requiresArg: true,
     required: false
@@ -153,12 +154,12 @@ class KistunetCli {
     }
 
     options.NODE_ENV = process.env.NODE_ENV || 'prod'
-    options.libp2pIdentity = options.libp2pIdentity
-      ? await import(options.libp2pIdentity)
-      : config.libp2pIdentity
+    options.libp2pIdentity = options.libp2Identity
+      ? await import(options.libp2Identity)
+      : config.libp2Identity
 
-    options.devp2pIdentity = options.devp2pIdentity
-      ? await import(options.libp2pIdentity)
+    options.devp2pIdentity = options.devp2Identity
+      ? await import(options.libp2Identity)
       : config.libp2pIdentity
 
     options.libp2pAddrs = options.libp2pAddrs || options.libp2PAddrs || config.libp2pAddrs

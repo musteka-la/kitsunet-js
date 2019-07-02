@@ -1,11 +1,11 @@
 import BN from 'bn.js';
 import { DownloaderType } from '../interfaces';
-import { Peer, IEthProtocol, PeerManager } from '../../net';
-import { EthChain } from '../../blockchain';
+import { Peer, PeerManager, IProtocol, ProtocolTypes } from '../../net';
 import { BaseDownloader } from './base';
+import { EthChain } from '../../blockchain';
 import { AsyncQueue } from 'async';
 interface TaskPayload {
-    protocol: IEthProtocol;
+    protocol: IProtocol<ProtocolTypes>;
     from: BN;
     to: BN;
     reverse?: boolean;
@@ -18,14 +18,7 @@ export declare class FastSyncDownloader extends BaseDownloader {
     queue: AsyncQueue<TaskPayload>;
     highestBlock: BN;
     constructor(chain: EthChain, peerManager: PeerManager);
-    protected task({ from, to, skip, reverse, protocol, peer }: {
-        from: any;
-        to: any;
-        skip: any;
-        reverse: any;
-        protocol: any;
-        peer: any;
-    }): Promise<void>;
+    protected task({ from, to, skip, reverse, protocol, peer }: TaskPayload): Promise<void>;
     best(): Promise<Peer | undefined>;
     download(peer: Peer): Promise<void>;
 }

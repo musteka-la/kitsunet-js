@@ -26,6 +26,7 @@ import {
 import { EthChain, IBlockchain } from '../../../blockchain'
 import Common from 'ethereumjs-common'
 import { NetworkPeer } from '../../network-peer'
+import { rlp } from 'ethereumjs-util';
 
 const debug = Debug('kitsunet:net:devp2p:node')
 
@@ -262,8 +263,15 @@ export class Devp2pNode extends Node<Devp2pPeer> {
     }
 
     let res: any
+    const [code, payload] = [(msg as T[]).shift(), (msg as T[]).shift()]
     try {
-      res = rlpxProto._send((msg as T[]).shift(), (msg as T[]).shift())
+      // FIXME: workaround for devp2p convoluted message handling
+      // this is why the protocol (ETH, LES, etc) needs to be separated from
+      // the transport interfaces (will be done in a devp2p rework)
+      if (protocol.id === 'eth' && (code as any) === ETH.MESSAGE_CODES.STATUS) {
+        rlpxProto._status = rlp.decode(payload as any) as unknown as ETH.StatusMsg
+      }
+      res = rlpxProto._send(code, payload)
     } catch (e) {
       debug(e)
     }
