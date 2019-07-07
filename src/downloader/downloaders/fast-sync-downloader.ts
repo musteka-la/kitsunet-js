@@ -122,14 +122,14 @@ export class FastSyncDownloader extends BaseDownloader {
     }
 
     // FIXME: do we need this?
-    // const ancestor = await this.findAncestor(protocol as unknown as IEthProtocol, peer, from)
-    // if (!ancestor) {
-    //   debug(new Error(`unable to find common ancestor with peer ${peer.id}`))
-    //   this.peerManager.ban([peer])
-    //   return
-    // }
+    const ancestor = await this.findAncestor(protocol as unknown as IEthProtocol, peer, from)
+    if (!ancestor) {
+      debug(new Error(`unable to find common ancestor with peer ${peer.id}`))
+      this.peerManager.ban([peer])
+      return
+    }
 
-    // from = new BN(ancestor.header.number)
+    from = new BN(ancestor.header.number)
     const remote: BN = new BN(remoteHeader.header.number)
     const localStr: string = from.toString(10)
     const remoteStr: string = remote.toString(10)
@@ -142,8 +142,8 @@ export class FastSyncDownloader extends BaseDownloader {
 
     try {
       const payload: TaskPayload = { from: from.clone(), to: to.clone(), protocol, peer }
-      debug(`queue contains ${this.queue.length()} tasks and ${this.queue.workersList().length} workers`)
       await this.queue.push(payload)
+      debug(`queue contains ${this.queue.length()} tasks and ${this.queue.workersList().length} workers`)
     } catch (err) {
       debug(`an error occurred processing fast sync task `, err)
     }
