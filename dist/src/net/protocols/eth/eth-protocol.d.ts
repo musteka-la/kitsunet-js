@@ -38,6 +38,7 @@ export declare class EthProtocol<P extends IPeerDescriptor<any>> extends BasePro
     receive<T, U>(readable: AsyncIterable<T>): AsyncIterable<U | U[] | null>;
     send<T, U>(msg: T): Promise<U | U[] | void | null>;
     /**
+     * Helper to issue requests with timeouts
      *
      * @param outId {ETH.MESSAGE_CODES} - out message id
      * @param inId {ETH.MESSAGE_CODES} - in message id
