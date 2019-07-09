@@ -121,7 +121,13 @@ export class FastSyncDownloader extends BaseDownloader {
       return
     }
 
-    // FIXME: do we need this?
+    const remote: BN = new BN(remoteHeader.header.number)
+    const remoteStr: string = remote.toString(10)
+    if (from.gte(remote)) {
+      debug(`remote block ${remoteStr} is lower or equal to local block, skiping!`)
+      return
+    }
+
     const ancestor = await this.findAncestor(protocol as unknown as IEthProtocol, peer, from)
     if (!ancestor) {
       debug(new Error(`unable to find common ancestor with peer ${peer.id}`))
@@ -130,9 +136,7 @@ export class FastSyncDownloader extends BaseDownloader {
     }
 
     from = new BN(ancestor.header.number)
-    const remote: BN = new BN(remoteHeader.header.number)
     const localStr: string = from.toString(10)
-    const remoteStr: string = remote.toString(10)
     debug(`latest block is ${localStr} remote block is ${remoteStr}`)
 
     from.iaddn(1)

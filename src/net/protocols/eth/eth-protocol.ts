@@ -97,6 +97,7 @@ export class EthProtocol<P extends IPeerDescriptor<any>> extends BaseProtocol<P>
   }
 
   /**
+   * Helper to issue requests with timeouts
    *
    * @param outId {ETH.MESSAGE_CODES} - out message id
    * @param inId {ETH.MESSAGE_CODES} - in message id
