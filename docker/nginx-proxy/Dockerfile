@@ -1,4 +1,4 @@
-FROM jwilder/nginx-proxy
+FROM jwilder/nginx-proxy:v0.9.0
 
 RUN { \
       echo 'proxy_connect_timeout 86400;'; \
