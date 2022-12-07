@@ -54,7 +54,7 @@
     "kitsunet-block-tracker": "github:musteka-la/kitsunet-block-tracker.git#master",
     "kitsunet-telemetry": "github:musteka-la/kitsunet-telemetry",
     "level": "^5.0.1",
-    "libp2p": "^0.25.3",
+    "libp2p": "^0.38.0",
     "libp2p-bootstrap": "~0.9.3",
     "libp2p-kad-dht": "^0.15.0",
     "libp2p-mdns": "~0.12.0",
